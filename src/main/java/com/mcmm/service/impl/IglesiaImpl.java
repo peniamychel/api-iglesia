@@ -23,7 +23,7 @@ public class IglesiaImpl implements IIglesia {
         List<IglesiaDto> iglesiasDto = new ArrayList<>();
         Iterable<Iglesia> iglesias = iglesiaDao.findAll();
 
-        for (Iglesia iglesia : iglesias) {
+        for (Iglesia iglesia : iglesias){
             IglesiaDto dto = modelMapper.map(iglesia, IglesiaDto.class);
             iglesiasDto.add(dto);
         }

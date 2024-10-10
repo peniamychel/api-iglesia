@@ -1,5 +1,6 @@
 package com.mcmm.controller;
 
+import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.UsuarioDto;
 import com.mcmm.model.entity.ERole;
@@ -8,6 +9,7 @@ import com.mcmm.model.entity.Usuario;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -18,7 +20,12 @@ import java.util.stream.Collectors;
 public class MainController {
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private UsuarioDao usuarioDao;
+    @Autowired
+    private RolDao rolDao;
 
     @GetMapping("/hello")
     public String hello(){
@@ -29,7 +36,6 @@ public class MainController {
     public String helloSeguro(){
         return "Hello secured";
     }
-
 
     @PostMapping("/crearusuario")
     public ResponseEntity<?> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
@@ -49,7 +55,7 @@ public class MainController {
         Usuario usuario = Usuario.builder()
                 .username(usuarioDto.getUsername())
                 .email(usuarioDto.getEmail())
-                .password(usuarioDto.getPassword())
+                .password(passwordEncoder.encode(usuarioDto.getPassword()))
                 .roles(roles)
                 .build();
 

@@ -7,15 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/persona/v1")
+@PreAuthorize("hasRole('ENCARGADO_IGLESIA')")
 public class PersonaController {
     @Autowired
     private IPersona personaService;
 
-    @PostMapping("/persona")
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> create(@RequestBody PersonaDto personaDto) {
         ResponseEntity<?> responseEntity;
@@ -41,7 +43,7 @@ public class PersonaController {
         return responseEntity;
     }
 
-    @PutMapping("/persona")
+    @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> update(@RequestBody PersonaDto personaDto) {
         ResponseEntity<?> responseEntity;
@@ -67,7 +69,7 @@ public class PersonaController {
         return responseEntity;
     }
 
-    @DeleteMapping("/persona/{id}")
+    @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> delete(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
@@ -105,7 +107,7 @@ public class PersonaController {
         return responseEntity;
     }
 
-    @GetMapping("/persona/{id}")
+    @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> showById(@PathVariable("id") Long id) {
         ResponseEntity<?> responseEntity;
@@ -141,7 +143,7 @@ public class PersonaController {
         return responseEntity;
     }
 
-    @GetMapping("/personas")
+    @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> findAll() {
         ResponseEntity<?> responseEntity;

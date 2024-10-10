@@ -13,6 +13,8 @@ public interface UsuarioDao extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByUsername(String username);
 
+    Boolean existsByUsername(String username);
+
     @Query("SELECT u FROM Usuario u WHERE u.username = ?1")
     Optional<Usuario> getName(String username);
 
