@@ -16,4 +16,5 @@ public interface IIglesia {
 
     public IglesiaDto update(Long id, IglesiaDto iglesiaDto);
 
+    IglesiaDto buscarNombreIglesia(String nameIglesia);
 }

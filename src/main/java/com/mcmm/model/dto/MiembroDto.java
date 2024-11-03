@@ -14,20 +14,15 @@ import java.util.Date;
 public class MiembroDto {
 
     private Long id;
-
     private Date fechaConvercion;
-
     private String lugarConvercion;
-
     private String interventores;
-
     private String detalles;
 
-    private Persona persona;
+    private PersonaDto personaDto;
+    private Long personaId; // Para propósitos de creación y actualizació
 
     private Boolean estado;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 }

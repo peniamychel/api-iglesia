@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/persona/v1")
-@PreAuthorize("hasRole('ENCARGADO_IGLESIA')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
 public class PersonaController {
     @Autowired
     private IPersona personaService;
@@ -48,11 +48,11 @@ public class PersonaController {
     public ResponseEntity<?> update(@RequestBody PersonaDto personaDto) {
         ResponseEntity<?> responseEntity;
         try {
-            PersonaDto iglesiaUpdate = personaService.save(personaDto);
+            PersonaDto personaUpdate = personaService.save(personaDto);
             responseEntity = new ResponseEntity<>(
                     MessageResponse.builder()
                             .message("Persona actualizada exitosamente.")
-                            .datos(iglesiaUpdate)
+                            .datos(personaUpdate)
                             .nombreModelo("Persona")
                             .build(),
                     HttpStatus.OK
@@ -168,4 +168,73 @@ public class PersonaController {
         }
         return responseEntity;
     }
+
+
+    /*buscara si la persona ya tiene datos de miembrro*/
+    @GetMapping("/personanomiembro")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> personaNoMiembro() {
+        ResponseEntity<?> responseEntity;
+        Iterable<PersonaDto> personaDtos = personaService.personaNoMiembro();
+        try {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("Listado de Personas")
+                            .datos(personaDtos)
+                            .nombreModelo("Persona")
+                            .build()
+                    , HttpStatus.OK
+            );
+        } catch (Exception e) {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("No se encontro datos.")
+                            .datos(null)
+                            .build()
+                    , HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        return responseEntity;
+    }
+
+    //busca segun cidula identidad
+    @GetMapping("/showbyci/{ci}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> buscarCi(@PathVariable("ci") String ci) {
+        ResponseEntity<?> responseEntity;
+        try {
+//            PersonaDto personaFiedById = personaService.buscarCi(ci);
+            PersonaDto personaFiedById = personaService.buscarCi(ci);
+
+            if (personaFiedById == null) {
+                responseEntity = new ResponseEntity<>(
+                        MessageResponse.builder()
+                                .message("Persona no encontrada.")
+                                .datos(null)
+                                .build(),
+                        HttpStatus.NOT_FOUND
+                );
+            } else {
+                responseEntity = new ResponseEntity<>(
+                        MessageResponse.builder()
+                                .message("Persona encontrada.")
+                                .datos(personaFiedById)
+                                .nombreModelo("Persona")
+                                .build(),
+                        HttpStatus.OK
+                );
+            }
+        } catch (DataAccessException e) {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("Error al buscar la Persona.")
+                            .datos(null)
+                            .build(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        return responseEntity;
+    }
+
+
 }

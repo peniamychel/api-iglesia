@@ -2,7 +2,9 @@ package com.mcmm.service.impl;
 
 import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dto.IglesiaDto;
+import com.mcmm.model.dto.PersonaDto;
 import com.mcmm.model.entity.Iglesia;
+import com.mcmm.model.entity.Persona;
 import com.mcmm.service.IIglesia;
 import org.modelmapper.ModelMapper;
 import jakarta.transaction.Transactional;
@@ -56,4 +58,14 @@ public class IglesiaImpl implements IIglesia {
     public IglesiaDto update(Long id, IglesiaDto iglesiaDto) {
         return null;
     }
+
+    @Override
+    public IglesiaDto buscarNombreIglesia(String nameIglesia) {
+        Iglesia iglesia = iglesiaDao.buscarPorNombreIglesia(nameIglesia);
+        if (iglesia != null) {
+            return modelMapper.map(iglesia, IglesiaDto.class);
+        }
+        return null;
+    }
+
 }

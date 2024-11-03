@@ -7,6 +7,7 @@ import lombok.*;
 import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -21,6 +22,9 @@ public class Iglesia implements java.io.Serializable{
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "idIglesia")
+    private List<MiembroIglesia> miembroIglesias;
 
     private String nombre;
 

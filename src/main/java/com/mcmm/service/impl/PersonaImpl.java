@@ -59,4 +59,25 @@ public class PersonaImpl implements IPersona {
     public PersonaDto update(Long id, PersonaDto personaDto) {
         return null;
     }
+
+    @Override
+    public Iterable<PersonaDto> personaNoMiembro() {
+        List<PersonaDto> personasDto = new ArrayList<>();
+        Iterable<Persona> personas = personaDao.findPersonasWithoutMiembro();
+
+        for (Persona persona : personas) {
+            PersonaDto dto = modelMapper.map(persona, PersonaDto.class);
+            personasDto.add(dto);
+        }
+        return personasDto;
+    }
+
+    @Override
+    public PersonaDto buscarCi(String ci) {
+        Persona persona = personaDao.findByCi(ci);
+        if (persona != null) {
+            return modelMapper.map(persona, PersonaDto.class);
+        }
+        return null;
+    }
 }

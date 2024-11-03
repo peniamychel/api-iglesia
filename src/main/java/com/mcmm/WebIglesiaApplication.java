@@ -26,18 +26,18 @@ public class WebIglesiaApplication {
 	@Autowired
 	PasswordEncoder passwordEncoder;
 
-	@Bean
-	public CommandLineRunner init(){
-		return args ->{
-			Usuario usuario = Usuario.builder()
-					.email("5I5wF@example.com")
-					.username("admin")
-					.password(passwordEncoder.encode("1234"))
-					.roles(Set.of(Rol.builder()
-							.name(ERole.valueOf(ERole.ADMIN.name()))
-							.build()))
-					.build();
-			usuarioDao.save(usuario);
-		};
-	}
+//	@Bean
+//	public CommandLineRunner init(){
+//		return args ->{
+//			Usuario usuario = Usuario.builder()
+//					.email("5I5wF@example.com")
+//					.username("admin")
+//					.password(passwordEncoder.encode("1234"))
+//					.roles(Set.of(Rol.builder()
+//							.name(ERole.valueOf(ERole.ADMIN.name()))
+//							.build()))
+//					.build();
+//			usuarioDao.save(usuario);
+//		};
+//	}
 }

@@ -9,9 +9,12 @@ public interface IMiembro {
 
     public MiembroDto findById(Long id);
 
-    public MiembroDto save(MiembroDto miembroDto);
+    public MiembroDto create(MiembroDto miembroDto);
 
-    public void delete(MiembroDto miembroDto);
+    public void delete(Long id);
 
-    public MiembroDto update(Long id, MiembroDto miembroDto);
+    public MiembroDto estado(Long id);
+
+
+    public MiembroDto update( MiembroDto miembroDto);
 }

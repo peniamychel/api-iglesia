@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 
 @Data
@@ -21,6 +22,13 @@ public class Miembro {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "idMiembro")
+    private List<MiembroIglesia> miembroIglesias;
+
+    @OneToOne (fetch = FetchType.LAZY,targetEntity = Persona.class, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "persona_id")
+    private Persona persona;
+
     @Column(name = "fecha_convercion")
     private Date fechaConvercion;
 
@@ -30,11 +38,6 @@ public class Miembro {
     private String interventores;
 
     private String detalles;
-
-    @OrderColumn
-    @ManyToOne(targetEntity = Persona.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "persona_id")
-    private Persona persona;
 
     private Boolean estado;
 

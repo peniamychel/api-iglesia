@@ -13,4 +13,8 @@ public interface IPersona {
     public void delete(PersonaDto personaDto);
 
     public PersonaDto update(Long id, PersonaDto personaDto);
+
+    public Iterable<PersonaDto> personaNoMiembro();
+
+    public PersonaDto buscarCi(String ci);
 }

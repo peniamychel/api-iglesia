@@ -5,24 +5,28 @@ import com.mcmm.service.IPrivilegio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/privilegios/v1")
+@PreAuthorize("hasRole('ADMIN')")
 public class PrivilegioController {
 
     @Autowired
     private IPrivilegio privilegioService;
 
-    @GetMapping
+    @GetMapping("/findall")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<PrivilegioDto>> findAll() {
         List<PrivilegioDto> privilegios = (List<PrivilegioDto>) privilegioService.findAll();
         return ResponseEntity.ok(privilegios);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/showbyid/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<PrivilegioDto> findById(@PathVariable Long id) {
         PrivilegioDto privilegio = privilegioService.findById(id);
         if (privilegio != null) {
@@ -31,13 +35,15 @@ public class PrivilegioController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping
-    public ResponseEntity<PrivilegioDto> save(@RequestBody PrivilegioDto privilegioDto) {
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<PrivilegioDto> create(@RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto savedPrivilegio = privilegioService.save(privilegioDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPrivilegio);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         PrivilegioDto privilegio = privilegioService.findById(id);
         if (privilegio != null) {
@@ -47,7 +53,8 @@ public class PrivilegioController {
         return ResponseEntity.notFound().build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<PrivilegioDto> update(@PathVariable Long id, @RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto updatedPrivilegio = privilegioService.update(id, privilegioDto);
         if (updatedPrivilegio != null) {

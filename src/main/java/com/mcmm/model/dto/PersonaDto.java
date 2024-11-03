@@ -15,9 +15,9 @@ public class PersonaDto implements java.io.Serializable{
     private Long id;
     private String nombre;
     private String apellido;
-    private Integer ci;
+    private String ci;
     private Date fechaNac;
-    private Integer celular;
+    private String celular;
     private String sexo;
     private String direccion;
     private String uriFoto;

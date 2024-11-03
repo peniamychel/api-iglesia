@@ -3,7 +3,6 @@ package com.mcmm.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -13,31 +12,32 @@ import java.util.Date;
 @ToString
 @Entity
 @Builder
-@Table(name = "persona")
-public class Persona implements java.io.Serializable{
+@Table(name = "miembros_iglesia")
+public class MiembroIglesia implements java.io.Serializable{
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nombre;
+    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "id_miembros" )
+    private Miembro idMiembro;
 
-    private String apellido;
+    @ManyToOne (fetch = FetchType.LAZY,targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "id_iglesia")
+    private Iglesia idIglesia;
 
-    @Column(name = "ci", unique = true)
-    private String ci;
+    @Column(name = "fecha")
+    private Date fecha;
 
-    @Column(name = "fecha_nac")
-    private Date fechaNac;
+    private String motivoTraspaso;
 
-    private String celular;
+    @Column(name = "fecha_traspaso")
+    private Date fechaTraspaso;
 
-    private String sexo;
-
-    private String direccion;
-
-    @Column(name = "uri_foto")
-    private String uriFoto;
+    @Column(name = "uri_carta_traspaso")
+    private String uriCartaTraspaso;
 
     private Boolean estado;
 
@@ -52,7 +52,7 @@ public class Persona implements java.io.Serializable{
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (estado == null) {
-            estado = true;
+            estado = true;  // Establecer estado en true si no se ha asignado
         }
     }
 
@@ -60,4 +60,5 @@ public class Persona implements java.io.Serializable{
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

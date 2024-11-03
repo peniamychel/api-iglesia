@@ -63,8 +63,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         Map<String, Object> httpResponse = new HashMap<>();
         httpResponse.put("token", token);
-        httpResponse.put("Mensage","Autenticaion Exitosa");
-        httpResponse.put("Nombre usuario", user.getUsername());
+        httpResponse.put("nensage","Autenticaion Exitosa");
+        httpResponse.put("username", user.getUsername());
+        httpResponse.put("roles", user.getAuthorities());
+
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
         response.setStatus(HttpStatus.OK.value());
@@ -88,6 +90,5 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
         response.getWriter().flush();
     }
-
 
 }
