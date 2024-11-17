@@ -34,7 +34,6 @@ public class MiembroImpl implements IMiembro {
     public MiembroDto create(MiembroDto miembroDto) {
         Miembro miembro = modelMapper.map(miembroDto, Miembro.class);
 
-
         // Convertir el personaId en una entidad de Persona antes de guardar
         if (miembroDto.getPersonaId() != null) {
             Persona persona = personaDao.findById(miembroDto.getPersonaId())
@@ -77,10 +76,8 @@ public class MiembroImpl implements IMiembro {
     }
 
 
-
     @Override
     public MiembroDto update(MiembroDto miembroDto) {
-
         Miembro miembroExistente = miembroDao.findById(miembroDto.getId()).orElse(null);
 
 //        logger.debug("\n \n MIEMBRO ENCONTRADO..................................: {} \n \n", miembroExistente);

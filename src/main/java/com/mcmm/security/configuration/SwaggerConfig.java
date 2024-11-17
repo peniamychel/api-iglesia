@@ -1,4 +1,4 @@
-package com.mcmm.security;
+package com.mcmm.security.configuration;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+//@EnableSwager2
 public class SwaggerConfig {
 
     @Bean

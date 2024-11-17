@@ -1,4 +1,4 @@
-package com.mcmm.security;
+package com.mcmm.security.configuration;
 
 import com.mcmm.security.filters.JwtAuthenticationFilter;
 import com.mcmm.security.filters.JwtAuthorizationFilter;
@@ -57,9 +57,11 @@ public class SecurityConfig {
                             "/webjars/**",
                             "/swagger-ui.html"
                     ).permitAll();
+                    auth.requestMatchers("/auth/**").permitAll();
 //                    auth.requestMatchers("/helloseguro").authenticated();
 //                    auth.requestMatchers("/main/v1/**").authenticated();
 //                    auth.requestMatchers("/**").permitAll();
+                    auth.requestMatchers("/uploads/**").permitAll(); //permiso para esta carpeta sea accesible sin autenticacion
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> {

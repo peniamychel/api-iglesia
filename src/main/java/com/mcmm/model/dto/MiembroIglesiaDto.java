@@ -17,10 +17,10 @@ public class MiembroIglesiaDto {
 
     private Long id;
 
-    private MiembroDto miembroDto;
+//    private MiembroDto miembroDto;
     private Long miembroId;
 
-    private IglesiaDto iglesiaDto;
+//    private IglesiaDto iglesiaDto;
     private Long iglesiaId;
 
     private Date fecha;

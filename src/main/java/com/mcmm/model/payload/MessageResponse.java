@@ -24,7 +24,7 @@ public class MessageResponse<T> {
 //    public MessageResponse(String message){
 //        this.message = message;
 //        this.datos = null;
-//        this.nombreTabla = null;
+//        this.nombreModelo = "";
 //    }
 
 }

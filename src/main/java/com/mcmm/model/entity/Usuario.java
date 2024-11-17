@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -32,6 +33,16 @@ public class Usuario {
     @Size(max = 50)
     private String username;
 
+    @Size(max = 100)
+    private String name;
+
+    @Size(max = 100)
+    private String apellidos;
+
+    private String uriFoto;
+
+    private Boolean estado;
+
     @NotBlank
     @Size(min = 3, max = 100)
     private String password;
@@ -41,4 +52,17 @@ public class Usuario {
             joinColumns = @JoinColumn(name = "usuario_id"),
             inverseJoinColumns = @JoinColumn(name = "rol_id"))
     private Set<Rol> roles;
+
+    @PrePersist
+    protected void onCreate() {
+        if (estado == null) {
+            estado = true;
+        }
+    }
 }
+
+//    @ManyToMany(fetch = FetchType.EAGER)
+//    @JoinTable(name = "usuario_rol",
+//            joinColumns = @JoinColumn(name = "usuario_id"),
+//            inverseJoinColumns = @JoinColumn(name = "rol_id"))
+//    private Set<Rol> roles;

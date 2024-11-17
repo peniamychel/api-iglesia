@@ -14,6 +14,9 @@ import java.util.Date;
 public class MiembroDto {
 
     private Long id;
+
+//    private Long iglesiaId;
+
     private Date fechaConvercion;
     private String lugarConvercion;
     private String interventores;

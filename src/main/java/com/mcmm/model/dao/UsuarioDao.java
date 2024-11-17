@@ -15,6 +15,8 @@ public interface UsuarioDao extends JpaRepository<Usuario, Long> {
 
     Boolean existsByUsername(String username);
 
+    boolean existsByEmail(String email);
+
     @Query("SELECT u FROM Usuario u WHERE u.username = ?1")
     Optional<Usuario> getName(String username);
 

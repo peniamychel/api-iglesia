@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/iglesia/v1")
 @PreAuthorize("hasRole('ADMIN')")
@@ -173,10 +174,11 @@ public class IglesiaController {
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
     public boolean estado(@PathVariable("id") Long id) {
-        IglesiaDto iglesiaDto = iglesiaService.findById(id);
         ResponseEntity<?> responseEntity;
+        IglesiaDto iglesiaDto = new IglesiaDto();
         try {
-//            iglesiaDto = iglesiaService.findById(id);
+            iglesiaDto = iglesiaService.findById(id);
+
             iglesiaDto.setEstado(!iglesiaDto.getEstado());
             iglesiaService.save(iglesiaDto);
             IglesiaDto iglesiaUpdate = iglesiaService.save(iglesiaDto);
@@ -238,6 +240,8 @@ public class IglesiaController {
         }
         return responseEntity;
     }
+
+
 
 }
 

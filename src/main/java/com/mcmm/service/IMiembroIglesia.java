@@ -1,7 +1,8 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.MiembroIglesiaDto;
-import com.mcmm.model.dto.PersonaDto;
+import com.mcmm.model.dto.*;
+
+import java.util.List;
 
 public interface IMiembroIglesia {
 
@@ -13,5 +14,13 @@ public interface IMiembroIglesia {
 
     public void delete(MiembroIglesiaDto miembroIglesiaDto);
 
-    public MiembroIglesiaDto update(Long id, MiembroIglesiaDto miembroIglesiaDto);
+    public MiembroIglesiaDto update(MiembroIglesiaDto miembroIglesiaDto);
+
+    public boolean estado(Long id);
+
+    Iterable<MiembroDto> findMiembrosIglesia(Long id);
+
+    boolean findByIdMiembro(Long id);
+
+    List<GraficoDataDto> graficoMiembrosIglesia(Long cant);
 }

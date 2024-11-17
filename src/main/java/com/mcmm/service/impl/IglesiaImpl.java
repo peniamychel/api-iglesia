@@ -31,6 +31,12 @@ public class IglesiaImpl implements IIglesia {
         }
         return iglesiasDto;
     }
+    @Override
+    public IglesiaDto save(IglesiaDto iglesiaDto) {
+        Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);
+        Iglesia savedIglesia = iglesiaDao.save(iglesia);
+        return modelMapper.map(savedIglesia, IglesiaDto.class);
+    }
 
     @Override
     public IglesiaDto findById(Long id) {
@@ -41,12 +47,7 @@ public class IglesiaImpl implements IIglesia {
         return null;
     }
 
-    @Override
-    public IglesiaDto save(IglesiaDto iglesiaDto) {
-        Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);
-        Iglesia savedIglesia = iglesiaDao.save(iglesia);
-        return modelMapper.map(savedIglesia, IglesiaDto.class);
-    }
+
 
     @Override
     public void delete(IglesiaDto iglesiaDto) {

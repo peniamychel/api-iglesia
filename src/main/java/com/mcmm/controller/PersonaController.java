@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/persona/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
-public class PersonaController {
+public class PersonaController{
+
     @Autowired
     private IPersona personaService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<?> create(@RequestBody PersonaDto personaDto) {
+    public ResponseEntity<?> create(@RequestBody PersonaDto personaDto){
         ResponseEntity<?> responseEntity;
         try {
             PersonaDto personaSave = personaService.save(personaDto);
@@ -38,6 +39,32 @@ public class PersonaController {
                             .datos(null)
                             .build(),
                     HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/findall")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> findAll(){
+        ResponseEntity<?> responseEntity;
+        Iterable<PersonaDto> personaDtos = personaService.findAll();
+        try {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("Listado de Personas")
+                            .datos(personaDtos)
+                            .nombreModelo("Persona")
+                            .build()
+                    , HttpStatus.OK
+            );
+        } catch (Exception e) {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("No se encontro datos.")
+                            .datos(null)
+                            .build()
+                    , HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
         return responseEntity;
@@ -138,32 +165,6 @@ public class PersonaController {
                             .datos(null)
                             .build(),
                     HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        return responseEntity;
-    }
-
-    @GetMapping("/findall")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> findAll() {
-        ResponseEntity<?> responseEntity;
-        Iterable<PersonaDto> personaDtos = personaService.findAll();
-        try {
-            responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
-                            .message("Listado de Personas")
-                            .datos(personaDtos)
-                            .nombreModelo("Persona")
-                            .build()
-                    , HttpStatus.OK
-            );
-        } catch (Exception e) {
-            responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
-                            .message("No se encontro datos.")
-                            .datos(null)
-                            .build()
-                    , HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
         return responseEntity;

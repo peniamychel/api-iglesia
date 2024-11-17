@@ -21,7 +21,7 @@ public class MiembroIglesia implements java.io.Serializable{
     private Long id;
 
     @ManyToOne (fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "id_miembros" )
+    @JoinColumn(name = "id_miembros")
     private Miembro idMiembro;
 
     @ManyToOne (fetch = FetchType.LAZY,targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
