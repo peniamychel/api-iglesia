@@ -9,18 +9,12 @@ import lombok.Data;
 public class UpdateUserDto {
     @NotNull
     private Long id;
-
     @Size(min = 3, max = 20)
     private String username;
     @Email
     private String email;
-
     private String name;
-
     private String apellidos;
-
     private String uriFoto;
-
     private Boolean estado;
-
 }

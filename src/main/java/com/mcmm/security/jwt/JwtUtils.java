@@ -16,10 +16,8 @@ import java.util.function.Function;
 @Component
 @Slf4j
 public class JwtUtils {
-
     @Value("${jwt.secret.key}")
     private String secretKey;
-
     @Value("${jwt.time.expiration}")
     private String timeExpiration;
 
@@ -57,7 +55,6 @@ public class JwtUtils {
         Claims claims = extractAllClaims(token);
         return claimsTFunction.apply(claims);
     }
-
 
     //Obtenemos todos los clainms del token
     public Claims extractAllClaims(String token){

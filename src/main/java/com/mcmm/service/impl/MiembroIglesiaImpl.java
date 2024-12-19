@@ -50,8 +50,8 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
         Iglesia iglesia = iglesiaDao.findById(miembroIglesiaDto.getIglesiaId()).orElse(null);
         MiembroIglesia miembroIglesia = modelMapper.map(miembroIglesiaDto, MiembroIglesia.class);
         if (miembro != null || iglesia != null) {
-            miembroIglesia.setIdIglesia(iglesia);
-            miembroIglesia.setIdMiembro(miembro);
+            miembroIglesia.setIglesia(iglesia);
+            miembroIglesia.setMiembro(miembro);
         }
         MiembroIglesia savedMiembroIglesia = miembroIglesiaDao.save(miembroIglesia);
         return modelMapper.map(savedMiembroIglesia, MiembroIglesiaDto.class);
@@ -117,7 +117,7 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
     @Override
     public boolean findByIdMiembro(Long id) {
         boolean res = false;
-        res = miembroIglesiaDao.findByIdMiembro(id);
+        res = miembroIglesiaDao.findByMiembro(id);
         return res;
     }
 

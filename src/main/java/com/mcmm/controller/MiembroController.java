@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/miembro/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
 public class MiembroController {
-    private static final Logger logger = LoggerFactory.getLogger(MiembroImpl.class); //uso para debuggear
+//    private static final Logger logger = LoggerFactory.getLogger(MiembroImpl.class); //uso para debuggear
 
     @Autowired
     private IMiembro miembroService;
@@ -118,7 +118,7 @@ public class MiembroController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> update( @RequestBody MiembroDto miembroDto) {
         ResponseEntity<?> responseEntity;
-        logger.debug("\n \n LOGS...........: {} \n \n", miembroDto);
+//        logger.debug("\n \n LOGS...........: {} \n \n", miembroDto);
         try {
             // Intentamos actualizar el miembro con los datos proporcionados
 

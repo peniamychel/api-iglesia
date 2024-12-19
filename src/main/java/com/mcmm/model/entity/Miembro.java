@@ -22,12 +22,15 @@ public class Miembro {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "idMiembro")
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "miembro")
     private List<MiembroIglesia> miembroIglesias;
 
     @OneToOne (fetch = FetchType.LAZY,targetEntity = Persona.class, cascade = CascadeType.MERGE)
     @JoinColumn(name = "persona_id")
     private Persona persona;
+
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = Cargo.class, cascade = CascadeType.PERSIST, mappedBy = "miembro")
+    private List<Cargo> cargos;
 
     @Column(name = "fecha_convercion")
     private Date fechaConvercion;

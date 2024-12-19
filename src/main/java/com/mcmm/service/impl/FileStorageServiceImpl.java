@@ -26,21 +26,31 @@ public class FileStorageServiceImpl implements FileStorageService {
 
         try {
             Files.createDirectories(this.fileStorageLocation);
+
+            //SE CREAN TODOS LOS SUB DIRECTORIOS DEL DIRECTORIO PRINCIPAL
+            Path subDirectoryMonito = this.fileStorageLocation.resolve("usuarios");
+            Files.createDirectories(subDirectoryMonito);
+
+            Path subDirectoryPatito = this.fileStorageLocation.resolve("personas");
+            Files.createDirectories(subDirectoryPatito);
+
+
         } catch (IOException ex) {
-            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
+            throw new RuntimeException("No se pudo crear el directorio de almacenamiento. ", ex);
         }
     }
 
     @Override
-    public String storeFile(MultipartFile file, String username) throws IOException {
+    public String storeFile(MultipartFile file, String nameModel, String nameDir) throws IOException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String fileName = username + "-" + UUID.randomUUID().toString() + fileExtension;
+        String fileNameNative = nameModel + "-" + UUID.randomUUID().toString() + fileExtension;
+        String dirFile = nameDir + fileNameNative;
 
-        Path targetLocation = this.fileStorageLocation.resolve(fileName);
+        Path targetLocation = this.fileStorageLocation.resolve(dirFile);
         Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-        return fileName;
+        return fileNameNative;
     }
 
     @Override

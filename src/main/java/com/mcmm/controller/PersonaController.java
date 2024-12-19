@@ -9,15 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/persona/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
 public class PersonaController{
-
     @Autowired
     private IPersona personaService;
-
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> create(@RequestBody PersonaDto personaDto){
@@ -43,7 +45,6 @@ public class PersonaController{
         }
         return responseEntity;
     }
-
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> findAll(){
@@ -236,6 +237,19 @@ public class PersonaController{
         }
         return responseEntity;
     }
-
-
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<?> uploadProfilePhoto(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = personaService.updateProfilePhoto(id, file);
+            Map<String, String> response = new HashMap<>();
+            response.put("uriFoto", fileUrl);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }

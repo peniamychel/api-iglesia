@@ -3,16 +3,18 @@ package com.mcmm.service;
 import com.mcmm.model.dto.usuarioDto.ChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.Usuario;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 public interface IUsuario {
+    final String USUARIOS_DIR = "usuarios/";
 
-    public Iterable<UsuarioDto> findAll();
+    public Iterable<UsuarioDtoRes> findAll();
 
-    public UsuarioDto findById(Long id);
+    public UsuarioDtoRes findById(Long id);
 
     public UsuarioDto create(Usuario usuario);
 

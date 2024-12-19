@@ -5,6 +5,7 @@ import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.ChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.ERole;
 import com.mcmm.model.entity.Rol;
 import com.mcmm.model.entity.Usuario;
@@ -41,7 +42,6 @@ public class UsuarioController {
 
     @Autowired
     private IUsuario usuarioService;
-
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.OK)
@@ -136,17 +136,16 @@ public class UsuarioController {
         }
     }
 
-
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> findAll() {
         ResponseEntity<?> responseEntity;
-        Iterable<UsuarioDto> usuarioDtos = usuarioService.findAll();
+        Iterable<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
                     MessageResponse.builder()
                             .message("Listado de Usuarios")
-                            .datos(usuarioDtos)
+                            .datos(usuarioDtosRes)
                             .nombreModelo("Usuario")
                             .build()
                     , HttpStatus.OK
@@ -174,11 +173,11 @@ public class UsuarioController {
     public ResponseEntity<?> showById(@PathVariable("id") Long id) {
         ResponseEntity<?> responseEntity;
         try {
-            Optional<Usuario> usuarioFiedById = usuarioDao.findById(id);
+            UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
             responseEntity = new ResponseEntity<>(
                     MessageResponse.builder()
                             .message("Usurio encontrada.")
-                            .datos(usuarioFiedById.get())
+                            .datos(usuarioFiedById)
                             .nombreModelo("Usuario")
                             .build(),
                     HttpStatus.OK
@@ -224,12 +223,12 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{userId}/foto")
+    @PostMapping("/{id}/foto")
     public ResponseEntity<?> uploadProfilePhoto(
-            @PathVariable Long userId,
+            @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = usuarioService.updateProfilePhoto(userId, file);
+            String fileUrl = usuarioService.updateProfilePhoto(id, file);
             Map<String, String> response = new HashMap<>();
             response.put("uriFoto", fileUrl);
             return ResponseEntity.ok(response);
@@ -238,6 +237,48 @@ public class UsuarioController {
             response.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @GetMapping("/findbyusername")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> findByUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Usuario usuario = new Usuario();
+
+        Optional<Usuario> optionalUsuario = usuarioDao.findByUsername(currentUsername);
+        if (optionalUsuario.isPresent()) {
+            usuario = optionalUsuario.get();
+            System.out.println("Usuario encontrado: " + usuario.getUsername());
+        } else {
+            System.out.println("Usuario no encontrado");
+        }
+//        Map<String, String> response = new HashMap<>();
+//        response.put("message", "Password changed successfully");
+//        response.put("username", usuario.getId().toString());
+
+        ResponseEntity<?> responseEntity;
+        try {
+            UsuarioDtoRes usuarioFiedById = usuarioService.findById(usuario.getId());
+            usuarioFiedById.setPassword("pass oculto");
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("Usurio encontrada.")
+                            .datos(usuarioFiedById)
+                            .nombreModelo("Usuario")
+                            .build(),
+                    HttpStatus.OK
+            );
+        } catch (DataAccessException e) {
+            responseEntity = new ResponseEntity<>(
+                    MessageResponse.builder()
+                            .message("Error al buscar la Usuario.")
+                            .datos(null)
+                            .build(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        return responseEntity;
     }
 
 }

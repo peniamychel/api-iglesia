@@ -47,8 +47,6 @@ public class IglesiaImpl implements IIglesia {
         return null;
     }
 
-
-
     @Override
     public void delete(IglesiaDto iglesiaDto) {
         Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);

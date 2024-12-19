@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -12,33 +13,33 @@ import java.util.Date;
 @ToString
 @Entity
 @Builder
-@Table(name = "miembros_iglesia")
-public class MiembroIglesia implements java.io.Serializable{
+@Table(name = "cargo")
+public class Cargo {
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "id_miembro")
-    private Miembro miembro;
+    @ManyToOne (fetch = FetchType.LAZY, targetEntity = CargoTipo.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "tipo_cargo_id")
+    private CargoTipo tipoCargo;
 
-    @ManyToOne (fetch = FetchType.LAZY,targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "id_iglesia")
+    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "iglesia_id")
     private Iglesia iglesia;
 
-    @Column(name = "fecha")
-    private Date fecha;
+    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "miembro_id")
+    private Miembro miembro;
 
-    private String motivoTraspaso;
+    @Column(name = "detalle")
+    private String detalle;
 
-    @Column(name = "fecha_traspaso")
-    private Date fechaTraspaso;
+    @Column(name = "fecha_inicio")
+    private Date fechaInicio;
 
-    @Column(name = "uri_carta_traspaso")
-    private String uriCartaTraspaso;
-
+    private Date fechaFin;
     private Boolean estado;
 
     @Column(name = "created_at", updatable = false)
@@ -55,10 +56,8 @@ public class MiembroIglesia implements java.io.Serializable{
             estado = true;  // Establecer estado en true si no se ha asignado
         }
     }
-
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }

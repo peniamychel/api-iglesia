@@ -23,8 +23,11 @@ public class Iglesia implements java.io.Serializable{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "idIglesia")
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "iglesia")
     private List<MiembroIglesia> miembroIglesias;
+
+    @OneToMany(fetch = FetchType.LAZY, targetEntity = Cargo.class, cascade = CascadeType.PERSIST, mappedBy = "iglesia")
+    private List<Cargo> cargos;
 
     private String nombre;
 

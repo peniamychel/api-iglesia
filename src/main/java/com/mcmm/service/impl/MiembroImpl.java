@@ -20,7 +20,7 @@ import java.util.List;
 
 @Service
 public class MiembroImpl implements IMiembro {
-    private static final Logger logger = LoggerFactory.getLogger(MiembroImpl.class);
+//    private static final Logger logger = LoggerFactory.getLogger(MiembroImpl.class);
 
     private ModelMapper modelMapper = new ModelMapper();
 
@@ -74,7 +74,6 @@ public class MiembroImpl implements IMiembro {
         }
         return null;
     }
-
 
     @Override
     public MiembroDto update(MiembroDto miembroDto) {

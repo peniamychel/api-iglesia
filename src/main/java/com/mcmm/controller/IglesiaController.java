@@ -1,5 +1,6 @@
 package com.mcmm.controller;
 
+import com.mcmm.exception.ResourceNotFoundException;
 import com.mcmm.model.dto.IglesiaDto;
 import com.mcmm.model.dto.PersonaDto;
 import com.mcmm.model.entity.Iglesia;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/iglesia/v1")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
 public class IglesiaController {
     @Autowired
     private IIglesia iglesiaService;
@@ -110,12 +111,14 @@ public class IglesiaController {
     }
 
     @GetMapping("/showbyid/{id}")
-    @ResponseStatus(HttpStatus.OK)
+//    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> showById(@PathVariable("id") Long id) {
         ResponseEntity<?> responseEntity;
         try {
             IglesiaDto iglesiaFiedById = iglesiaService.findById(id);
             if (iglesiaFiedById == null) {
+
+//                throw new ResourceNotFoundException("Iglesia","id",id);
                 responseEntity = new ResponseEntity<>(
                         MessageResponse.builder()
                                 .message("Iglesia no encontrada.")
@@ -124,6 +127,8 @@ public class IglesiaController {
                         HttpStatus.NOT_FOUND
                 );
             } else {
+
+
                 responseEntity = new ResponseEntity<>(
                         MessageResponse.builder()
                                 .message("Iglesia encontrada.")

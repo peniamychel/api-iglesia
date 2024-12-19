@@ -4,6 +4,7 @@ public enum ERole {
 
     ADMIN,
     ENCARGADO_IGLESIA,
-    ENCARGADO_EVENTO
+    ENCARGADO_EVENTO,
+    TESORERO
 
 }

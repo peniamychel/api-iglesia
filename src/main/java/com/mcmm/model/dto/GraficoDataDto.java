@@ -13,9 +13,7 @@ import java.util.Date;
 public class GraficoDataDto implements java.io.Serializable{
 
     private Long id;
-
     private String nombre;
-
     private Long valor;
 
 

@@ -16,10 +16,8 @@ import java.util.Date;
 public class MiembroIglesiaDto {
 
     private Long id;
-
 //    private MiembroDto miembroDto;
     private Long miembroId;
-
 //    private IglesiaDto iglesiaDto;
     private Long iglesiaId;
 

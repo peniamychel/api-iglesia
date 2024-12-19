@@ -4,6 +4,7 @@ import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.ERole;
 import com.mcmm.model.entity.Rol;
 import com.mcmm.model.entity.Usuario;
@@ -24,7 +25,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.*;
-
 @Service
 @Transactional
 public class UsuarioImpl implements IUsuario {
@@ -44,31 +44,54 @@ public class UsuarioImpl implements IUsuario {
     private ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
-    private  FileStorageService fileStorageService;
+    private FileStorageService fileStorageService;
 
     @Value("${file.base-url}")
     private String baseUrl;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public UsuarioImpl() {
     }
 
     @Override
-    public Iterable<UsuarioDto> findAll() {
-        List<UsuarioDto> usuarioDto = new ArrayList<>();
+    public Iterable<UsuarioDtoRes> findAll() {
+        List<UsuarioDtoRes> usuarioDtoRes = new ArrayList<>();
         Iterable<Usuario> usuarios = usuarioDao.findAll();
 
         for (Usuario usuario : usuarios) {
-            UsuarioDto dto = modelMapper.map(usuario, UsuarioDto.class);
-            usuarioDto.add(dto);
+            UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
+            if (usuario.getUriFoto() != null) {
+                String fileUrl = ServletUriComponentsBuilder
+                        .fromCurrentContextPath()
+                        .path(uploadDir)
+                        .path("/")
+                        .path(USUARIOS_DIR)
+                        .path(dto.getUriFoto())
+                        .toUriString();
+                dto.setUriFoto(fileUrl);
+            }
+            usuarioDtoRes.add(dto);
+
         }
-        return usuarioDto;
+        return usuarioDtoRes;
     }
 
     @Override
-    public UsuarioDto findById(Long id) {
+    public UsuarioDtoRes findById(Long id) {
         Usuario usuario = usuarioDao.findById(id).orElse(null);
         if (usuario != null) {
-            return modelMapper.map(usuario, UsuarioDto.class);
+            UsuarioDtoRes usuarioDtoRes = modelMapper.map(usuario, UsuarioDtoRes.class);
+            String fileUrl = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path(uploadDir)
+                    .path("/")
+                    .path(USUARIOS_DIR)
+                    .path(usuarioDtoRes.getUriFoto())
+                    .toUriString();
+            usuarioDtoRes.setUriFoto(fileUrl);
+            return usuarioDtoRes;
         }
         return null;
     }
@@ -136,16 +159,16 @@ public class UsuarioImpl implements IUsuario {
         if (updateUserDto.getEmail() != null) {
             usuario.setEmail(updateUserDto.getEmail());
         }
-        if(updateUserDto.getName() != null) {
+        if (updateUserDto.getName() != null) {
             usuario.setName(updateUserDto.getName());
         }
-        if(updateUserDto.getApellidos() != null) {
+        if (updateUserDto.getApellidos() != null) {
             usuario.setApellidos(updateUserDto.getApellidos());
         }
-        if(updateUserDto.getUriFoto() != null) {
+        if (updateUserDto.getUriFoto() != null) {
             usuario.setUriFoto(updateUserDto.getUriFoto());
         }
-        if(updateUserDto.getEstado() != null) {
+        if (updateUserDto.getEstado() != null) {
             usuario.setEstado(updateUserDto.getEstado());
         }
 
@@ -186,32 +209,36 @@ public class UsuarioImpl implements IUsuario {
         usuario.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
     }
+
     @Override
     @Transactional
-    public String updateProfilePhoto(Long userId, MultipartFile file) throws IOException {
-        Usuario usuario = usuarioDao.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+    public String updateProfilePhoto(Long id, MultipartFile file) throws IOException {
+
+        Usuario usuario = usuarioDao.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + id));
 
         // Si existe una foto anterior, la eliminamos
         if (usuario.getUriFoto() != null) {
-            String oldFileName = usuario.getUriFoto().substring(usuario.getUriFoto().lastIndexOf("/") + 1);
+            String oldFileName = USUARIOS_DIR + usuario.getUriFoto().substring(usuario.getUriFoto().lastIndexOf("/") + 1);
             fileStorageService.deleteFile(oldFileName);
         }
-
         // Guardamos la nueva foto
-        String fileName = fileStorageService.storeFile(file, usuario.getUsername());
+        String fileName = fileStorageService.storeFile(file, usuario.getUsername(), USUARIOS_DIR);
 
         // Construimos la URL completa
-        String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/uploads/")
+        String fileUrl = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(uploadDir)
+                .path("/")
+                .path(USUARIOS_DIR)
                 .path(fileName)
                 .toUriString();
-
-        usuario.setUriFoto(fileUrl);
+        usuario.setUriFoto(fileName);
         usuarioDao.save(usuario);
-
         return fileUrl;
     }
-
-
 }
+
+
+
+
