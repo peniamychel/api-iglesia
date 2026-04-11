@@ -1,7 +1,7 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.usuarioDto.ChangePasswordDto;
-import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.Usuario;
@@ -23,9 +23,9 @@ public interface IUsuario {
     Usuario updateUserRoles(UsuarioDto usuarioDto);
 
 
-    Usuario updateUser(UpdateUserDto updateUserDto);
+    Usuario updateUser(UsuarioUpdateDto usuarioUpdateDto);
 
-    void changePassword(ChangePasswordDto changePasswordDto, String currentUsername);
+    void changePassword(UsuarioChangePasswordDto usuarioChangePasswordDto, String currentUsername);
 
     String updateProfilePhoto(Long userId, MultipartFile file) throws IOException;
 

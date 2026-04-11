@@ -1,13 +1,10 @@
 package com.mcmm.controller;
 
 
-import com.mcmm.model.dto.MiembroDto;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IMiembro;
-import com.mcmm.service.impl.MiembroImpl;
 import jakarta.persistence.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -31,7 +28,7 @@ public class MiembroController {
         try {
             MiembroDto miembroSave = miembroService.create(miembroDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Miembro guardada exitosamente.")
                             .datos(miembroSave)
                             .nombreModelo("Miembro")
@@ -40,7 +37,7 @@ public class MiembroController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al guardar la Miembro.")
                             .datos(null)
                             .build(),
@@ -57,7 +54,7 @@ public class MiembroController {
         Iterable<MiembroDto> miembroDtos = miembroService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Miembros")
                             .datos(miembroDtos)
                             .nombreModelo("Miembro")
@@ -66,7 +63,7 @@ public class MiembroController {
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -85,7 +82,7 @@ public class MiembroController {
             MiembroDto miembroDto = miembroService.findById(id);
             if (miembroDto == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro no encontrado.")
                                 .datos(null)
                                 .build(),
@@ -93,7 +90,7 @@ public class MiembroController {
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro encontrado.")
                                 .datos(miembroDto)
                                 .nombreModelo("Miembro")
@@ -103,7 +100,7 @@ public class MiembroController {
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar el miembro.")
                             .datos(null)
                             .build(),
@@ -127,7 +124,7 @@ public class MiembroController {
             // Si el miembro no se encontró, retornamos un error 404
             if (miembroActualizado == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("El miembro con ID " + miembroActualizado.getId() + " no existe.")
                                 .datos(null)
                                 .nombreModelo("Miembro")
@@ -137,7 +134,7 @@ public class MiembroController {
             } else {
                 // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro actualizado exitosamente.")
                                 .datos(miembroActualizado)
                                 .nombreModelo("Miembro")
@@ -148,7 +145,7 @@ public class MiembroController {
         } catch (DataAccessException e) {
             // Si ocurre un error en el acceso a datos, devolvemos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al actualizar el miembro. Error Catch: "+ e.getMessage())
                             .datos(null)
                             .build(),
@@ -166,7 +163,7 @@ public class MiembroController {
             // Llamamos al método delete del servicio para eliminar el miembro
             miembroService.delete(id);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Miembro eliminado exitosamente.")
                             .datos(null)
                             .nombreModelo("Miembro")
@@ -176,7 +173,7 @@ public class MiembroController {
         } catch (EntityNotFoundException e) {
             // Si el miembro no existe, retornamos un error 404
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message(e.getMessage())
                             .datos(null)
                             .nombreModelo("Miembro")
@@ -186,7 +183,7 @@ public class MiembroController {
         } catch (DataAccessException e) {
             // Si hay un error en el acceso a datos, retornamos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al eliminar el miembro.")
                             .datos(null)
                             .build(),
@@ -207,7 +204,7 @@ public class MiembroController {
             // Si el miembro no se encontró, retornamos un error 404
             if (miembroActualizado == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("El miembro con ID " + id + " no existe.")
                                 .datos(null)
                                 .nombreModelo("Miembro")
@@ -217,7 +214,7 @@ public class MiembroController {
             } else {
                 // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro se cabio el estado exitosamente a: "+ miembroActualizado.getEstado())
                                 .datos(miembroActualizado)
                                 .nombreModelo("Miembro")
@@ -228,7 +225,7 @@ public class MiembroController {
         } catch (DataAccessException e) {
             // Si ocurre un error en el acceso a datos, devolvemos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al al cambiar el estado.")
                             .datos(null)
                             .build(),

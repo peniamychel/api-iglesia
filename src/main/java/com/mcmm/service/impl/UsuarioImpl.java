@@ -2,7 +2,7 @@ package com.mcmm.service.impl;
 
 import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.dao.UsuarioDao;
-import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.ERole;
@@ -11,15 +11,13 @@ import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IUsuario;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.mcmm.model.dto.usuarioDto.ChangePasswordDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -137,39 +135,39 @@ public class UsuarioImpl implements IUsuario {
 
     @Override
     @Transactional
-    public Usuario updateUser(UpdateUserDto updateUserDto) {
-        Usuario usuario = usuarioDao.findById(updateUserDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + updateUserDto.getId()));
+    public Usuario updateUser(UsuarioUpdateDto usuarioUpdateDto) {
+        Usuario usuario = usuarioDao.findById(usuarioUpdateDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioUpdateDto.getId()));
 
-        if (updateUserDto.getUsername() != null &&
-                !updateUserDto.getUsername().equals(usuario.getUsername()) &&
-                usuarioDao.existsByUsername(updateUserDto.getUsername())) {
+        if (usuarioUpdateDto.getUsername() != null &&
+                !usuarioUpdateDto.getUsername().equals(usuario.getUsername()) &&
+                usuarioDao.existsByUsername(usuarioUpdateDto.getUsername())) {
             throw new IllegalArgumentException("Username is already taken");
         }
 
-        if (updateUserDto.getEmail() != null &&
-                !updateUserDto.getEmail().equals(usuario.getEmail()) &&
-                usuarioDao.existsByEmail(updateUserDto.getEmail())) {
+        if (usuarioUpdateDto.getEmail() != null &&
+                !usuarioUpdateDto.getEmail().equals(usuario.getEmail()) &&
+                usuarioDao.existsByEmail(usuarioUpdateDto.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
         }
 
-        if (updateUserDto.getUsername() != null) {
-            usuario.setUsername(updateUserDto.getUsername());
+        if (usuarioUpdateDto.getUsername() != null) {
+            usuario.setUsername(usuarioUpdateDto.getUsername());
         }
-        if (updateUserDto.getEmail() != null) {
-            usuario.setEmail(updateUserDto.getEmail());
+        if (usuarioUpdateDto.getEmail() != null) {
+            usuario.setEmail(usuarioUpdateDto.getEmail());
         }
-        if (updateUserDto.getName() != null) {
-            usuario.setName(updateUserDto.getName());
+        if (usuarioUpdateDto.getName() != null) {
+            usuario.setName(usuarioUpdateDto.getName());
         }
-        if (updateUserDto.getApellidos() != null) {
-            usuario.setApellidos(updateUserDto.getApellidos());
+        if (usuarioUpdateDto.getApellidos() != null) {
+            usuario.setApellidos(usuarioUpdateDto.getApellidos());
         }
-        if (updateUserDto.getUriFoto() != null) {
-            usuario.setUriFoto(updateUserDto.getUriFoto());
+        if (usuarioUpdateDto.getUriFoto() != null) {
+            usuario.setUriFoto(usuarioUpdateDto.getUriFoto());
         }
-        if (updateUserDto.getEstado() != null) {
-            usuario.setEstado(updateUserDto.getEstado());
+        if (usuarioUpdateDto.getEstado() != null) {
+            usuario.setEstado(usuarioUpdateDto.getEstado());
         }
 
         return usuarioDao.save(usuario);
@@ -193,20 +191,20 @@ public class UsuarioImpl implements IUsuario {
 
     @Override
     @Transactional
-    public void changePassword(ChangePasswordDto changePasswordDto, String currentUsername) {
-        Usuario usuario = usuarioDao.findById(changePasswordDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + changePasswordDto.getId()));
+    public void changePassword(UsuarioChangePasswordDto usuarioChangePasswordDto, String currentUsername) {
+        Usuario usuario = usuarioDao.findById(usuarioChangePasswordDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioChangePasswordDto.getId()));
 
         // Verify that the authenticated user is changing their own password
 //        if (!usuario.getUsername().equals(currentUsername)) {
 //            throw new AccessDeniedException("You can only change your own password");
 //        }
 
-        if (!passwordEncoder.matches(changePasswordDto.getCurrentPassword(), usuario.getPassword())) {
+        if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
 
-        usuario.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+        usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
     }
 

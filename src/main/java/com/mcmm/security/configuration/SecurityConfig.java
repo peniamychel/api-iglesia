@@ -13,16 +13,15 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -49,7 +48,7 @@ public class SecurityConfig {
                 .and()
                 .csrf(config -> config.disable())
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/main/v1/hello").permitAll();
+                    auth.requestMatchers("/login").permitAll();
                     auth.requestMatchers(
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
@@ -72,6 +71,7 @@ public class SecurityConfig {
                 .build();
     }
 
+
 //    @Bean
 //    UserDetailsService userDetailsService() {
 //        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
@@ -81,6 +81,7 @@ public class SecurityConfig {
 //                .build());
 //        return manager;
 //    }
+
 
     @Bean
     PasswordEncoder passwordEncoder() {

@@ -2,10 +2,10 @@ package com.mcmm.controller;
 
 
 import com.mcmm.model.dto.GraficoDataDto;
-import com.mcmm.model.dto.IglesiaDto;
-import com.mcmm.model.dto.MiembroDto;
+import com.mcmm.model.dto.iglesiaDto.IglesiaDto;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
 import com.mcmm.model.dto.MiembroIglesiaDto;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IIglesia;
 import com.mcmm.service.IMiembro;
 import com.mcmm.service.IMiembroIglesia;
@@ -44,7 +44,7 @@ public class MiembroIglesiaController {
         try {
             MiembroIglesiaDto miembroIglesiaSave = miembroIglesiaService.save(miembroDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Miembro guardada exitosamente.")
                             .datos(miembroIglesiaSave)
                             .nombreModelo("Miembro")
@@ -53,7 +53,7 @@ public class MiembroIglesiaController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al guardar la Miembro.")
                             .datos(null)
                             .build(),
@@ -81,7 +81,7 @@ public class MiembroIglesiaController {
                         MiembroIglesiaDto miembrosIglesiaSave = miembroIglesiaService.save(miembroIglesiaDto);
                         if(miembrosIglesiaSave != null) {
                             responseEntity = new ResponseEntity<>(
-                                    MessageResponse.builder()
+                                    ApiResponse.builder()
                                             .message("Miembros guardada exitosamente.")
                                             .datos(miembrosIglesiaSave)
                                             .nombreModelo("MiembroIglesia")
@@ -90,7 +90,7 @@ public class MiembroIglesiaController {
                             );
                         }else{
                             responseEntity = new ResponseEntity<>(
-                                    MessageResponse.builder()
+                                    ApiResponse.builder()
                                             .message("Error al guardar la MiembroIglesia.")
                                             .datos(null)
                                             .build(),
@@ -100,7 +100,7 @@ public class MiembroIglesiaController {
                     }
                     else{
                         responseEntity = new ResponseEntity<>(
-                                MessageResponse.builder()
+                                ApiResponse.builder()
                                         .message("Miembro ya pertenece a una la iglesia.")
                                         .datos(null)
                                         .build(),
@@ -110,7 +110,7 @@ public class MiembroIglesiaController {
                 }
                 else{
                     responseEntity = new ResponseEntity<>(
-                            MessageResponse.builder()
+                            ApiResponse.builder()
                                     .message("Miembro o iglesia no encontrados.")
                                     .datos(null)
                                     .build(),
@@ -121,7 +121,7 @@ public class MiembroIglesiaController {
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error : " + e.getMessage() + ".")
                             .datos(null)
                             .build(),
@@ -138,7 +138,7 @@ public class MiembroIglesiaController {
         Iterable<MiembroIglesiaDto> miembroIglesiaDtos = miembroIglesiaService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de MiembrosIglesia")
                             .datos(miembroIglesiaDtos)
                             .nombreModelo("MiembroIglesia")
@@ -147,7 +147,7 @@ public class MiembroIglesiaController {
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -166,7 +166,7 @@ public class MiembroIglesiaController {
             MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.findById(id);
             if (miembroIglesiaDto == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("MiembroIglesia no encontrado.")
                                 .datos(null)
                                 .build(),
@@ -174,7 +174,7 @@ public class MiembroIglesiaController {
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro encontrado.")
                                 .datos(miembroIglesiaDto)
                                 .nombreModelo("Miembro")
@@ -184,7 +184,7 @@ public class MiembroIglesiaController {
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar el miembro iglesia.")
                             .datos(null)
                             .build(),
@@ -206,7 +206,7 @@ public class MiembroIglesiaController {
             // Si el miembro no se encontró, retornamos un error 404
             if (miembroIglesiaActualizado == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("El miembro iglesia con ID " + miembroIglesiaActualizado.getId() + " no existe.")
                                 .datos(null)
                                 .nombreModelo("MiembroIglesia")
@@ -216,7 +216,7 @@ public class MiembroIglesiaController {
             } else {
                 // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro iglesia actualizado exitosamente.")
                                 .datos(miembroIglesiaActualizado)
                                 .nombreModelo("Miembro")
@@ -227,7 +227,7 @@ public class MiembroIglesiaController {
         } catch (DataAccessException e) {
             // Si ocurre un error en el acceso a datos, devolvemos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al actualizar el miembro iglesia. Error Catch: "+ e.getMessage())
                             .datos(null)
                             .build(),
@@ -245,7 +245,7 @@ public class MiembroIglesiaController {
             // Llamamos al método delete del servicio para eliminar el miembro
             miembroIglesiaService.delete(miembroIglesiaDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("MiembroIglesia eliminado exitosamente.")
                             .datos(null)
                             .nombreModelo("Miembro")
@@ -255,7 +255,7 @@ public class MiembroIglesiaController {
         } catch (EntityNotFoundException e) {
             // Si el miembro no existe, retornamos un error 404
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message(e.getMessage())
                             .datos(null)
                             .nombreModelo("MiembroIglesia")
@@ -265,7 +265,7 @@ public class MiembroIglesiaController {
         } catch (DataAccessException e) {
             // Si hay un error en el acceso a datos, retornamos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al eliminar el miembroIglesia.")
                             .datos(null)
                             .build(),
@@ -286,7 +286,7 @@ public class MiembroIglesiaController {
             // Si el miembro no se encontró, retornamos un error 404
             if (miembroIglesiaEstado) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("El miembro con ID " + id + " no existe.")
                                 .datos(true)
                                 .nombreModelo("Miembro")
@@ -296,7 +296,7 @@ public class MiembroIglesiaController {
             } else {
                 // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro se cabio el estado exitosamente")
                                 .datos(false)
                                 .nombreModelo("Miembro")
@@ -307,7 +307,7 @@ public class MiembroIglesiaController {
         } catch (DataAccessException e) {
             // Si ocurre un error en el acceso a datos, devolvemos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al al cambiar el estado.")
                             .datos(null)
                             .build(),
@@ -330,7 +330,7 @@ public class MiembroIglesiaController {
             // Si el miembro no se encontró, retornamos un error 404
             if (miembroIglesiaActualizado == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("El miembro iglesia con ID " + miembroIglesiaActualizado.getId() + " no existe.")
                                 .datos(null)
                                 .nombreModelo("MiembroIglesia")
@@ -340,7 +340,7 @@ public class MiembroIglesiaController {
             } else {
                 // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembro iglesia actualizado exitosamente.")
                                 .datos(miembroIglesiaActualizado)
                                 .nombreModelo("Miembro")
@@ -351,7 +351,7 @@ public class MiembroIglesiaController {
         } catch (DataAccessException e) {
             // Si ocurre un error en el acceso a datos, devolvemos un error 500
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al actualizar el miembro iglesia. Error Catch: "+ e.getMessage())
                             .datos(null)
                             .build(),
@@ -372,7 +372,7 @@ public class MiembroIglesiaController {
             Iterable<MiembroDto> miembroDtos = miembroIglesiaService.findMiembrosIglesia(id);
             if (miembroDtos == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembros de la iglesia de id: " + id + " no encontrado.")
                                 .datos(null)
                                 .build(),
@@ -380,7 +380,7 @@ public class MiembroIglesiaController {
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Miembros del a la iglesa de id: " + id + " encontrados.")
                                 .datos(miembroDtos)
                                 .nombreModelo("Miembro")
@@ -390,7 +390,7 @@ public class MiembroIglesiaController {
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar el miembro iglesia.")
                             .datos(null)
                             .build(),
@@ -410,7 +410,7 @@ public class MiembroIglesiaController {
             List<GraficoDataDto> miembroIglesia = miembroIglesiaService.graficoMiembrosIglesia(cant);
             if (miembroIglesia == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Sin grafico")
                                 .datos(null)
                                 .build(),
@@ -418,7 +418,7 @@ public class MiembroIglesiaController {
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Grafico para " + cant + " Iglesias.")
                                 .datos(miembroIglesia)
                                 .nombreModelo("Miembro")
@@ -428,7 +428,7 @@ public class MiembroIglesiaController {
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al generar los datos para el grafico."+e.getMessage())
                             .datos(null)
                             .build(),

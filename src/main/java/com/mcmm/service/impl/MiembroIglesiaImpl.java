@@ -4,8 +4,7 @@ import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dao.MiembroDao;
 import com.mcmm.model.dao.MiembroIglesiaDao;
 import com.mcmm.model.dto.GraficoDataDto;
-import com.mcmm.model.dto.IglesiaDto;
-import com.mcmm.model.dto.MiembroDto;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
 import com.mcmm.model.dto.MiembroIglesiaDto;
 import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.Miembro;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MiembroIglesiaImpl implements IMiembroIglesia {

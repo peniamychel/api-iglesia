@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class UpdateUserDto {
+public class UsuarioUpdateDto {
     @NotNull
     private Long id;
     @Size(min = 3, max = 20)

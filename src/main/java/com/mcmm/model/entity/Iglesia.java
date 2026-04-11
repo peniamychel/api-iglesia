@@ -1,6 +1,4 @@
 package com.mcmm.model.entity;
-
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +13,11 @@ import java.util.List;
 @ToString
 @Entity
 @Builder
-@Table(name = "iglesia")
+//@Table(name = "iglesia")
+@Table(
+    name = "iglesia",
+    uniqueConstraints = @UniqueConstraint(columnNames = "nombre")
+)
 public class Iglesia implements java.io.Serializable{
 
     @Id
@@ -29,13 +31,14 @@ public class Iglesia implements java.io.Serializable{
     @OneToMany(fetch = FetchType.LAZY, targetEntity = Cargo.class, cascade = CascadeType.PERSIST, mappedBy = "iglesia")
     private List<Cargo> cargos;
 
+    @Column(name = "nombre", nullable = false)
     private String nombre;
 
     private String direccion;
 
-    private Integer telefono;
+    private Long telefono;
 
-    @Column(name = "fecha_fundacion")
+    @Column(name = "fecha_fundacion", columnDefinition = "DATE") //columnDefinition especifica el tipo de dato en la base de datos
     private Date fechaFundacion;
 
     private Boolean estado;
@@ -59,5 +62,4 @@ public class Iglesia implements java.io.Serializable{
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }

@@ -1,25 +1,21 @@
 package com.mcmm.service.impl;
-
 import com.mcmm.model.dao.PersonaDao;
-import com.mcmm.model.dto.IglesiaDto;
-import com.mcmm.model.dto.PersonaDto;
-import com.mcmm.model.entity.Iglesia;
+import com.mcmm.model.dto.personaDto.PersonaDto;
 import com.mcmm.model.entity.Persona;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IPersona;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 @Service
 public class PersonaImpl implements IPersona {
 
@@ -89,7 +85,54 @@ public class PersonaImpl implements IPersona {
 
     @Override
     public PersonaDto update(Long id, PersonaDto personaDto) {
-        return null;
+        // Actualización completa: Busca existente, copia TODOS los campos (sobrescribe nulls), guarda
+        Persona existing = personaDao.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + id));
+
+        // Copia todas las propiedades del DTO a la entidad, excluyendo 'id'
+        BeanUtils.copyProperties(personaDto, existing, "id");
+
+        Persona saved = personaDao.save(existing);
+        return buildDtoWithPhotoUrl(saved);  // Método helper reutilizable (ver abajo)
+    }
+
+    @Override
+    @Transactional  // NUEVO: Para atomicidad en actualizaciones parciales
+    public PersonaDto partialUpdate(Long id, PersonaDto partialDto) {
+        // Actualización parcial: Solo copia campos NO nulos del DTO
+        Persona existing = personaDao.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + id));
+
+        // Copia manual solo si el campo en DTO NO es null (evita sobrescribir con null)
+        if (partialDto.getNombre() != null) {
+            existing.setNombre(partialDto.getNombre());
+        }
+        if (partialDto.getApellido() != null) {
+            existing.setApellido(partialDto.getApellido());
+        }
+        if (partialDto.getCi() != null) {
+            existing.setCi(partialDto.getCi());
+        }
+        if (partialDto.getFechaNac() != null) {
+            existing.setFechaNac(partialDto.getFechaNac());
+        }
+        if (partialDto.getCelular() != null) {
+            existing.setCelular(partialDto.getCelular());
+        }
+        if (partialDto.getSexo() != null) {
+            existing.setSexo(partialDto.getSexo());
+        }
+        if (partialDto.getDireccion() != null) {
+            existing.setDireccion(partialDto.getDireccion());
+        }
+        // uriFoto NO se actualiza aquí (usa endpoint separado)
+        if (partialDto.getEstado() != null) {
+            existing.setEstado(partialDto.getEstado());
+        }
+        // createdAt no se toca (updatable=false en entidad)
+
+        Persona saved = personaDao.save(existing);
+        return modelMapper.map(saved, PersonaDto.class);
     }
 
     @Override
@@ -139,5 +182,21 @@ public class PersonaImpl implements IPersona {
         persona.setUriFoto(fileName);
         personaDao.save(persona);
         return fileUrl;
+    }
+
+    // MÉTODO HELPER NUEVO: Reutiliza la lógica de construcción de URL de foto (evita duplicación)
+    private PersonaDto buildDtoWithPhotoUrl(Persona persona) {
+        PersonaDto dto = modelMapper.map(persona, PersonaDto.class);
+        if (null != null) {
+            String fileUrl = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path(uploadDir)
+                    .path("/")
+                    .path(PERSONAS_DIR)
+                    .path(dto.getUriFoto())
+                    .toUriString();
+            dto.setUriFoto(fileUrl);
+        }
+        return dto;
     }
 }

@@ -1,6 +1,7 @@
 package com.mcmm.service;
 
 import com.mcmm.model.dto.*;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
 
 import java.util.List;
 

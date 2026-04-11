@@ -1,6 +1,6 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.PersonaDto;
+import com.mcmm.model.dto.personaDto.PersonaDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -18,6 +18,8 @@ public interface IPersona {
     public void delete(PersonaDto personaDto);
 
     public PersonaDto update(Long id, PersonaDto personaDto);
+
+    public PersonaDto partialUpdate(Long id, PersonaDto partialDto);
 
     public Iterable<PersonaDto> personaNoMiembro();
 

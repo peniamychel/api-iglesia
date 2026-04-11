@@ -1,8 +1,9 @@
 package com.mcmm.controller;
 
-import com.mcmm.model.dto.PersonaDto;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.dto.personaDto.PersonaDto;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IPersona;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -27,16 +28,15 @@ public class PersonaController{
         try {
             PersonaDto personaSave = personaService.save(personaDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Persona guardada exitosamente.")
                             .datos(personaSave)
-                            .nombreModelo("Persona")
                             .build(),
                     HttpStatus.CREATED
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al guardar la Persona.")
                             .datos(null)
                             .build(),
@@ -52,16 +52,15 @@ public class PersonaController{
         Iterable<PersonaDto> personaDtos = personaService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Personas")
                             .datos(personaDtos)
-                            .nombreModelo("Persona")
                             .build()
                     , HttpStatus.OK
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -78,17 +77,62 @@ public class PersonaController{
         try {
             PersonaDto personaUpdate = personaService.save(personaDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Persona actualizada exitosamente.")
                             .datos(personaUpdate)
-                            .nombreModelo("Persona")
                             .build(),
                     HttpStatus.OK
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al actualizar Persona.")
+                            .datos(null)
+                            .build(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        return responseEntity;
+    }
+
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> partialUpdate(@PathVariable Long id, @RequestBody PersonaDto partialDto) {
+        ResponseEntity<?> responseEntity;
+        try {
+            // Valida que al menos un campo no sea null (opcional, para evitar PATCH vacío)
+            if (partialDto.getNombre() == null && partialDto.getApellido() == null &&
+                    partialDto.getCi() == null && partialDto.getFechaNac() == null &&
+                    partialDto.getCelular() == null && partialDto.getSexo() == null &&
+                    partialDto.getDireccion() == null && partialDto.getEstado() == null) {
+                return ResponseEntity.badRequest().body(
+                        ApiResponse.builder()
+                                .message("Debe proporcionar al menos un campo para actualizar.")
+                                .datos(null)
+                                .build()
+                );
+            }
+
+            PersonaDto personaUpdated = personaService.partialUpdate(id, partialDto);
+            responseEntity = new ResponseEntity<>(
+                    ApiResponse.builder()
+                            .message("Persona actualizada parcialmente exitosamente.")
+                            .datos(personaUpdated)
+                            .build(),
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            responseEntity = new ResponseEntity<>(
+                    ApiResponse.builder()
+                            .message(e.getMessage())
+                            .datos(null)
+                            .build(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (DataAccessException e) {
+            responseEntity = new ResponseEntity<>(
+                    ApiResponse.builder()
+                            .message("Error al actualizar parcialmente la Persona.")
                             .datos(null)
                             .build(),
                     HttpStatus.INTERNAL_SERVER_ERROR
@@ -106,26 +150,24 @@ public class PersonaController{
             if (personaDelete != null) {
                 personaService.delete(personaDelete);
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Persona eliminada exitosamente.")
                                 .datos(personaDelete)
-                                .nombreModelo("Persona")
                                 .build(),
                         HttpStatus.OK
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("La Persona con ID " + id + " no existe.")
                                 .datos(null)
-                                .nombreModelo("Persona")
                                 .build(),
                         HttpStatus.NOT_FOUND
                 );
             }
         } catch (DataAccessException exDta) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al eliminar la Persona.")
                             .datos(null)
                             .build(),
@@ -143,7 +185,7 @@ public class PersonaController{
             PersonaDto personaFiedById = personaService.findById(id);
             if (personaFiedById == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Persona no encontrada.")
                                 .datos(null)
                                 .build(),
@@ -151,17 +193,16 @@ public class PersonaController{
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Persona encontrada.")
                                 .datos(personaFiedById)
-                                .nombreModelo("Persona")
                                 .build(),
                         HttpStatus.OK
                 );
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar la Persona.")
                             .datos(null)
                             .build(),
@@ -180,16 +221,15 @@ public class PersonaController{
         Iterable<PersonaDto> personaDtos = personaService.personaNoMiembro();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Personas")
                             .datos(personaDtos)
-                            .nombreModelo("Persona")
                             .build()
                     , HttpStatus.OK
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -199,7 +239,7 @@ public class PersonaController{
         return responseEntity;
     }
 
-    //busca segun cidula identidad
+    //busca segun cedula identidad
     @GetMapping("/showbyci/{ci}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> buscarCi(@PathVariable("ci") String ci) {
@@ -210,7 +250,7 @@ public class PersonaController{
 
             if (personaFiedById == null) {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Persona no encontrada.")
                                 .datos(null)
                                 .build(),
@@ -218,17 +258,16 @@ public class PersonaController{
                 );
             } else {
                 responseEntity = new ResponseEntity<>(
-                        MessageResponse.builder()
+                        ApiResponse.builder()
                                 .message("Persona encontrada.")
                                 .datos(personaFiedById)
-                                .nombreModelo("Persona")
                                 .build(),
                         HttpStatus.OK
                 );
             }
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar la Persona.")
                             .datos(null)
                             .build(),

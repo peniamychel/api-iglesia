@@ -1,7 +1,7 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.CargoDto;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.ICargo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -24,7 +24,7 @@ public class CargoController {
         try {
             CargoDto miembroSave = cargoService.create(cargoDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Cargo guardada exitosamente.")
                             .datos(miembroSave)
                             .nombreModelo("Cargo")
@@ -33,7 +33,7 @@ public class CargoController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al guardar la Cargo.")
                             .datos(null)
                             .build(),
@@ -50,7 +50,7 @@ public class CargoController {
         Iterable<CargoDto> cargoDtos = cargoService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Cargos")
                             .datos(cargoDtos)
                             .nombreModelo("Cargo")
@@ -59,7 +59,7 @@ public class CargoController {
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -76,7 +76,7 @@ public class CargoController {
         try {
             CargoDto cargoUpdate = cargoService.update(cargoDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Cargo actualizado exitosamente.")
                             .datos(cargoUpdate)
                             .nombreModelo("Cargo")
@@ -85,7 +85,7 @@ public class CargoController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al actualizar Cargo.")
                             .datos(null)
                             .build(),

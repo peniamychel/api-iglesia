@@ -1,5 +1,6 @@
-package com.mcmm.model.dto;
+package com.mcmm.model.dto.personaDto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.util.Date;
 public class PersonaDto implements java.io.Serializable{
 
     private Long id;
+    @NotBlank
     private String nombre;
     private String apellido;
     private String ci;

@@ -35,8 +35,8 @@ public class JwtUtils {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
-                    .build().
-                    parseClaimsJws(token)
+                    .build()
+                    .parseClaimsJws(token)
                     .getBody();
             return true;
         }catch (Exception e){

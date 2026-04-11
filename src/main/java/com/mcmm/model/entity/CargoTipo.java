@@ -23,6 +23,8 @@ public class CargoTipo {
     private List<Cargo> cargos;
 
     private String tipo;
+
+
     private String nombre;
     private Boolean estado;
 

@@ -2,15 +2,13 @@ package com.mcmm.service.impl;
 
 import com.mcmm.model.dao.MiembroDao;
 import com.mcmm.model.dao.PersonaDao;
-import com.mcmm.model.dto.MiembroDto;
-import com.mcmm.model.dto.PersonaDto;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.dto.personaDto.PersonaDto;
 import com.mcmm.model.entity.Miembro;
 import com.mcmm.model.entity.Persona;
 import com.mcmm.service.IMiembro;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,5 +1,6 @@
 package com.mcmm.service.impl;
 
+import com.mcmm.exception.DataAccessException;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UsuarioDao usuarioDao;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessException {
         Usuario usuario = usuarioDao
                 .findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("El usuario "+username+" no existe"));
@@ -43,4 +44,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 true,
                 authorities);
     }
+
 }

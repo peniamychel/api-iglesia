@@ -32,6 +32,10 @@ public class CargoTipoImpl implements ICargoTipo {
 
     @Override
     public CargoTipoDto findById(Long id) {
+        CargoTipo cargoTipo = cargoTipoDao.findById(id).orElse(null);
+        if (cargoTipo != null) {
+            return modelMapper.map(cargoTipo, CargoTipoDto.class);
+        }
         return null;
     }
 

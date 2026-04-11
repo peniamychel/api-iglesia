@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -29,7 +30,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.jwtUtils = jwtUtils;
     }
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+    public Authentication attemptAuthentication(@NonNull HttpServletRequest request,
+                                                @NonNull HttpServletResponse response) throws AuthenticationException {
         Usuario usuario = null;
         String username = "";
         String password = "";
@@ -62,8 +64,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.addHeader("Authorization", token);
 
         Map<String, Object> httpResponse = new HashMap<>();
+        httpResponse.put("success", true);
         httpResponse.put("token", token);
-        httpResponse.put("nensage","Autenticaion Exitosa");
+        httpResponse.put("message","Autenticaion Exitosa");
         httpResponse.put("username", user.getUsername());
         httpResponse.put("roles", user.getAuthorities());
 
@@ -81,13 +84,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                               HttpServletResponse response,
                                               AuthenticationException failed) throws IOException, ServletException {
         Map<String, Object> httpResponse = new HashMap<>();
+        httpResponse.put("success", false);
         httpResponse.put("message", "Error de autenticación: Usuario o contraseña incorrectos");
-        httpResponse.put("error", failed.getMessage());
+        httpResponse.put("error", failed.getClass().getSimpleName());// mustra el tipo de error por el nombre de la clase
+
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
         response.getWriter().flush();
     }
-
 }

@@ -1,7 +1,6 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.MiembroDto;
-import com.mcmm.model.dto.PersonaDto;
+import com.mcmm.model.dto.MiembroDto.MiembroDto;
 
 public interface IMiembro {
 

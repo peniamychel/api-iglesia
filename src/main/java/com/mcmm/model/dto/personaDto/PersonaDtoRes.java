@@ -1,4 +1,4 @@
-package com.mcmm.model.dto;
+package com.mcmm.model.dto.personaDto;
 
 import lombok.*;
 
@@ -10,17 +10,18 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class IglesiaDto implements java.io.Serializable{
+public class PersonaDtoRes implements java.io.Serializable{
 
     private Long id;
-
     private String nombre;
+    private String apellido;
+    private String ci;
+    private Date fechaNac;
+    private String celular;
+    private String sexo;
     private String direccion;
-    private Integer telefono;
-    private Date fechaFundacion;
-
+    private String uriFoto;
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Antigravity ###
+*~
+
+### Archivos locales imagens, videos, etc. ###
+/uploads

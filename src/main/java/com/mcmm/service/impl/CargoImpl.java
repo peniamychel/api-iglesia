@@ -27,7 +27,6 @@ public class CargoImpl implements ICargo {
 
     @Autowired
     private IglesiaDao iglesiaDao;
-    ;
 
     @Autowired
     private MiembroDao miembroDao;

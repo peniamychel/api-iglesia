@@ -2,14 +2,14 @@ package com.mcmm.controller;
 
 
 import com.mcmm.model.dao.UsuarioDao;
-import com.mcmm.model.dto.usuarioDto.ChangePasswordDto;
-import com.mcmm.model.dto.usuarioDto.UpdateUserDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.ERole;
 import com.mcmm.model.entity.Rol;
 import com.mcmm.model.entity.Usuario;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.model.payload.MessageResponseLogin;
 import com.mcmm.service.IRol;
 import com.mcmm.service.IUsuario;
@@ -136,6 +136,10 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Obtiene todos los usuarios
+     * @return  Listado de usuarios
+     */
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> findAll() {
@@ -143,7 +147,7 @@ public class UsuarioController {
         Iterable<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Usuarios")
                             .datos(usuarioDtosRes)
                             .nombreModelo("Usuario")
@@ -152,7 +156,7 @@ public class UsuarioController {
             );
         } catch (Exception e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("No se encontro datos.")
                             .datos(null)
                             .build()
@@ -168,6 +172,11 @@ public class UsuarioController {
         return "Usuario eliminado".concat(id);
     }
 
+    /**
+     *  Obtiene el usuario por id
+     * @param id del usuario
+     * @return usuario
+     */
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> showById(@PathVariable("id") Long id) {
@@ -175,7 +184,7 @@ public class UsuarioController {
         try {
             UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Usurio encontrada.")
                             .datos(usuarioFiedById)
                             .nombreModelo("Usuario")
@@ -184,7 +193,7 @@ public class UsuarioController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar la Usuario.")
                             .datos(null)
                             .build(),
@@ -195,8 +204,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDto updateUserDto) {
-        return ResponseEntity.ok(usuarioService.updateUser(updateUserDto));
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
+        return ResponseEntity.ok(usuarioService.updateUser(usuarioUpdateDto));
     }
 
     @PutMapping("/update-roles")
@@ -212,11 +221,11 @@ public class UsuarioController {
 
     @PutMapping("/change-password")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> changePassword( @RequestBody ChangePasswordDto changePasswordDto) {
+    public ResponseEntity<?> changePassword( @RequestBody UsuarioChangePasswordDto usuarioChangePasswordDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
 
-        usuarioService.changePassword(changePasswordDto, currentUsername);
+        usuarioService.changePassword(usuarioChangePasswordDto, currentUsername);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Password changed successfully");
@@ -239,6 +248,10 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * no se envia ningun valor, solo usa el token
+     * @return todos los datos del usuario
+     */
     @GetMapping("/findbyusername")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> findByUsername() {
@@ -262,7 +275,7 @@ public class UsuarioController {
             UsuarioDtoRes usuarioFiedById = usuarioService.findById(usuario.getId());
             usuarioFiedById.setPassword("pass oculto");
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Usurio encontrada.")
                             .datos(usuarioFiedById)
                             .nombreModelo("Usuario")
@@ -271,7 +284,7 @@ public class UsuarioController {
             );
         } catch (DataAccessException e) {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Error al buscar la Usuario.")
                             .datos(null)
                             .build(),

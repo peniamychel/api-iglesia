@@ -1,10 +1,13 @@
 package com.mcmm.controller;
 
+import com.mcmm.exception.BadRequestException;
+import com.mcmm.exception.DataAccessException;
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dto.CargoTipoDto;
-import com.mcmm.model.payload.MessageResponse;
+import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.ICargoTipo;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,12 +23,12 @@ public class CargoTipoController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<?> create(@RequestBody CargoTipoDto cargoTipoDto) {
+    public ResponseEntity<?> create(@RequestBody @Valid CargoTipoDto cargoTipoDto) {
         ResponseEntity<?> responseEntity;
         try {
             CargoTipoDto miembroSave = cargoTipoService.create(cargoTipoDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Cargo guardada exitosamente.")
                             .datos(miembroSave)
                             .nombreModelo("Cargo")
@@ -33,13 +36,7 @@ public class CargoTipoController {
                     HttpStatus.CREATED
             );
         } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
-                            .message("Error al guardar la Cargo.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new BadRequestException(e.getMessage());
         }
         return responseEntity;
     }
@@ -51,7 +48,7 @@ public class CargoTipoController {
         Iterable<CargoTipoDto> cargoDtos = cargoTipoService.findAll();
         try {
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("Listado de Cargos")
                             .datos(cargoDtos)
                             .nombreModelo("Cargo")
@@ -59,13 +56,7 @@ public class CargoTipoController {
                     , HttpStatus.OK
             );
         } catch (Exception e) {
-            responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
-                            .message("No se encontro datos.")
-                            .datos(null)
-                            .build()
-                    , HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new BadRequestException(e.getMessage());
         }
         return responseEntity;
     }
@@ -74,10 +65,13 @@ public class CargoTipoController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<?> update(@RequestBody CargoTipoDto cargoTipoDto) {
         ResponseEntity<?> responseEntity;
+        if(cargoTipoService.findById(cargoTipoDto.getId()) == null){
+            throw new NotFoundExceptionResource("CargoTipo no encontrado");
+        }
         try {
-            CargoTipoDto cargoTipoUpdate = cargoTipoService.update(cargoTipoDto);
+        CargoTipoDto cargoTipoUpdate = cargoTipoService.update(cargoTipoDto);
             responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
+                    ApiResponse.builder()
                             .message("CargoTipo actualizado exitosamente.")
                             .datos(cargoTipoUpdate)
                             .nombreModelo("CargoTipo")
@@ -85,13 +79,31 @@ public class CargoTipoController {
                     HttpStatus.OK
             );
         } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    MessageResponse.builder()
-                            .message("Error al actualizar CargoTipo.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new BadRequestException(e.getMessage());
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/showbyid/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> showById(@PathVariable("id") Long id) {
+        ResponseEntity<?> responseEntity;
+        try {
+            CargoTipoDto cargoTipoDtoFiedById = cargoTipoService.findById(id);
+            if (cargoTipoDtoFiedById == null) {
+                throw new NotFoundExceptionResource("CargoTipo","id",id);
+            } else {
+                responseEntity = new ResponseEntity<>(
+                        ApiResponse.builder()
+                                .message("CargoTipo actualizado.")
+                                .datos(cargoTipoDtoFiedById)
+                                .nombreModelo("CargoTipo")
+                                .build(),
+                        HttpStatus.OK
+                );
+            }
+        } catch (DataAccessException e) {
+            throw new BadRequestException(e.getMessage());
         }
         return responseEntity;
     }

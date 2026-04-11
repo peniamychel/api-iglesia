@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class ChangePasswordDto {
+public class UsuarioChangePasswordDto {
     @NotNull
     private Long id;
 

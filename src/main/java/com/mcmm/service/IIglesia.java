@@ -1,8 +1,6 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.IglesiaDto;
-
-import java.util.List;
+import com.mcmm.model.dto.iglesiaDto.IglesiaDto;
 
 public interface IIglesia {
 
@@ -17,4 +15,6 @@ public interface IIglesia {
     public IglesiaDto update(Long id, IglesiaDto iglesiaDto);
 
     IglesiaDto buscarNombreIglesia(String nameIglesia);
+
+    IglesiaDto buscarNombreIglesiaExceptoId(Long id, String nameIglesia);
 }
