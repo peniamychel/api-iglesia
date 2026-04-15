@@ -23,10 +23,10 @@ public class IglesiaController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ApiResponse> create(@RequestBody @Valid IglesiaDto iglesiaDto) {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<IglesiaDto>> create(@RequestBody @Valid IglesiaDto iglesiaDto) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
-            //controlar que el nombre no se este insertando duplicado
+            // controlar que el nombre no se este insertando duplicado
             IglesiaDto existeIglesia = iglesiaService.buscarNombreIglesia(iglesiaDto.getNombre());
             if (existeIglesia != null) {
                 throw new BadRequestException("El nombre de la iglesia ya existe.");
@@ -34,13 +34,12 @@ public class IglesiaController {
 
             IglesiaDto iglesiaSave = iglesiaService.save(iglesiaDto);
             responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
+                    ApiResponse.<IglesiaDto>builder()
                             .message("Iglesia guardada exitosamente.")
                             .datos(iglesiaSave)
                             .nombreModelo("Iglesia")
                             .build(),
-                    HttpStatus.CREATED
-            );
+                    HttpStatus.CREATED);
         } catch (DataAccessException e) {
             throw new BadRequestException(e.getMessage());
         }
@@ -49,18 +48,17 @@ public class IglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> update(@RequestBody @Valid IglesiaDto iglesiaDto) {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<IglesiaDto>> update(@RequestBody @Valid IglesiaDto iglesiaDto) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
             IglesiaDto iglesiaUpdate = iglesiaService.save(iglesiaDto);
             responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
+                    ApiResponse.<IglesiaDto>builder()
                             .message("Iglesia actualizada exitosamente.")
                             .datos(iglesiaUpdate)
                             .nombreModelo("Iglesia")
                             .build(),
-                    HttpStatus.OK
-            );
+                    HttpStatus.OK);
         } catch (DataAccessException e) {
             throw new BadRequestException(e.getMessage());
         }
@@ -69,22 +67,20 @@ public class IglesiaController {
 
     @PutMapping("/update2/{id}") // Usamos el ID en la ruta
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> update(
+    public ResponseEntity<ApiResponse<IglesiaDto>> update(
             @PathVariable Long id,
-            @RequestBody @Valid IglesiaDto iglesiaDto
-    ) {
+            @RequestBody @Valid IglesiaDto iglesiaDto) {
         // Es buena práctica asegurar que el ID de la URL coincida con el del DTO
         iglesiaDto.setId(id);
         try {
             IglesiaDto iglesiaUpdate = iglesiaService.save(iglesiaDto);
 
             return ResponseEntity.ok(
-                    ApiResponse.builder()
+                    ApiResponse.<IglesiaDto>builder()
                             .message("Iglesia actualizada exitosamente.")
                             .datos(iglesiaUpdate)
                             .nombreModelo("Iglesia")
-                            .build()
-            );
+                            .build());
         } catch (DataAccessException e) {
             throw new BadRequestException("Error al acceder a la base de datos: " + e.getMessage());
         }
@@ -104,8 +100,7 @@ public class IglesiaController {
                                 .datos(iglesiaDelete)
                                 .nombreModelo("Iglesia")
                                 .build(),
-                        HttpStatus.OK
-                );
+                        HttpStatus.OK);
             } else {
                 throw new NotFoundExceptionResource("Iglesia", "id", id);
             }
@@ -117,21 +112,20 @@ public class IglesiaController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> showById(@PathVariable("id") Long id) {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<IglesiaDto>> showById(@PathVariable("id") Long id) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
             IglesiaDto iglesiaFiedById = iglesiaService.findById(id);
             if (iglesiaFiedById == null) {
                 throw new NotFoundExceptionResource("Iglesia", "id", id);
             } else {
                 responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
+                        ApiResponse.<IglesiaDto>builder()
                                 .message("Iglesia encontrada.")
                                 .datos(iglesiaFiedById)
                                 .nombreModelo("Iglesia")
                                 .build(),
-                        HttpStatus.OK
-                );
+                        HttpStatus.OK);
             }
         } catch (DataAccessException e) {
             throw new BadRequestException(e.getMessage());
@@ -141,18 +135,17 @@ public class IglesiaController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> findAll() {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<Iterable<IglesiaDto>>> findAll() {
+        ResponseEntity<ApiResponse<Iterable<IglesiaDto>>> responseEntity;
         try {
             Iterable<IglesiaDto> iglesiaDtos = iglesiaService.findAll();
             responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
+                    ApiResponse.<Iterable<IglesiaDto>>builder()
                             .message("Listado de iglesias")
                             .datos(iglesiaDtos)
                             .nombreModelo("iglesia")
-                            .build()
-                    , HttpStatus.OK
-            );
+                            .build(),
+                    HttpStatus.OK);
         } catch (Exception e) {
             throw new InternalServerErrorExceptionResource(e.getMessage());
         }
@@ -177,11 +170,12 @@ public class IglesiaController {
         return iglesiaDto.getEstado();
     }
 
-    //busca segun nombre de iglesia si ya existe
+    // busca segun nombre de iglesia si ya existe
     @GetMapping("/showbynombreiglesia/{nameIglesia}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> buscarNombreIglesia(@PathVariable("nameIglesia") String nameIglesia) {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<IglesiaDto>> buscarNombreIglesia(
+            @PathVariable("nameIglesia") String nameIglesia) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
             IglesiaDto buscarNombreIglesia = iglesiaService.buscarNombreIglesia(nameIglesia);
 
@@ -189,13 +183,12 @@ public class IglesiaController {
                 throw new NotFoundExceptionResource("Iglesia", "nameIglesia", nameIglesia);
             } else {
                 responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
+                        ApiResponse.<IglesiaDto>builder()
                                 .message("Persona encontrada.")
                                 .datos(buscarNombreIglesia)
                                 .nombreModelo("Persona")
                                 .build(),
-                        HttpStatus.OK
-                );
+                        HttpStatus.OK);
             }
         } catch (DataAccessException e) {
             throw new InternalServerErrorExceptionResource(e.getMessage());
@@ -203,11 +196,12 @@ public class IglesiaController {
         return responseEntity;
     }
 
-    //busca segun nombre de iglesia si ya existe
+    // busca segun nombre de iglesia si ya existe
     @GetMapping("/showbynombreiglesiaexceptoid/{nameIglesia}/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> buscarNombreIglesiaExceptoId(@PathVariable("nameIglesia") String nameIglesia, @PathVariable("id") Long id) {
-        ResponseEntity<ApiResponse> responseEntity;
+    public ResponseEntity<ApiResponse<IglesiaDto>> buscarNombreIglesiaExceptoId(
+            @PathVariable("nameIglesia") String nameIglesia, @PathVariable("id") Long id) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
             IglesiaDto buscarNombreIglesia = iglesiaService.buscarNombreIglesiaExceptoId(id, nameIglesia);
 
@@ -215,13 +209,12 @@ public class IglesiaController {
                 throw new NotFoundExceptionResource("Iglesia", "nameIglesia", nameIglesia);
             } else {
                 responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
+                        ApiResponse.<IglesiaDto>builder()
                                 .message("Persona encontrada.")
                                 .datos(buscarNombreIglesia)
                                 .nombreModelo("Persona")
                                 .build(),
-                        HttpStatus.OK
-                );
+                        HttpStatus.OK);
             }
         } catch (DataAccessException e) {
             throw new InternalServerErrorExceptionResource(e.getMessage());
@@ -229,4 +222,3 @@ public class IglesiaController {
         return responseEntity;
     }
 }
-

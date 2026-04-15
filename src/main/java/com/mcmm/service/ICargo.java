@@ -7,6 +7,7 @@ public interface ICargo {
     public CargoDto findById(Long id);
     public CargoDto create(CargoDto cargoDto);
     public void delete(Long id);
-    public CargoDto estado(Long id);
+    public void estado(Long id);
     public CargoDto update( CargoDto cargoDto);
+    public CargoDto save(CargoDto cargoDto);
 }

@@ -12,6 +12,7 @@ import com.mcmm.model.entity.Miembro;
 import com.mcmm.service.ICargo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,7 +35,6 @@ public class CargoImpl implements ICargo {
     @Autowired
     private CargoTipoDao cargoTipoDao;
 
-
     @Override
     public Iterable<CargoDto> findAll() {
         List<CargoDto> cargosDtos = new ArrayList<>();
@@ -42,7 +42,6 @@ public class CargoImpl implements ICargo {
 
         for (Cargo cargo : cargos) {
             CargoDto cargoDto = modelMapper.map(cargo, CargoDto.class);
-
             cargosDtos.add(cargoDto);
         }
         return cargosDtos;
@@ -50,7 +49,9 @@ public class CargoImpl implements ICargo {
 
     @Override
     public CargoDto findById(Long id) {
-        return null;
+        Cargo cargo = cargoDao.findById(id).orElse(null);
+        if (cargo == null) return null;
+        return modelMapper.map(cargo, CargoDto.class);
     }
 
     @Override
@@ -93,8 +94,8 @@ public class CargoImpl implements ICargo {
     }
 
     @Override
-    public CargoDto estado(Long id) {
-        return null;
+    public void estado(Long id) {
+        cargoDao.toggleEstado(id);
     }
 
     @Override
@@ -130,5 +131,16 @@ public class CargoImpl implements ICargo {
             cargoR = cargoDao.save(cargoR);
         }
         return modelMapper.map(cargoR, CargoDto.class);
+    }
+
+    @Override
+    public CargoDto save(CargoDto cargoDto) {
+        try {
+            Cargo cargo = modelMapper.map(cargoDto, Cargo.class);
+            Cargo saveCargo = cargoDao.save(cargo);
+            return modelMapper.map(saveCargo, CargoDto.class);
+        } catch (DataIntegrityViolationException ex) {
+            throw new RuntimeException("Error en la base datos contacte al administrador.");
+        }
     }
 }

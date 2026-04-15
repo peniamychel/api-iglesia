@@ -1,8 +1,5 @@
 package com.mcmm.model.dto;
 
-import com.mcmm.model.entity.Iglesia;
-import com.mcmm.model.entity.Miembro;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,9 +13,9 @@ import java.util.Date;
 public class MiembroIglesiaDto {
 
     private Long id;
-//    private MiembroDto miembroDto;
+    // private MiembroDto miembroDto;
     private Long miembroId;
-//    private IglesiaDto iglesiaDto;
+    // private IglesiaDto iglesiaDto;
     private Long iglesiaId;
 
     private Date fecha;

@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -21,15 +20,15 @@ public class Cargo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne (fetch = FetchType.LAZY, targetEntity = CargoTipo.class, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = CargoTipo.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "tipo_cargo_id")
     private CargoTipo tipoCargo;
 
-    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "iglesia_id")
     private Iglesia iglesia;
 
-    @ManyToOne (fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Miembro.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "miembro_id")
     private Miembro miembro;
 
@@ -53,9 +52,10 @@ public class Cargo {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (estado == null) {
-            estado = true;  // Establecer estado en true si no se ha asignado
+            estado = true; // Establecer estado en true si no se ha asignado
         }
     }
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

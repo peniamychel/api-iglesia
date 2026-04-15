@@ -1,8 +1,8 @@
 package com.mcmm.model.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -13,12 +13,9 @@ import java.util.List;
 @ToString
 @Entity
 @Builder
-//@Table(name = "iglesia")
-@Table(
-    name = "iglesia",
-    uniqueConstraints = @UniqueConstraint(columnNames = "nombre")
-)
-public class Iglesia implements java.io.Serializable{
+// @Table(name = "iglesia")
+@Table(name = "iglesia", uniqueConstraints = @UniqueConstraint(columnNames = "nombre"))
+public class Iglesia implements java.io.Serializable {
 
     @Id
     @Column(name = "id")
@@ -38,7 +35,8 @@ public class Iglesia implements java.io.Serializable{
 
     private Long telefono;
 
-    @Column(name = "fecha_fundacion", columnDefinition = "DATE") //columnDefinition especifica el tipo de dato en la base de datos
+    @Column(name = "fecha_fundacion", columnDefinition = "DATE") // columnDefinition especifica el tipo de dato en la
+                                                                 // base de datos
     private Date fechaFundacion;
 
     private Boolean estado;
@@ -54,7 +52,7 @@ public class Iglesia implements java.io.Serializable{
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (estado == null) {
-            estado = true;  // Establecer estado en true si no se ha asignado
+            estado = true; // Establecer estado en true si no se ha asignado
         }
     }
 

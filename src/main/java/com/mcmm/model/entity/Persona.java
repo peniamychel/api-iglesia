@@ -3,7 +3,6 @@ package com.mcmm.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -14,7 +13,7 @@ import java.util.Date;
 @Entity
 @Builder
 @Table(name = "persona")
-public class Persona implements java.io.Serializable{
+public class Persona implements java.io.Serializable {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

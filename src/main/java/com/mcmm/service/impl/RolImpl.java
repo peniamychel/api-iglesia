@@ -1,17 +1,14 @@
 package com.mcmm.service.impl;
 
-
 import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.entity.ERole;
 import com.mcmm.model.entity.Rol;
 import com.mcmm.service.IRol;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,7 +25,8 @@ public class RolImpl implements IRol {
     public Rol findOrCreateRol(ERole name) {
         return rolDao.findByName(name)
                 .orElseGet(() -> {
-                    // Verificar nuevamente dentro de una transacción para evitar condiciones de carrera
+                    // Verificar nuevamente dentro de una transacción para evitar condiciones de
+                    // carrera
                     try {
                         return rolDao.findByName(name)
                                 .orElseGet(() -> {
@@ -51,11 +49,11 @@ public class RolImpl implements IRol {
                 .collect(Collectors.toSet());
     }
 
-//    @PostConstruct
-//    public void init() {
-//        // Inicializar roles al arrancar la aplicación
-//        Arrays.stream(ERole.values())
-//                .forEach(this::findOrCreateRol);
-//    }
+    // @PostConstruct
+    // public void init() {
+    // // Inicializar roles al arrancar la aplicación
+    // Arrays.stream(ERole.values())
+    // .forEach(this::findOrCreateRol);
+    // }
 
 }

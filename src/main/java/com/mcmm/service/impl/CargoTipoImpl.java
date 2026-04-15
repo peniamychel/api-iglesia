@@ -6,6 +6,7 @@ import com.mcmm.model.entity.CargoTipo;
 import com.mcmm.service.ICargoTipo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -62,14 +63,25 @@ public class CargoTipoImpl implements ICargoTipo {
     }
 
     @Override
-    public CargoTipoDto estado(Long id) {
-        return null;
+    public void estado(Long id) {
+        cargoTipoDao.toggleEstado(id);
     }
 
     @Override
     public CargoTipoDto update(CargoTipoDto cargoTipoDto) {
 
-
         return null;
+    }
+
+    @Override
+    public CargoTipoDto save(CargoTipoDto cargoTipoDto) {
+        try {
+            CargoTipo cargoTipo = modelMapper.map(cargoTipoDto, CargoTipo.class);
+            CargoTipo savedIglesia = cargoTipoDao.save(cargoTipo);
+
+            return modelMapper.map(savedIglesia, CargoTipoDto.class);
+        } catch (DataIntegrityViolationException ex) {
+            throw new RuntimeException("Error en la base datos contacte al administrador.");
+        }
     }
 }

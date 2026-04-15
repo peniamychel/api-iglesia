@@ -17,11 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -38,13 +33,14 @@ public class SecurityConfig {
     JwtAuthorizationFilter jwtAuthorizationFilter;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager autohenticationManager) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager autohenticationManager)
+            throws Exception {
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils);
         jwtAuthenticationFilter.setAuthenticationManager(autohenticationManager);
         jwtAuthenticationFilter.setFilterProcessesUrl("/login");
 
         return httpSecurity
-                .cors()  // Habilitar CORS
+                .cors() // Habilitar CORS
                 .and()
                 .csrf(config -> config.disable())
                 .authorizeHttpRequests(auth -> {
@@ -54,13 +50,13 @@ public class SecurityConfig {
                             "/v3/api-docs/**",
                             "/swagger-resources/**",
                             "/webjars/**",
-                            "/swagger-ui.html"
-                    ).permitAll();
+                            "/swagger-ui.html").permitAll();
                     auth.requestMatchers("/auth/**").permitAll();
-//                    auth.requestMatchers("/helloseguro").authenticated();
-//                    auth.requestMatchers("/main/v1/**").authenticated();
-//                    auth.requestMatchers("/**").permitAll();
-                    auth.requestMatchers("/uploads/**").permitAll(); //permiso para esta carpeta sea accesible sin autenticacion
+                    // auth.requestMatchers("/helloseguro").authenticated();
+                    // auth.requestMatchers("/main/v1/**").authenticated();
+                    // auth.requestMatchers("/**").permitAll();
+                    auth.requestMatchers("/uploads/**").permitAll(); // permiso para esta carpeta sea accesible sin
+                                                                     // autenticacion
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> {
@@ -71,17 +67,15 @@ public class SecurityConfig {
                 .build();
     }
 
-
-//    @Bean
-//    UserDetailsService userDetailsService() {
-//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-//        manager.createUser(User.withUsername("juancho")
-//                .password("12345")
-//                .roles()
-//                .build());
-//        return manager;
-//    }
-
+    // @Bean
+    // UserDetailsService userDetailsService() {
+    // InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+    // manager.createUser(User.withUsername("juancho")
+    // .password("12345")
+    // .roles()
+    // .build());
+    // return manager;
+    // }
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -89,32 +83,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    AuthenticationManager authenticationManager(HttpSecurity httpSecurity, PasswordEncoder passwordEncoder) throws Exception {
+    AuthenticationManager authenticationManager(HttpSecurity httpSecurity, PasswordEncoder passwordEncoder)
+            throws Exception {
         return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class)
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder)
                 .and().build();
     }
 
+    // para encriptara una contraseña
+    // public static void main(String[] args) {
+    // System.out.println(new BCryptPasswordEncoder().encode("12345"));
+    // }
 
-//     para encriptara una contraseña
-//    public static void main(String[] args) {
-//        System.out.println(new BCryptPasswordEncoder().encode("12345"));
-//    }
-
-
-    //Para los cors si no tubiera la clase CorsConfiguration
-//    @Bean
-//    public WebMvcConfigurer corsConfigurer() {
-//        return new WebMvcConfigurer() {
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/**")
-//                        .allowedOrigins("http://localhost:4200")
-//                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-//                        .allowedHeaders("*")
-//                        .allowCredentials(true);
-//            }
-//        };
-//    }
+    // Para los cors si no tubiera la clase CorsConfiguration
+    // @Bean
+    // public WebMvcConfigurer corsConfigurer() {
+    // return new WebMvcConfigurer() {
+    // @Override
+    // public void addCorsMappings(CorsRegistry registry) {
+    // registry.addMapping("/**")
+    // .allowedOrigins("http://localhost:4200")
+    // .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+    // .allowedHeaders("*")
+    // .allowCredentials(true);
+    // }
+    // };
+    // }
 }

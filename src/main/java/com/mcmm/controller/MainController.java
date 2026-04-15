@@ -8,5 +8,4 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 public class MainController {
 
-
 }

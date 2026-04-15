@@ -4,17 +4,17 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class CargoTipoDto{
+public class CargoTipoDto {
 
     private Long id;
-    //private List<CargoDto> cargos;
+
+    @NotBlank(message = "El Tipo es Obligatorio.")
     private String tipo;
 
     @NotBlank(message = "El nombre es obligatorio.")

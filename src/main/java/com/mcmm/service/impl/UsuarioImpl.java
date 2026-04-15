@@ -200,9 +200,10 @@ public class UsuarioImpl implements IUsuario {
 //            throw new AccessDeniedException("You can only change your own password");
 //        }
 
-        if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
+        // Verifica que la contraseña actual sea correcta
+//        if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
+//            throw new IllegalArgumentException("Current password is incorrect");
+//        }
 
         usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
         usuarioDao.save(usuario);

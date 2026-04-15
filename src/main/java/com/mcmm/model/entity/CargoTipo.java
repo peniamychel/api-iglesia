@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,11 +18,7 @@ public class CargoTipo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(fetch = FetchType.LAZY, targetEntity = Cargo.class, cascade = CascadeType.PERSIST, mappedBy = "tipoCargo")
-    private List<Cargo> cargos;
-
     private String tipo;
-
 
     private String nombre;
     private Boolean estado;
@@ -32,14 +27,16 @@ public class CargoTipo {
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (estado == null) {
-            estado = true;  // Establecer estado en true si no se ha asignado
+            estado = true; // Establecer estado en true si no se ha asignado
         }
     }
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

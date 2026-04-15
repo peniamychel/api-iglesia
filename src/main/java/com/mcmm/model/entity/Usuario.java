@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -48,9 +47,7 @@ public class Usuario {
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER, targetEntity = Rol.class, cascade = CascadeType.PERSIST)
-    @JoinTable(name = "usuario_rol",
-            joinColumns = @JoinColumn(name = "usuario_id"),
-            inverseJoinColumns = @JoinColumn(name = "rol_id"))
+    @JoinTable(name = "usuario_rol", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "rol_id"))
     private Set<Rol> roles;
 
     @PrePersist
@@ -61,8 +58,8 @@ public class Usuario {
     }
 }
 
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(name = "usuario_rol",
-//            joinColumns = @JoinColumn(name = "usuario_id"),
-//            inverseJoinColumns = @JoinColumn(name = "rol_id"))
-//    private Set<Rol> roles;
+// @ManyToMany(fetch = FetchType.EAGER)
+// @JoinTable(name = "usuario_rol",
+// joinColumns = @JoinColumn(name = "usuario_id"),
+// inverseJoinColumns = @JoinColumn(name = "rol_id"))
+// private Set<Rol> roles;

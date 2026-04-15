@@ -1,6 +1,5 @@
 package com.mcmm.model.dto.MiembroDto;
 
-import com.mcmm.model.dto.personaDto.PersonaDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
