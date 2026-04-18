@@ -69,8 +69,14 @@ public class CargoTipoImpl implements ICargoTipo {
 
     @Override
     public CargoTipoDto update(CargoTipoDto cargoTipoDto) {
+        CargoTipo cargoTipoR = cargoTipoDao.findById(cargoTipoDto.getId()).orElse(null);
+        if (cargoTipoR != null) {
+            cargoTipoR.setTipo(cargoTipoDto.getTipo());
+            cargoTipoR.setNombre(cargoTipoDto.getNombre());
 
-        return null;
+            cargoTipoR = cargoTipoDao.save(cargoTipoR);
+        }
+        return modelMapper.map(cargoTipoR, CargoTipoDto.class);
     }
 
     @Override

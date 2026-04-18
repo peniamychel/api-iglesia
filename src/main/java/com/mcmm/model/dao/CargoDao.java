@@ -15,4 +15,6 @@ public interface CargoDao extends JpaRepository<Cargo, Long> {
     @Query("UPDATE Cargo c SET c.estado = NOT c.estado, c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :id")
     void toggleEstado(Long id);
 
+
+
 }

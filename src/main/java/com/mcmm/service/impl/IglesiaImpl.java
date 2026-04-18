@@ -37,7 +37,7 @@ public class IglesiaImpl implements IIglesia {
     @Override
     public List<IglesiaDto> findAll() {
         List<IglesiaDto> iglesiasDto = new ArrayList<>();
-        Iterable<Iglesia> iglesias = iglesiaDao.findAll();
+        Iterable<Iglesia> iglesias = iglesiaDao.findAllByOrderByCreatedAtDesc();
 
         for (Iglesia iglesia : iglesias){
             IglesiaDto dto = modelMapper.map(iglesia, IglesiaDto.class);

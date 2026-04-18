@@ -38,7 +38,9 @@ public class Cargo {
     @Column(name = "fecha_inicio")
     private Date fechaInicio;
 
+    @Column(name = "fecha_fin")
     private Date fechaFin;
+
     private Boolean estado;
 
     @Column(name = "created_at", updatable = false)
