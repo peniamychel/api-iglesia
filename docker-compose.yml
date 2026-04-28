@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: mariadb-iglesia
+    restart: always
+    environment:
+      MARIADB_DATABASE: iglev3
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306" # Mapeamos el 3307 de tu PC al 3306 del contenedor
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: api-iglesia-container
+    ports:
+      - "8092:8092"
+    depends_on:
+      - db
+    environment:
+      # IMPORTANTE: Sobrescribimos el localhost por el nombre del servicio 'db'
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/iglev3
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      # Ajustamos la URL de archivos para que apunte al puerto correcto
+      FILE_BASE_URL: http://localhost:8092
+
+volumes:
+  mariadb_data:

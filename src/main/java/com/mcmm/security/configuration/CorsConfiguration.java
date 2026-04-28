@@ -15,7 +15,7 @@ public class CorsConfiguration extends org.springframework.web.cors.CorsConfigur
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200","http://192.168.0.116:4200")  // URL de tu aplicación Angular
+                .allowedOrigins("http://localhost:4200","http://192.168.0.142","http://localhost")  // URL de tu aplicación Angular
 //                .allowedOrigins("http://localhost:3000","http://localhost:4200")  // URL de tu aplicación React + angular
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
                 .allowedHeaders("*")
@@ -25,7 +25,7 @@ public class CorsConfiguration extends org.springframework.web.cors.CorsConfigur
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200","http://192.168.0.116:4200")); // URL de tu aplicación Angular
+        configuration.setAllowedOrigins(List.of("http://localhost:4200","http://192.168.0.142","http://localhost")); // URL de tu aplicación Angular
 //        configuration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:4200"));  // URL de tu aplicación React + angular
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
