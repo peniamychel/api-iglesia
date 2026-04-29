@@ -1,6 +1,7 @@
 package com.mcmm.model.dao;
 
 import com.mcmm.model.entity.Iglesia;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +20,8 @@ public interface IglesiaDao extends JpaRepository<Iglesia, Long> {
     Iglesia buscarPorNombreIglesiaExceptoId(Long id, String nameIglesia);
 
     List<Iglesia> findAllByOrderByCreatedAtDesc();
+
+    // Trae las iglesias activas con todos sus datos
+    @EntityGraph(attributePaths = {"cargos", "cargos.tipoCargo", "cargos.miembro", "cargos.miembro.persona"})
+    List<Iglesia> findByEstadoTrue();
 }

@@ -16,11 +16,13 @@ public class FileConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadPath = Paths.get(uploadDir);
-        String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
+        // Convertimos la ruta del .properties en una ruta absoluta real
+        Path path = Paths.get(uploadDir).toAbsolutePath().normalize();
+        String absolutePath = path.toUri().toString();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/")
+                // Usamos la ruta absoluta con el protocolo file:///
+                .addResourceLocations(absolutePath)
                 .setCachePeriod(3600)
                 .resourceChain(true);
     }

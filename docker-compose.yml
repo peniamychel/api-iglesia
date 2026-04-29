@@ -11,6 +11,18 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
 
+#  contenedor para la gestion con phpmyadmin
+#  phpmyadmin:
+#    image: phpmyadmin
+#    restart: always
+#    ports:
+#      - 8090:80
+#    environment:
+#      - PMA_ARBITRARY=1
+#      - PMA_HOST=db
+#      - PMA_USER=root
+#      - PMA_PASSWORD=root
+
   app:
     build: .
     container_name: api-iglesia-container
