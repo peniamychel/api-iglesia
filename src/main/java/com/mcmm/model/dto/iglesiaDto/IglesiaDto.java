@@ -6,15 +6,19 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+
+import com.mcmm.model.dto.CargoDto;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class IglesiaDto implements java.io.Serializable{
+public class IglesiaDto implements java.io.Serializable {
 
     private Long id;
+    private List<CargoDto> cargos;
 
     @NotBlank(message = "El nombre de la iglesia no puede estar vacío.")
     @Size(min = 3, message = "El nombre de la iglesia debe tener mas de 3 caracteres.")

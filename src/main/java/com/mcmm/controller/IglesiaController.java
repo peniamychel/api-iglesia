@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/iglesia/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
@@ -221,4 +223,50 @@ public class IglesiaController {
         }
         return responseEntity;
     }
+
+    @GetMapping("/checkbynombreandidnot/{nameIglesia}/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<IglesiaDto>> findByNombreAndIdNot(
+            @PathVariable("nameIglesia") String nameIglesia, @PathVariable("id") Long id) {
+        ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
+        try {
+            IglesiaDto buscarNombreIglesia = iglesiaService.findByNombreAndIdNot(nameIglesia, id);
+
+            if (buscarNombreIglesia == null) {
+                throw new NotFoundExceptionResource("Iglesia", "nameIglesia", nameIglesia);
+            } else {
+                responseEntity = new ResponseEntity<>(
+                        ApiResponse.<IglesiaDto>builder()
+                                .message("Iglesia encontrada.")
+                                .datos(buscarNombreIglesia)
+                                .nombreModelo("Iglesia")
+                                .build(),
+                        HttpStatus.OK);
+            }
+        } catch (DataAccessException e) {
+            throw new InternalServerErrorExceptionResource(e.getMessage());
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/findall-activas")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<List<IglesiaDto>>> findByEstadoTrue() {
+        ResponseEntity<ApiResponse<List<IglesiaDto>>> responseEntity;
+        try {
+            List<IglesiaDto> iglesiaDtos = iglesiaService.findByEstadoTrue();
+            responseEntity = new ResponseEntity<>(
+                    ApiResponse.<List<IglesiaDto>>builder()
+                            .message("Listado de iglesias activas")
+                            .datos(iglesiaDtos)
+                            .nombreModelo("Iglesia")
+                            .build(),
+                    HttpStatus.OK);
+        } catch (Exception e) {
+            throw new InternalServerErrorExceptionResource(e.getMessage());
+        }
+        return responseEntity;
+    }
+
+    
 }

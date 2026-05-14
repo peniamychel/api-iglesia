@@ -21,9 +21,9 @@ public class IglesiaImpl implements IIglesia {
 
     @Override
     public IglesiaDto save(IglesiaDto iglesiaDto) {
-//        Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);
-//        Iglesia savedIglesia = iglesiaDao.save(iglesia);
-//        return modelMapper.map(savedIglesia, IglesiaDto.class);
+        // Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);
+        // Iglesia savedIglesia = iglesiaDao.save(iglesia);
+        // return modelMapper.map(savedIglesia, IglesiaDto.class);
 
         try {
             Iglesia iglesia = modelMapper.map(iglesiaDto, Iglesia.class);
@@ -39,7 +39,7 @@ public class IglesiaImpl implements IIglesia {
         List<IglesiaDto> iglesiasDto = new ArrayList<>();
         Iterable<Iglesia> iglesias = iglesiaDao.findAllByOrderByCreatedAtDesc();
 
-        for (Iglesia iglesia : iglesias){
+        for (Iglesia iglesia : iglesias) {
             IglesiaDto dto = modelMapper.map(iglesia, IglesiaDto.class);
             iglesiasDto.add(dto);
         }
@@ -78,6 +78,27 @@ public class IglesiaImpl implements IIglesia {
     @Override
     public IglesiaDto buscarNombreIglesiaExceptoId(Long id, String nameIglesia) {
         Iglesia iglesia = iglesiaDao.buscarPorNombreIglesiaExceptoId(id, nameIglesia);
+        if (iglesia != null) {
+            return modelMapper.map(iglesia, IglesiaDto.class);
+        }
+        return null;
+    }
+
+    @Override
+    public List<IglesiaDto> findByEstadoTrue() {
+        List<IglesiaDto> iglesiasDto = new ArrayList<>();
+        List<Iglesia> iglesias = iglesiaDao.findByEstadoTrue();
+
+        for (Iglesia iglesia : iglesias) {
+            IglesiaDto dto = modelMapper.map(iglesia, IglesiaDto.class);
+            iglesiasDto.add(dto);
+        }
+        return iglesiasDto;
+    }
+
+    @Override
+    public IglesiaDto findByNombreAndIdNot(String nameIglesia, Long id) {
+        Iglesia iglesia = iglesiaDao.findByNombreAndIdNot(nameIglesia, id);
         if (iglesia != null) {
             return modelMapper.map(iglesia, IglesiaDto.class);
         }
