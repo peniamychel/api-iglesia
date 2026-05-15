@@ -13,8 +13,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -29,11 +29,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("El usuario "+username+" no existe"));
 
-        Collection<? extends GrantedAuthority> authorities = usuario
-                .getRoles()
-                .stream()
-                .map(role ->  new SimpleGrantedAuthority("ROLE_".concat(role.getName().name())))
-                .collect(Collectors.toList());
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        usuario.getRoles().forEach(role -> {
+            authorities.add(new SimpleGrantedAuthority("ROLE_".concat(role.getName().name())));
+            role.getPrivilegios().forEach(privilegio ->
+                authorities.add(new SimpleGrantedAuthority(privilegio.getNombre()))
+            );
+        });
 
         return new User(
                 usuario.getUsername(),

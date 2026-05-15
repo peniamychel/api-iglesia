@@ -1,7 +1,11 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.PrivilegioDto;
+import com.mcmm.model.entity.ERole;
+import com.mcmm.model.entity.Privilegio;
+import com.mcmm.model.entity.Rol;
 import com.mcmm.service.IPrivilegio;
+import com.mcmm.service.IRol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/privilegios/v1")
@@ -17,6 +22,9 @@ public class PrivilegioController {
 
     @Autowired
     private IPrivilegio privilegioService;
+
+    @Autowired
+    private IRol rolService;
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
@@ -61,5 +69,34 @@ public class PrivilegioController {
             return ResponseEntity.ok(updatedPrivilegio);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/rol/{rolName}/add/{privilegioId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Rol> addPrivilegioToRol(
+            @PathVariable String rolName,
+            @PathVariable Long privilegioId) {
+        ERole eRole = ERole.valueOf(rolName.toUpperCase());
+        Rol updated = rolService.addPrivilegio(eRole, privilegioId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/rol/{rolName}/remove/{privilegioId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Rol> removePrivilegioFromRol(
+            @PathVariable String rolName,
+            @PathVariable Long privilegioId) {
+        ERole eRole = ERole.valueOf(rolName.toUpperCase());
+        Rol updated = rolService.removePrivilegio(eRole, privilegioId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/rol/{rolName}/privilegios")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Set<Privilegio>> getPrivilegiosByRol(
+            @PathVariable String rolName) {
+        ERole eRole = ERole.valueOf(rolName.toUpperCase());
+        Set<Privilegio> privilegios = rolService.getPrivilegiosByRol(eRole);
+        return ResponseEntity.ok(privilegios);
     }
 }

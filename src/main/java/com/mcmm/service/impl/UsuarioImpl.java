@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -195,15 +196,13 @@ public class UsuarioImpl implements IUsuario {
         Usuario usuario = usuarioDao.findById(usuarioChangePasswordDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioChangePasswordDto.getId()));
 
-        // Verify that the authenticated user is changing their own password
-//        if (!usuario.getUsername().equals(currentUsername)) {
-//            throw new AccessDeniedException("You can only change your own password");
-//        }
+        if (!usuario.getUsername().equals(currentUsername)) {
+            throw new AccessDeniedException("Solo puedes cambiar tu propia contraseña");
+        }
 
-        // Verifica que la contraseña actual sea correcta
-//        if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
-//            throw new IllegalArgumentException("Current password is incorrect");
-//        }
+        if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
 
         usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
