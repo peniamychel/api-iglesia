@@ -1,6 +1,6 @@
 package com.mcmm.service.impl;
 
-import com.mcmm.exception.DataAccessException;
+import com.mcmm.exception.DataAccessResourceException;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UsuarioDao usuarioDao;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessResourceException {
         Usuario usuario = usuarioDao
                 .findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("El usuario "+username+" no existe"));
@@ -33,9 +33,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         usuario.getRoles().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority("ROLE_".concat(role.getName().name())));
-            role.getPrivilegios().forEach(privilegio ->
-                authorities.add(new SimpleGrantedAuthority(privilegio.getNombre()))
-            );
+            role.getPrivilegios().forEach(privilegio -> {
+                if (privilegio.getNombre() != null) {
+                    authorities.add(new SimpleGrantedAuthority(privilegio.getNombre()));
+                }
+            });
         });
 
         return new User(

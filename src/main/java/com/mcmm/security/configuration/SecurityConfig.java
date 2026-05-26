@@ -91,10 +91,10 @@ public class SecurityConfig {
                 .and().build();
     }
 
-    // para encriptara una contraseña
-    // public static void main(String[] args) {
-    // System.out.println(new BCryptPasswordEncoder().encode("12345"));
-    // }
+//     para encriptara una contraseña
+//     public static void main(String[] args) {
+//     System.out.println(new BCryptPasswordEncoder().encode("12345"));
+//     }
 
     // Para los cors si no tubiera la clase CorsConfiguration
     // @Bean

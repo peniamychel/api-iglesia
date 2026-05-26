@@ -3,6 +3,7 @@ package com.mcmm.controller;
 
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
+import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
@@ -45,6 +46,7 @@ public class UsuarioController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Crear Usuario')")
     public ResponseEntity<?> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
 
         // Usar un Set para eliminar duplicados
@@ -167,6 +169,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/delete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
     public String eliminarUsuaior(@RequestParam String id) {
         usuarioDao.deleteById(Long.parseLong(id));
         return "Usuario eliminado".concat(id);
@@ -204,11 +207,13 @@ public class UsuarioController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
     public ResponseEntity<?> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
         return ResponseEntity.ok(usuarioService.updateUser(usuarioUpdateDto));
     }
 
     @PutMapping("/update-roles")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
     public ResponseEntity<?> updateUserRoles(@RequestBody UsuarioDto usuarioDto) {
         return ResponseEntity.ok(usuarioService.updateUserRoles(usuarioDto));
     }
@@ -221,7 +226,7 @@ public class UsuarioController {
 
     @PutMapping("/change-password")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> changePassword( @RequestBody UsuarioChangePasswordDto usuarioChangePasswordDto) {
+    public ResponseEntity<?> changePassword(@RequestBody UsuarioChangePasswordDto usuarioChangePasswordDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
 
@@ -232,7 +237,18 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> resetPassword(@RequestBody UsuarioResetPasswordDto usuarioResetPasswordDto) {
+        usuarioService.resetPassword(usuarioResetPasswordDto);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password reset successfully");
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
     public ResponseEntity<?> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {

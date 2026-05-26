@@ -37,6 +37,7 @@ public class MiembroIglesiaController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> create(@RequestBody MiembroIglesiaDto miembroDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -61,6 +62,7 @@ public class MiembroIglesiaController {
 
     @PostMapping("/created")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> created(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
         ResponseEntity<?> responseEntity = null;
         try {
@@ -181,6 +183,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> update(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -224,6 +227,7 @@ public class MiembroIglesiaController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> delete(@PathVariable MiembroIglesiaDto miembroIglesiaDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -259,6 +263,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> estado(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
         try {
@@ -298,6 +303,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
     public ResponseEntity<?> traspaso(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
         ResponseEntity<?> responseEntity;
         logger.debug("\n \n LOGS...........: {} \n \n", miembroIglesiaDto);

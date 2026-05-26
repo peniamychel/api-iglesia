@@ -6,11 +6,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class UsuarioChangePasswordDto {
+public class UsuarioResetPasswordDto {
     @NotNull
     private Long id;
-
-    private String currentPassword;
 
     @NotBlank(message = "New password is required")
     @Size(min = 6, max = 40)

@@ -2,6 +2,7 @@ package com.mcmm.service.impl;
 
 import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.dao.UsuarioDao;
+import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
@@ -205,6 +206,16 @@ public class UsuarioImpl implements IUsuario {
         }
 
         usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
+        usuarioDao.save(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(UsuarioResetPasswordDto usuarioResetPasswordDto) {
+        Usuario usuario = usuarioDao.findById(usuarioResetPasswordDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioResetPasswordDto.getId()));
+
+        usuario.setPassword(passwordEncoder.encode(usuarioResetPasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
     }
 

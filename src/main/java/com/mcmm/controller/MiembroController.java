@@ -23,6 +23,7 @@ public class MiembroController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<?> create(@RequestBody MiembroDto miembroDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -113,6 +114,7 @@ public class MiembroController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<?> update( @RequestBody MiembroDto miembroDto) {
         ResponseEntity<?> responseEntity;
 //        logger.debug("\n \n LOGS...........: {} \n \n", miembroDto);
@@ -157,6 +159,7 @@ public class MiembroController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
         try {
@@ -195,6 +198,7 @@ public class MiembroController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<?> estado(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
         try {

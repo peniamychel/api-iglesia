@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InternalServerErrorExceptionResource.class)
-    public ResponseEntity<ApiResponseException>internalServerErrorExceptionResource(DataAccessException exception, WebRequest webRequest){
+    public ResponseEntity<ApiResponseException>internalServerErrorExceptionResource(InternalServerErrorExceptionResource exception, WebRequest webRequest){
         ApiResponseException apiResponse = ApiResponseException.builder()
                 .message(exception.getMessage())
                 .url(webRequest.getDescription(false))

@@ -23,6 +23,7 @@ public class CargoTipoController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Tipos de Cargo')")
     public ResponseEntity<ApiResponse<CargoTipoDto>> create(@RequestBody @Valid CargoTipoDto cargoTipoDto) {
         ResponseEntity<ApiResponse<CargoTipoDto>> responseEntity;
         try {
@@ -71,6 +72,7 @@ public class CargoTipoController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Tipos de Cargo')")
     public ResponseEntity<ApiResponse<CargoTipoDto>> update(@RequestBody CargoTipoDto cargoTipoDto) {
         ResponseEntity<ApiResponse<CargoTipoDto>> responseEntity;
         try {
@@ -128,6 +130,7 @@ public class CargoTipoController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Tipos de Cargo')")
     public boolean estado(@PathVariable("id") Long id) {
         CargoTipoDto cargoTipoDto;
         try {

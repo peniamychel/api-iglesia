@@ -23,6 +23,7 @@ public class PersonaController{
     private IPersona personaService;
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
     public ResponseEntity<?> create(@RequestBody PersonaDto personaDto){
         ResponseEntity<?> responseEntity;
         try {
@@ -72,6 +73,7 @@ public class PersonaController{
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
     public ResponseEntity<?> update(@RequestBody PersonaDto personaDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -97,6 +99,7 @@ public class PersonaController{
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
     public ResponseEntity<?> partialUpdate(@PathVariable Long id, @RequestBody PersonaDto partialDto) {
         ResponseEntity<?> responseEntity;
         try {
@@ -143,6 +146,7 @@ public class PersonaController{
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
         try {
@@ -277,6 +281,7 @@ public class PersonaController{
         return responseEntity;
     }
     @PostMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
     public ResponseEntity<?> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {

@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
-public class DataAccessException extends RuntimeException{
+public class DataAccessResourceException extends RuntimeException{
 
-    public DataAccessException(String message) {
+    public DataAccessResourceException(String message) {
         super(message);
     }
 }

@@ -25,6 +25,7 @@ public class IglesiaController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> create(@RequestBody @Valid IglesiaDto iglesiaDto) {
         ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
@@ -50,6 +51,7 @@ public class IglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> update(@RequestBody @Valid IglesiaDto iglesiaDto) {
         ResponseEntity<ApiResponse<IglesiaDto>> responseEntity;
         try {
@@ -69,6 +71,7 @@ public class IglesiaController {
 
     @PutMapping("/update2/{id}") // Usamos el ID en la ruta
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> update(
             @PathVariable Long id,
             @RequestBody @Valid IglesiaDto iglesiaDto) {
@@ -90,6 +93,7 @@ public class IglesiaController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         ResponseEntity<?> responseEntity;
         try {
@@ -156,6 +160,7 @@ public class IglesiaController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public boolean estado(@PathVariable("id") Long id) {
         IglesiaDto iglesiaDto;
         try {

@@ -1,11 +1,13 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.PrivilegioDto;
+import com.mcmm.model.dto.RolDto;
 import com.mcmm.model.entity.ERole;
 import com.mcmm.model.entity.Privilegio;
 import com.mcmm.model.entity.Rol;
 import com.mcmm.service.IPrivilegio;
 import com.mcmm.service.IRol;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/privilegios/v1")
@@ -25,6 +28,8 @@ public class PrivilegioController {
 
     @Autowired
     private IRol rolService;
+
+    private ModelMapper modelMapper = new ModelMapper();
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
@@ -45,6 +50,7 @@ public class PrivilegioController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
     public ResponseEntity<PrivilegioDto> create(@RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto savedPrivilegio = privilegioService.save(privilegioDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPrivilegio);
@@ -52,6 +58,7 @@ public class PrivilegioController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         PrivilegioDto privilegio = privilegioService.findById(id);
         if (privilegio != null) {
@@ -63,6 +70,7 @@ public class PrivilegioController {
 
     @PutMapping("/update/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
     public ResponseEntity<PrivilegioDto> update(@PathVariable Long id, @RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto updatedPrivilegio = privilegioService.update(id, privilegioDto);
         if (updatedPrivilegio != null) {
@@ -73,30 +81,37 @@ public class PrivilegioController {
 
     @PostMapping("/rol/{rolName}/add/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Rol> addPrivilegioToRol(
+    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    public ResponseEntity<RolDto> addPrivilegioToRol(
             @PathVariable String rolName,
             @PathVariable Long privilegioId) {
         ERole eRole = ERole.valueOf(rolName.toUpperCase());
         Rol updated = rolService.addPrivilegio(eRole, privilegioId);
-        return ResponseEntity.ok(updated);
+        RolDto dto = modelMapper.map(updated, RolDto.class);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/rol/{rolName}/remove/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Rol> removePrivilegioFromRol(
+    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    public ResponseEntity<RolDto> removePrivilegioFromRol(
             @PathVariable String rolName,
             @PathVariable Long privilegioId) {
         ERole eRole = ERole.valueOf(rolName.toUpperCase());
         Rol updated = rolService.removePrivilegio(eRole, privilegioId);
-        return ResponseEntity.ok(updated);
+        RolDto dto = modelMapper.map(updated, RolDto.class);
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/rol/{rolName}/privilegios")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Set<Privilegio>> getPrivilegiosByRol(
+    public ResponseEntity<Set<PrivilegioDto>> getPrivilegiosByRol(
             @PathVariable String rolName) {
         ERole eRole = ERole.valueOf(rolName.toUpperCase());
         Set<Privilegio> privilegios = rolService.getPrivilegiosByRol(eRole);
-        return ResponseEntity.ok(privilegios);
+        Set<PrivilegioDto> dtos = privilegios.stream()
+                .map(p -> modelMapper.map(p, PrivilegioDto.class))
+                .collect(Collectors.toSet());
+        return ResponseEntity.ok(dtos);
     }
 }
