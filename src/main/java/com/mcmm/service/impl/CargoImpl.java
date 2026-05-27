@@ -90,7 +90,7 @@ public class CargoImpl implements ICargo {
 
     @Override
     public void delete(Long id) {
-
+        cargoDao.deleteById(id);
     }
 
     @Override

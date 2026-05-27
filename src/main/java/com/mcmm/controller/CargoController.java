@@ -126,6 +126,24 @@ public class CargoController {
         return responseEntity;
     }
 
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
+        CargoDto cargoDto = cargoService.findById(id);
+        if (cargoDto == null) {
+            throw new NotFoundExceptionResource("Cargo", "id", id);
+        }
+        cargoService.delete(id);
+        return new ResponseEntity<>(
+                ApiResponse.<Void>builder()
+                        .message("Cargo eliminado exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Cargo")
+                        .build(),
+                HttpStatus.OK);
+    }
+
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
