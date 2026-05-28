@@ -1,6 +1,6 @@
 package com.mcmm.model.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,13 +15,13 @@ public class CargoDto {
 
     private Long id;
 
-    @NotBlank(message = "Requiere el tipoCargoId.")
+    @NotNull(message = "Requiere el tipoCargoId.")
     private Long tipoCargoId;
 
-    @NotBlank(message = "Requiere el iglesiaId.")
+    @NotNull(message = "Requiere el iglesiaId.")
     private Long iglesiaId;
 
-    @NotBlank(message = "Requiere el miembroId.")
+    @NotNull(message = "Requiere el miembroId.")
     private Long idMiembro;
 
     private String detalle;

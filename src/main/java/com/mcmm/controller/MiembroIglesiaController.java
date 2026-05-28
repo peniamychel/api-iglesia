@@ -1,19 +1,13 @@
 package com.mcmm.controller;
 
+import com.mcmm.exception.BadRequestException;
 import com.mcmm.model.dto.GraficoDataDto;
-import com.mcmm.model.dto.iglesiaDto.IglesiaDto;
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
 import com.mcmm.model.dto.MiembroIglesiaDto;
 import com.mcmm.model.payload.ApiResponse;
-import com.mcmm.service.IIglesia;
-import com.mcmm.service.IMiembro;
 import com.mcmm.service.IMiembroIglesia;
-import com.mcmm.service.impl.MiembroImpl;
-import jakarta.persistence.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,399 +18,140 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/miembroiglesia/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@RequiredArgsConstructor
 public class MiembroIglesiaController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MiembroImpl.class); // uso para debuggear
-
-    @Autowired
-    private IMiembroIglesia miembroIglesiaService;
-    @Autowired
-    private IMiembro miembroService;
-    @Autowired
-    private IIglesia iglesiaService;
+    private final IMiembroIglesia miembroIglesiaService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> create(@RequestBody MiembroIglesiaDto miembroDto) {
-        ResponseEntity<?> responseEntity;
-        try {
-            MiembroIglesiaDto miembroIglesiaSave = miembroIglesiaService.save(miembroDto);
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Miembro guardada exitosamente.")
-                            .datos(miembroIglesiaSave)
-                            .nombreModelo("Miembro")
-                            .build(),
-                    HttpStatus.CREATED);
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al guardar la Miembro.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> create(@RequestBody @Valid MiembroIglesiaDto miembroDto) {
+        MiembroIglesiaDto miembroIglesiaSave = miembroIglesiaService.save(miembroDto);
+        return new ResponseEntity<>(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("MiembroIglesia guardado exitosamente.")
+                        .datos(miembroIglesiaSave)
+                        .nombreModelo("MiembroIglesia")
+                        .build(),
+                HttpStatus.CREATED);
     }
 
     @PostMapping("/created")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> created(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
-        ResponseEntity<?> responseEntity = null;
-        try {
-            if (miembroIglesiaDto != null) {
-
-                IglesiaDto iglesiaDto;
-                MiembroDto miembroDto;
-                miembroDto = miembroService.findById(miembroIglesiaDto.getIglesiaId());
-                iglesiaDto = iglesiaService.findById(miembroIglesiaDto.getMiembroId());
-
-                if (miembroDto != null && iglesiaDto != null) {
-                    boolean result = miembroIglesiaService.findByIdMiembro(miembroDto.getId());
-                    if (result) {
-                        MiembroIglesiaDto miembrosIglesiaSave = miembroIglesiaService
-                                .save(miembroIglesiaDto);
-                        if (miembrosIglesiaSave != null) {
-                            responseEntity = new ResponseEntity<>(
-                                    ApiResponse.builder()
-                                            .message("Miembros guardada exitosamente.")
-                                            .datos(miembrosIglesiaSave)
-                                            .nombreModelo("MiembroIglesia")
-                                            .build(),
-                                    HttpStatus.CREATED);
-                        } else {
-                            responseEntity = new ResponseEntity<>(
-                                    ApiResponse.builder()
-                                            .message("Error al guardar la MiembroIglesia.")
-                                            .datos(null)
-                                            .build(),
-                                    HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    } else {
-                        responseEntity = new ResponseEntity<>(
-                                ApiResponse.builder()
-                                        .message("Miembro ya pertenece a una la iglesia.")
-                                        .datos(null)
-                                        .build(),
-                                HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                } else {
-                    responseEntity = new ResponseEntity<>(
-                            ApiResponse.builder()
-                                    .message("Miembro o iglesia no encontrados.")
-                                    .datos(null)
-                                    .build(),
-                            HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-
-            }
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error : " + e.getMessage() + ".")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> created(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
+        boolean result = miembroIglesiaService.findByIdMiembro(miembroIglesiaDto.getMiembroId());
+        if (!result) {
+            throw new BadRequestException("El miembro ya pertenece a una iglesia.");
         }
-        return responseEntity;
+        MiembroIglesiaDto saved = miembroIglesiaService.save(miembroIglesiaDto);
+        return new ResponseEntity<>(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("MiembroIglesia guardado exitosamente.")
+                        .datos(saved)
+                        .nombreModelo("MiembroIglesia")
+                        .build(),
+                HttpStatus.CREATED);
     }
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> findAll() {
-        ResponseEntity<?> responseEntity;
-        Iterable<MiembroIglesiaDto> miembroIglesiaDtos = miembroIglesiaService.findAll();
-        try {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Listado de MiembrosIglesia")
-                            .datos(miembroIglesiaDtos)
-                            .nombreModelo("MiembroIglesia")
-                            .build(),
-                    HttpStatus.OK);
-        } catch (Exception e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("No se encontro datos.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> findAll() {
+        List<MiembroIglesiaDto> miembroIglesiaDtos = miembroIglesiaService.findAll();
+        return ResponseEntity.ok(
+                ApiResponse.<List<MiembroIglesiaDto>>builder()
+                        .message("Listado de MiembrosIglesia")
+                        .datos(miembroIglesiaDtos)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
-    // Método para encontrar un miembro por ID
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> findById(@PathVariable("id") Long id) {
-        ResponseEntity<?> responseEntity;
-        try {
-            MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.findById(id);
-            if (miembroIglesiaDto == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("MiembroIglesia no encontrado.")
-                                .datos(null)
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembro encontrado.")
-                                .datos(miembroIglesiaDto)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al buscar el miembro iglesia.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> findById(@PathVariable("id") Long id) {
+        MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.findById(id);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("MiembroIglesia encontrado.")
+                        .datos(miembroIglesiaDto)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> update(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
-        ResponseEntity<?> responseEntity;
-        try {
-            // Intentamos actualizar el miembro con los datos proporcionados
-
-            MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
-
-            // Si el miembro no se encontró, retornamos un error 404
-            if (miembroIglesiaActualizado == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("El miembro iglesia con ID "
-                                        + miembroIglesiaActualizado.getId()
-                                        + " no existe.")
-                                .datos(null)
-                                .nombreModelo("MiembroIglesia")
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembro iglesia actualizado exitosamente.")
-                                .datos(miembroIglesiaActualizado)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            // Si ocurre un error en el acceso a datos, devolvemos un error 500
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al actualizar el miembro iglesia. Error Catch: "
-                                    + e.getMessage())
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> update(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
+        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("MiembroIglesia actualizado exitosamente.")
+                        .datos(miembroIglesiaActualizado)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
     @DeleteMapping("/delete/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> delete(@PathVariable MiembroIglesiaDto miembroIglesiaDto) {
-        ResponseEntity<?> responseEntity;
-        try {
-            // Llamamos al método delete del servicio para eliminar el miembro
-            miembroIglesiaService.delete(miembroIglesiaDto);
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("MiembroIglesia eliminado exitosamente.")
-                            .datos(null)
-                            .nombreModelo("Miembro")
-                            .build(),
-                    HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            // Si el miembro no existe, retornamos un error 404
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message(e.getMessage())
-                            .datos(null)
-                            .nombreModelo("MiembroIglesia")
-                            .build(),
-                    HttpStatus.NOT_FOUND);
-        } catch (DataAccessException e) {
-            // Si hay un error en el acceso a datos, retornamos un error 500
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al eliminar el miembroIglesia.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        miembroIglesiaService.delete(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("MiembroIglesia eliminado exitosamente.")
+                        .datos(null)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> estado(@PathVariable Long id) {
-        ResponseEntity<?> responseEntity;
-        try {
-            // Intentamos actualizar el miembro con los datos proporcionados
-            boolean miembroIglesiaEstado = miembroIglesiaService.estado(id);
-
-            // Si el miembro no se encontró, retornamos un error 404
-            if (miembroIglesiaEstado) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("El miembro con ID " + id + " no existe.")
-                                .datos(true)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembro se cabio el estado exitosamente")
-                                .datos(false)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            // Si ocurre un error en el acceso a datos, devolvemos un error 500
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al al cambiar el estado.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> estado(@PathVariable Long id) {
+        MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.estado(id);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("Se cambió el estado del MiembroIglesia exitosamente a: " + miembroIglesiaDto.getEstado())
+                        .datos(miembroIglesiaDto)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
     @PutMapping("/traspaso")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<?> traspaso(@RequestBody MiembroIglesiaDto miembroIglesiaDto) {
-        ResponseEntity<?> responseEntity;
-        logger.debug("\n \n LOGS...........: {} \n \n", miembroIglesiaDto);
-        try {
-            // Intentamos actualizar el miembro con los datos proporcionados
-
-            MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
-
-            // Si el miembro no se encontró, retornamos un error 404
-            if (miembroIglesiaActualizado == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("El miembro iglesia con ID "
-                                        + miembroIglesiaActualizado.getId()
-                                        + " no existe.")
-                                .datos(null)
-                                .nombreModelo("MiembroIglesia")
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                // Si el miembro se actualizó correctamente, retornamos el miembro actualizado
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembro iglesia actualizado exitosamente.")
-                                .datos(miembroIglesiaActualizado)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            // Si ocurre un error en el acceso a datos, devolvemos un error 500
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al actualizar el miembro iglesia. Error Catch: "
-                                    + e.getMessage())
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> traspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
+        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("MiembroIglesia traspasado exitosamente.")
+                        .datos(miembroIglesiaActualizado)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
 
-    // Da una lista de Miembros que estan en una iglesia dado el id de la iglesia
     @GetMapping("/listmiembrosiglesia/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> findMiembrosIglesia(@PathVariable("id") Long id) {
-        ResponseEntity<?> responseEntity;
-        try {
-
-            Iterable<MiembroDto> miembroDtos = miembroIglesiaService.findMiembrosIglesia(id);
-            if (miembroDtos == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembros de la iglesia de id: " + id
-                                        + " no encontrado.")
-                                .datos(null)
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Miembros del a la iglesa de id: " + id
-                                        + " encontrados.")
-                                .datos(miembroDtos)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al buscar el miembro iglesia.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<List<MiembroDto>>> findMiembrosIglesia(@PathVariable("id") Long id) {
+        List<MiembroDto> miembroDtos = miembroIglesiaService.findMiembrosIglesia(id);
+        return ResponseEntity.ok(
+                ApiResponse.<List<MiembroDto>>builder()
+                        .message("Miembros de la iglesia encontrados.")
+                        .datos(miembroDtos)
+                        .nombreModelo("Miembro")
+                        .build());
     }
 
-    // graficos para miembros iglesia
     @GetMapping("/graficomiembrosiglesia/{cant}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> graficoMiembrosIglesia(@PathVariable("cant") Long cant) {
-        ResponseEntity<?> responseEntity;
-        try {
-
-            List<GraficoDataDto> miembroIglesia = miembroIglesiaService.graficoMiembrosIglesia(cant);
-            if (miembroIglesia == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Sin grafico")
-                                .datos(null)
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.builder()
-                                .message("Grafico para " + cant + " Iglesias.")
-                                .datos(miembroIglesia)
-                                .nombreModelo("Miembro")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al generar los datos para el grafico."
-                                    + e.getMessage())
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<List<GraficoDataDto>>> graficoMiembrosIglesia(@PathVariable("cant") Long cant) {
+        List<GraficoDataDto> miembroIglesia = miembroIglesiaService.graficoMiembrosIglesia(cant);
+        return ResponseEntity.ok(
+                ApiResponse.<List<GraficoDataDto>>builder()
+                        .message("Gráfico para " + cant + " Iglesias.")
+                        .datos(miembroIglesia)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
     }
-
 }

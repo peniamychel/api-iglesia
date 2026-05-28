@@ -1,313 +1,167 @@
 package com.mcmm.controller;
 
-
-import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
-import com.mcmm.model.entity.ERole;
-import com.mcmm.model.entity.Rol;
-import com.mcmm.model.entity.Usuario;
 import com.mcmm.model.payload.ApiResponse;
-import com.mcmm.model.payload.MessageResponseLogin;
-import com.mcmm.service.IRol;
 import com.mcmm.service.IUsuario;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuario/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private UsuarioDao usuarioDao;
-    @Autowired
-    private IRol rolDao;
-
-    @Autowired
-    private IUsuario usuarioService;
+    private final IUsuario usuarioService;
 
     @PostMapping("/create")
-    @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Crear Usuario')")
-    public ResponseEntity<?> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
-
-        // Usar un Set para eliminar duplicados
-        Set<ERole> rolesSet = usuarioDto.getRoles().stream()
-                .map(ERole::valueOf) // Convertir a ERole directamente
-                .collect(Collectors.toSet()); // Eliminar duplicados automáticamente
-
-        // Convertir el Set de ERole a Set de Rol
-        Set<Rol> roles = rolesSet.stream()
-                .map(role -> Rol.builder()
-                        .name(role)
-                        .build())
-                .collect(Collectors.toSet());
-
-        Usuario usuario = Usuario.builder()
-                .username(usuarioDto.getUsername())
-                .name(usuarioDto.getName())
-                .apellidos(usuarioDto.getApellidos())
-                .email(usuarioDto.getEmail())
-                .password(usuarioDto.getPassword())
-                .roles(roles)
-                .build();
-
-        try {
-            if (usuarioDao.existsByUsername(usuario.getUsername())) {
-                return new ResponseEntity<>(
-                        MessageResponseLogin.builder()
-                                .success(false)
-                                .message("El usuario ya existe")
-                                .datos(null)
-                                .build()
-                        , HttpStatus.OK
-                );
-            }
-
-            if (usuarioDao.existsByEmail(usuario.getEmail())) {
-                return new ResponseEntity<>(
-                        MessageResponseLogin.builder()
-                                .success(false)
-                                .message("El email ya existe")
-                                .datos(null)
-                                .build()
-                        , HttpStatus.OK
-                );
-            }
-
-            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-
-            // Manejar roles
-            Set<Rol> rolesm;
-            if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-                // Asignar rol por defecto
-                rolesm = Collections.singleton(rolDao.findOrCreateRol(ERole.ENCARGADO_EVENTO));
-            } else {
-                // Obtener roles existentes
-                Set<ERole> roleNames = usuario.getRoles().stream()
-                        .map(Rol::getName)
-                        .collect(Collectors.toSet());
-
-                // Usar roles existentes
-                rolesm = rolDao.getRolesByNames(roleNames);
-            }
-
-            usuario.setRoles(rolesm);
-
-            UsuarioDto guardado2 = usuarioService.create(usuario);
-
-//            Usuario guardado = usuarioDao.save(usuario);
-            if (guardado2.getId() != null) {
-                usuarioDao.save(usuario);
-            }
-            return new ResponseEntity<>(
-                    MessageResponseLogin.builder()
-                            .success(true)
-                            .message("Nuevo usuario guardado con exito")
-                            .datos(guardado2)
-                            .build()
-                    , HttpStatus.OK
-            );
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    MessageResponseLogin.builder()
-                            .message("Error 403")
-                            .datos(null)
-                            .build()
-                    , HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+    public ResponseEntity<ApiResponse<UsuarioDtoRes>> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
+        UsuarioDtoRes usuarioCreado = usuarioService.create(usuarioDto);
+        return new ResponseEntity<>(
+                ApiResponse.<UsuarioDtoRes>builder()
+                        .message("Nuevo usuario guardado con éxito")
+                        .datos(usuarioCreado)
+                        .nombreModelo("Usuario")
+                        .build(),
+                HttpStatus.CREATED);
     }
 
-    /**
-     * Obtiene todos los usuarios
-     * @return  Listado de usuarios
-     */
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> findAll() {
-        ResponseEntity<?> responseEntity;
-        Iterable<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
-        try {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Listado de Usuarios")
-                            .datos(usuarioDtosRes)
-                            .nombreModelo("Usuario")
-                            .build()
-                    , HttpStatus.OK
-            );
-        } catch (Exception e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("No se encontro datos.")
-                            .datos(null)
-                            .build()
-                    , HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<List<UsuarioDtoRes>>> findAll() {
+        List<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
+        return ResponseEntity.ok(
+                ApiResponse.<List<UsuarioDtoRes>>builder()
+                        .message("Listado de Usuarios")
+                        .datos(usuarioDtosRes)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public String eliminarUsuaior(@RequestParam String id) {
-        usuarioDao.deleteById(Long.parseLong(id));
-        return "Usuario eliminado".concat(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        usuarioService.delete(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Usuario eliminado exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
-    /**
-     *  Obtiene el usuario por id
-     * @param id del usuario
-     * @return usuario
-     */
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> showById(@PathVariable("id") Long id) {
-        ResponseEntity<?> responseEntity;
-        try {
-            UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Usurio encontrada.")
-                            .datos(usuarioFiedById)
-                            .nombreModelo("Usuario")
-                            .build(),
-                    HttpStatus.OK
-            );
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al buscar la Usuario.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<UsuarioDtoRes>> showById(@PathVariable("id") Long id) {
+        UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
+        return ResponseEntity.ok(
+                ApiResponse.<UsuarioDtoRes>builder()
+                        .message("Usuario encontrado.")
+                        .datos(usuarioFiedById)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public ResponseEntity<?> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
-        return ResponseEntity.ok(usuarioService.updateUser(usuarioUpdateDto));
+    public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
+        UsuarioDtoRes usuarioActualizado = usuarioService.updateUser(usuarioUpdateDto);
+        return ResponseEntity.ok(
+                ApiResponse.<UsuarioDtoRes>builder()
+                        .message("Usuario actualizado exitosamente.")
+                        .datos(usuarioActualizado)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
     @PutMapping("/update-roles")
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public ResponseEntity<?> updateUserRoles(@RequestBody UsuarioDto usuarioDto) {
-        return ResponseEntity.ok(usuarioService.updateUserRoles(usuarioDto));
+    public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUserRoles(@RequestBody UsuarioDto usuarioDto) {
+        UsuarioDtoRes usuarioActualizado = usuarioService.updateUserRoles(usuarioDto);
+        return ResponseEntity.ok(
+                ApiResponse.<UsuarioDtoRes>builder()
+                        .message("Roles de usuario actualizados exitosamente.")
+                        .datos(usuarioActualizado)
+                        .nombreModelo("Usuario")
+                        .build());
     }
-
-//    @PutMapping("/change-password")
-//    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDto changePasswordDto) {
-//        usuarioService.changePassword(changePasswordDto);
-//        return ResponseEntity.ok().build();
-//    }
 
     @PutMapping("/change-password")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> changePassword(@RequestBody UsuarioChangePasswordDto usuarioChangePasswordDto) {
+    public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody @Valid UsuarioChangePasswordDto usuarioChangePasswordDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
 
         usuarioService.changePassword(usuarioChangePasswordDto, currentUsername);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Password changed successfully");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Contraseña cambiada exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
     @PutMapping("/reset-password")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> resetPassword(@RequestBody UsuarioResetPasswordDto usuarioResetPasswordDto) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody @Valid UsuarioResetPasswordDto usuarioResetPasswordDto) {
         usuarioService.resetPassword(usuarioResetPasswordDto);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Password reset successfully");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Contraseña restablecida exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
     @PostMapping("/{id}/foto")
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public ResponseEntity<?> uploadProfilePhoto(
+    public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         try {
             String fileUrl = usuarioService.updateProfilePhoto(id, file);
-            Map<String, String> response = new HashMap<>();
-            response.put("uriFoto", fileUrl);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Foto de perfil actualizada exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("Usuario")
+                            .build());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al subir la foto: " + e.getMessage());
         }
     }
 
-    /**
-     * no se envia ningun valor, solo usa el token
-     * @return todos los datos del usuario
-     */
     @GetMapping("/findbyusername")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> findByUsername() {
+    public ResponseEntity<ApiResponse<UsuarioDtoRes>> findByUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        Usuario usuario = new Usuario();
 
-        Optional<Usuario> optionalUsuario = usuarioDao.findByUsername(currentUsername);
-        if (optionalUsuario.isPresent()) {
-            usuario = optionalUsuario.get();
-            System.out.println("Usuario encontrado: " + usuario.getUsername());
-        } else {
-            System.out.println("Usuario no encontrado");
-        }
-//        Map<String, String> response = new HashMap<>();
-//        response.put("message", "Password changed successfully");
-//        response.put("username", usuario.getId().toString());
-
-        ResponseEntity<?> responseEntity;
-        try {
-            UsuarioDtoRes usuarioFiedById = usuarioService.findById(usuario.getId());
-            usuarioFiedById.setPassword("pass oculto");
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Usurio encontrada.")
-                            .datos(usuarioFiedById)
-                            .nombreModelo("Usuario")
-                            .build(),
-                    HttpStatus.OK
-            );
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.builder()
-                            .message("Error al buscar la Usuario.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        return responseEntity;
+        UsuarioDtoRes usuarioFiedById = usuarioService.findByUsername(currentUsername);
+        return ResponseEntity.ok(
+                ApiResponse.<UsuarioDtoRes>builder()
+                        .message("Usuario encontrado.")
+                        .datos(usuarioFiedById)
+                        .nombreModelo("Usuario")
+                        .build());
     }
-
 }

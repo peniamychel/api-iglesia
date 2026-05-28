@@ -1,5 +1,6 @@
 package com.mcmm.model.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -13,9 +14,11 @@ import java.util.Date;
 public class MiembroIglesiaDto {
 
     private Long id;
-    // private MiembroDto miembroDto;
+
+    @NotNull(message = "El ID del miembro es obligatorio.")
     private Long miembroId;
-    // private IglesiaDto iglesiaDto;
+
+    @NotNull(message = "El ID de la iglesia es obligatorio.")
     private Long iglesiaId;
 
     private Date fecha;

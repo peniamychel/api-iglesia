@@ -1,5 +1,6 @@
 package com.mcmm.service.impl;
 
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dao.MiembroDao;
 import com.mcmm.model.dao.MiembroIglesiaDao;
@@ -10,134 +11,126 @@ import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.Miembro;
 import com.mcmm.model.entity.MiembroIglesia;
 import com.mcmm.service.IMiembroIglesia;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class MiembroIglesiaImpl implements IMiembroIglesia {
 
-    @Autowired
-    private MiembroIglesiaDao miembroIglesiaDao;
-    @Autowired
-    private MiembroDao miembroDao;
-    @Autowired
-    private IglesiaDao iglesiaDao;
-    private ModelMapper modelMapper = new ModelMapper();
-
-
+    private final ModelMapper modelMapper;
+    private final MiembroIglesiaDao miembroIglesiaDao;
+    private final MiembroDao miembroDao;
+    private final IglesiaDao iglesiaDao;
 
     @Override
-    public Iterable<MiembroIglesiaDto> findAll() {
-        List<MiembroIglesiaDto> miembrosIglesiaDtos = new ArrayList<>();
-        Iterable<MiembroIglesia> miembrosIglesias = miembroIglesiaDao.findAll();
-
-        for (MiembroIglesia miembroIglesia : miembrosIglesias) {
-            MiembroIglesiaDto dto = modelMapper.map(miembroIglesia, MiembroIglesiaDto.class);
-            miembrosIglesiaDtos.add(dto);
-        }
-        return miembrosIglesiaDtos;
+    @Transactional(readOnly = true)
+    public List<MiembroIglesiaDto> findAll() {
+        return StreamSupport.stream(miembroIglesiaDao.findAll().spliterator(), false)
+                .map(miembroIglesia -> modelMapper.map(miembroIglesia, MiembroIglesiaDto.class))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public MiembroIglesiaDto save(MiembroIglesiaDto miembroIglesiaDto) {
-        Miembro miembro = miembroDao.findById(miembroIglesiaDto.getMiembroId()).orElse(null);
-        Iglesia iglesia = iglesiaDao.findById(miembroIglesiaDto.getIglesiaId()).orElse(null);
-        MiembroIglesia miembroIglesia = modelMapper.map(miembroIglesiaDto, MiembroIglesia.class);
-        if (miembro != null || iglesia != null) {
-            miembroIglesia.setIglesia(iglesia);
-            miembroIglesia.setMiembro(miembro);
-        }
-        MiembroIglesia savedMiembroIglesia = miembroIglesiaDao.save(miembroIglesia);
-        return modelMapper.map(savedMiembroIglesia, MiembroIglesiaDto.class);
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public MiembroIglesiaDto findById(Long id) {
-        MiembroIglesia miembroIglesia = miembroIglesiaDao.findById(id).orElse(null);
-        if (miembroIglesia != null) {
-            return modelMapper.map(miembroIglesia, MiembroIglesiaDto.class); // personaDto
-        }
-        return null;
+        MiembroIglesia miembroIglesia = miembroIglesiaDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("MiembroIglesia", "id", id));
+        return modelMapper.map(miembroIglesia, MiembroIglesiaDto.class);
     }
 
     @Override
-    public void delete(MiembroIglesiaDto miembroIglesiaDto) {
+    @Transactional
+    public MiembroIglesiaDto save(MiembroIglesiaDto miembroIglesiaDto) {
+        Miembro miembro = miembroDao.findById(miembroIglesiaDto.getMiembroId())
+                .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", miembroIglesiaDto.getMiembroId()));
+        Iglesia iglesia = iglesiaDao.findById(miembroIglesiaDto.getIglesiaId())
+                .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", miembroIglesiaDto.getIglesiaId()));
 
+        MiembroIglesia miembroIglesia = modelMapper.map(miembroIglesiaDto, MiembroIglesia.class);
+        miembroIglesia.setMiembro(miembro);
+        miembroIglesia.setIglesia(iglesia);
+
+        MiembroIglesia saved = miembroIglesiaDao.save(miembroIglesia);
+        return modelMapper.map(saved, MiembroIglesiaDto.class);
     }
 
     @Override
+    @Transactional
+    public void delete(Long id) {
+        MiembroIglesia miembroIglesia = miembroIglesiaDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("MiembroIglesia", "id", id));
+        miembroIglesiaDao.delete(miembroIglesia);
+    }
+
+    @Override
+    @Transactional
     public MiembroIglesiaDto update(MiembroIglesiaDto miembroIglesiaDto) {
-        MiembroIglesia miembroIglesiaE = miembroIglesiaDao.findById(miembroIglesiaDto.getId()).orElse(null);
-        MiembroIglesiaDto miembroIglesiaDtoE = modelMapper.map(miembroIglesiaE, MiembroIglesiaDto.class);
-        if (miembroIglesiaE != null) {
+        MiembroIglesia miembroIglesiaE = miembroIglesiaDao.findById(miembroIglesiaDto.getId())
+                .orElseThrow(() -> new NotFoundExceptionResource("MiembroIglesia", "id", miembroIglesiaDto.getId()));
 
-            miembroIglesiaDtoE.setIglesiaId(miembroIglesiaDto.getIglesiaId());
-            miembroIglesiaDtoE.setMiembroId(miembroIglesiaDto.getMiembroId());
-            miembroIglesiaDtoE.setFecha(miembroIglesiaDto.getFecha());
-            miembroIglesiaDtoE.setMotivoTraspaso(miembroIglesiaDto.getMotivoTraspaso());
-            miembroIglesiaDtoE.setFechaTraspaso(miembroIglesiaDto.getFechaTraspaso());
-            miembroIglesiaDtoE.setUriCartaTraspaso(miembroIglesiaDto.getUriCartaTraspaso());
-            miembroIglesiaDtoE.setEstado(miembroIglesiaDto.getEstado());
-
-            miembroIglesiaE = miembroIglesiaDao.save(modelMapper.map(miembroIglesiaDtoE, MiembroIglesia.class));
-            return modelMapper.map(miembroIglesiaE, MiembroIglesiaDto.class); // personaDto
+        if (miembroIglesiaDto.getMiembroId() != null) {
+            Miembro miembro = miembroDao.findById(miembroIglesiaDto.getMiembroId())
+                    .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", miembroIglesiaDto.getMiembroId()));
+            miembroIglesiaE.setMiembro(miembro);
         }
-        return null;
 
+        if (miembroIglesiaDto.getIglesiaId() != null) {
+            Iglesia iglesia = iglesiaDao.findById(miembroIglesiaDto.getIglesiaId())
+                    .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", miembroIglesiaDto.getIglesiaId()));
+            miembroIglesiaE.setIglesia(iglesia);
+        }
+
+        miembroIglesiaE.setFecha(miembroIglesiaDto.getFecha());
+        miembroIglesiaE.setMotivoTraspaso(miembroIglesiaDto.getMotivoTraspaso());
+        miembroIglesiaE.setFechaTraspaso(miembroIglesiaDto.getFechaTraspaso());
+        miembroIglesiaE.setUriCartaTraspaso(miembroIglesiaDto.getUriCartaTraspaso());
+        miembroIglesiaE.setEstado(miembroIglesiaDto.getEstado());
+
+        MiembroIglesia updated = miembroIglesiaDao.save(miembroIglesiaE);
+        return modelMapper.map(updated, MiembroIglesiaDto.class);
     }
 
     @Override
-    public boolean estado(Long id) {
-        MiembroIglesia miembroIglesiaE = miembroIglesiaDao.findById(id).orElse(null);
-        if (miembroIglesiaE != null) {
-            miembroIglesiaE.setEstado(!miembroIglesiaE.getEstado());
-            miembroIglesiaDao.save(miembroIglesiaE);
-            return miembroIglesiaE.getEstado();
-        }
-        return false;
+    @Transactional
+    public MiembroIglesiaDto estado(Long id) {
+        MiembroIglesia miembroIglesiaE = miembroIglesiaDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("MiembroIglesia", "id", id));
+        miembroIglesiaE.setEstado(!miembroIglesiaE.getEstado());
+        MiembroIglesia updated = miembroIglesiaDao.save(miembroIglesiaE);
+        return modelMapper.map(updated, MiembroIglesiaDto.class);
     }
 
     @Override
-    public Iterable<MiembroDto> findMiembrosIglesia(Long id) {
-        List<MiembroDto> miembrosDtos = new ArrayList<>();
-        Iterable<Miembro> miembrosIglesia = miembroIglesiaDao.findMiembrosIglesia(id);
-        for (Miembro miembroIglesia : miembrosIglesia) {
-            MiembroDto dto = modelMapper.map(miembrosIglesia, MiembroDto.class);
-            miembrosDtos.add(dto);
-        }
-        return miembrosDtos;
+    @Transactional(readOnly = true)
+    public List<MiembroDto> findMiembrosIglesia(Long id) {
+        return StreamSupport.stream(miembroIglesiaDao.findMiembrosIglesia(id).spliterator(), false)
+                .map(miembro -> modelMapper.map(miembro, MiembroDto.class))
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean findByIdMiembro(Long id) {
-        boolean res = false;
-        res = miembroIglesiaDao.findByMiembro(id);
-        return res;
+        return miembroIglesiaDao.findByMiembro(id);
     }
 
-
-//    public List<GraficoDataDto> graficoMiembrosIglesia(Long cant) {
-//        List<Object[]> graficoDataDtos = miembroIglesiaDao.obtenerIglesiasConMasMiembros(cant);
-//        return graficoDataDtos;
-//    }
-
     @Override
+    @Transactional(readOnly = true)
     public List<GraficoDataDto> graficoMiembrosIglesia(Long limite) {
         List<Object[]> resultados = miembroIglesiaDao.obtenerIglesiasConMasMiembros(limite);
-        List<GraficoDataDto> lista = new ArrayList<>();
-
-        for (Object[] fila : resultados) {
+        return resultados.stream().map(fila -> {
             GraficoDataDto dto = new GraficoDataDto();
             dto.setId((Long) fila[0]);
-            dto.setNombre((String) fila[1]+" - "+(String) fila[2]);
+            dto.setNombre((String) fila[1] + " - " + (String) fila[2]);
             dto.setValor((Long) fila[3]);
-            lista.add(dto);
-        }
-
-        return lista;
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

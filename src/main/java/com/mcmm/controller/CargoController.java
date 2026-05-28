@@ -1,164 +1,135 @@
 package com.mcmm.controller;
 
-import com.mcmm.exception.InternalServerErrorExceptionResource;
-import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dto.CargoDto;
 import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.ICargo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controlador REST para la gestión de Cargos de miembros en la Iglesia.
+ * Proporciona endpoints para creación, obtención, actualización, desactivación y eliminación de Cargos.
+ * 
+ * @author Antigravity
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/api/cargo/v1")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@RequiredArgsConstructor
 public class CargoController {
-    @Autowired
-    private ICargo cargoService;
 
+    private final ICargo cargoService;
+
+    /**
+     * Crea un nuevo Cargo para un miembro en la base de datos.
+     * 
+     * @param cargoDto DTO con los datos del Cargo a registrar.
+     * @return ResponseEntity conteniendo la respuesta de API con el DTO del Cargo creado.
+     */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
-    public ResponseEntity<ApiResponse<CargoDto>> create(@RequestBody CargoDto cargoDto) {
-        ResponseEntity<ApiResponse<CargoDto>> responseEntity;
-        try {
-            CargoDto cargoSave = cargoService.create(cargoDto);
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<CargoDto>builder()
-                            .message("Cargo guardada exitosamente.")
-                            .datos(cargoSave)
-                            .nombreModelo("Cargo")
-                            .build(),
-                    HttpStatus.CREATED);
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<CargoDto>builder()
-                            .message("Error al guardar la Cargo.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<CargoDto>> create(@RequestBody @Valid CargoDto cargoDto) {
+        CargoDto cargoSave = cargoService.create(cargoDto);
+        return new ResponseEntity<>(
+                ApiResponse.<CargoDto>builder()
+                        .message("Cargo guardado exitosamente.")
+                        .datos(cargoSave)
+                        .nombreModelo("Cargo")
+                        .build(),
+                HttpStatus.CREATED);
     }
 
+    /**
+     * Obtiene todos los Cargos registrados.
+     * 
+     * @return ResponseEntity conteniendo la respuesta de API con el listado de Cargos.
+     */
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ApiResponse<Iterable<CargoDto>>> findAll() {
-        ResponseEntity<ApiResponse<Iterable<CargoDto>>> responseEntity;
         Iterable<CargoDto> cargoDtos = cargoService.findAll();
-        try {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<Iterable<CargoDto>>builder()
-                            .message("Listado de Cargos")
-                            .datos(cargoDtos)
-                            .nombreModelo("Cargo")
-                            .build(),
-                    HttpStatus.OK);
-        } catch (Exception e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<Iterable<CargoDto>>builder()
-                            .message("No se encontro datos.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+        return ResponseEntity.ok(
+                ApiResponse.<Iterable<CargoDto>>builder()
+                        .message("Listado de Cargos")
+                        .datos(cargoDtos)
+                        .nombreModelo("Cargo")
+                        .build());
     }
 
+    /**
+     * Actualiza la información de un Cargo existente.
+     * 
+     * @param cargoDto DTO con los datos actualizados del Cargo.
+     * @return ResponseEntity conteniendo el Cargo actualizado.
+     */
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
-    public ResponseEntity<ApiResponse<CargoDto>> update(@RequestBody CargoDto cargoDto) {
-        ResponseEntity<ApiResponse<CargoDto>> responseEntity;
-        try {
-            CargoDto cargoUpdate = cargoService.update(cargoDto);
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<CargoDto>builder()
-                            .message("Cargo actualizado exitosamente.")
-                            .datos(cargoUpdate)
-                            .nombreModelo("Cargo")
-                            .build(),
-                    HttpStatus.OK);
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<CargoDto>builder()
-                            .message("Error al actualizar Cargo.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+    public ResponseEntity<ApiResponse<CargoDto>> update(@RequestBody @Valid CargoDto cargoDto) {
+        CargoDto cargoUpdate = cargoService.update(cargoDto);
+        return ResponseEntity.ok(
+                ApiResponse.<CargoDto>builder()
+                        .message("Cargo actualizado exitosamente.")
+                        .datos(cargoUpdate)
+                        .nombreModelo("Cargo")
+                        .build());
     }
 
+    /**
+     * Busca un Cargo por su identificador único ID.
+     * 
+     * @param id Identificador único del Cargo a buscar.
+     * @return ResponseEntity conteniendo el Cargo encontrado.
+     */
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ApiResponse<CargoDto>> showById(@PathVariable("id") Long id) {
-        ResponseEntity<ApiResponse<CargoDto>> responseEntity;
-        try {
-            CargoDto cargoFiedById = cargoService.findById(id);
-            if (cargoFiedById == null) {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.<CargoDto>builder()
-                                .message("Cargo no encontrado.")
-                                .datos(null)
-                                .build(),
-                        HttpStatus.NOT_FOUND);
-            } else {
-                responseEntity = new ResponseEntity<>(
-                        ApiResponse.<CargoDto>builder()
-                                .message("Cargo encontrado.")
-                                .datos(cargoFiedById)
-                                .nombreModelo("Cargo")
-                                .build(),
-                        HttpStatus.OK);
-            }
-        } catch (DataAccessException e) {
-            responseEntity = new ResponseEntity<>(
-                    ApiResponse.<CargoDto>builder()
-                            .message("Error al buscar Cargo.")
-                            .datos(null)
-                            .build(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return responseEntity;
+        CargoDto cargoFiedById = cargoService.findById(id);
+        return ResponseEntity.ok(
+                ApiResponse.<CargoDto>builder()
+                        .message("Cargo encontrado.")
+                        .datos(cargoFiedById)
+                        .nombreModelo("Cargo")
+                        .build());
     }
 
+    /**
+     * Elimina un Cargo por su ID de la base de datos.
+     * 
+     * @param id Identificador del Cargo a eliminar.
+     * @return ResponseEntity confirmando la eliminación del Cargo.
+     */
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
-        CargoDto cargoDto = cargoService.findById(id);
-        if (cargoDto == null) {
-            throw new NotFoundExceptionResource("Cargo", "id", id);
-        }
         cargoService.delete(id);
-        return new ResponseEntity<>(
+        return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Cargo eliminado exitosamente.")
                         .datos(null)
                         .nombreModelo("Cargo")
-                        .build(),
-                HttpStatus.OK);
+                        .build());
     }
 
+    /**
+     * Alterna el estado (activo/inactivo) de un Cargo específico por su ID.
+     * 
+     * @param id Identificador del Cargo.
+     * @return true si el nuevo estado es activo, false en caso contrario.
+     */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
     public boolean estado(@PathVariable("id") Long id) {
-        CargoDto cargoDto;
-        try {
-            cargoDto = cargoService.findById(id);
-            if (cargoDto == null) {
-                throw new NotFoundExceptionResource("Cargo", "id", id);
-            }
-            cargoService.estado(id);
-
-        } catch (DataAccessException e) {
-            throw new InternalServerErrorExceptionResource(e.getMessage());
-        }
+        CargoDto cargoDto = cargoService.findById(id);
+        cargoService.estado(id);
         return !cargoDto.getEstado();
     }
 }

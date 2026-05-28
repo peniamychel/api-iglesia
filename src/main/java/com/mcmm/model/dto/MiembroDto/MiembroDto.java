@@ -1,6 +1,7 @@
 package com.mcmm.model.dto.MiembroDto;
 
 import com.mcmm.model.dto.personaDto.PersonaDto;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,8 @@ public class MiembroDto {
     private String detalles;
 
     private PersonaDto personaDto;
+
+    @NotNull(message = "El ID de la Persona es obligatorio.")
     private Long personaId; // Para propósitos de creación y actualizació
 
     private Boolean estado;

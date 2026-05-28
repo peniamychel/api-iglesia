@@ -5,31 +5,30 @@ import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
-import com.mcmm.model.entity.Usuario;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface IUsuario {
-    final String USUARIOS_DIR = "usuarios/";
 
-    public Iterable<UsuarioDtoRes> findAll();
+    List<UsuarioDtoRes> findAll();
 
-    public UsuarioDtoRes findById(Long id);
+    UsuarioDtoRes findById(Long id);
 
-    public UsuarioDto create(Usuario usuario);
+    UsuarioDtoRes findByUsername(String username);
 
-    public void delete(Long id);
+    UsuarioDtoRes create(UsuarioDto usuarioDto);
 
-    Usuario updateUserRoles(UsuarioDto usuarioDto);
+    void delete(Long id);
 
+    UsuarioDtoRes updateUserRoles(UsuarioDto usuarioDto);
 
-    Usuario updateUser(UsuarioUpdateDto usuarioUpdateDto);
+    UsuarioDtoRes updateUser(UsuarioUpdateDto usuarioUpdateDto);
 
     void changePassword(UsuarioChangePasswordDto usuarioChangePasswordDto, String currentUsername);
 
     void resetPassword(UsuarioResetPasswordDto usuarioResetPasswordDto);
 
     String updateProfilePhoto(Long userId, MultipartFile file) throws IOException;
-
 }

@@ -4,26 +4,25 @@ import com.mcmm.model.dto.personaDto.PersonaDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface IPersona {
 
-    final String PERSONAS_DIR = "personas/";
+    List<PersonaDto> findAll();
 
-    public Iterable<PersonaDto> findAll();
+    PersonaDto findById(Long id);
 
-    public PersonaDto findById(Long id);
+    PersonaDto save(PersonaDto personaDto);
 
-    public PersonaDto save(PersonaDto personaDto);
+    void delete(Long id);
 
-    public void delete(PersonaDto personaDto);
+    PersonaDto update(Long id, PersonaDto personaDto);
 
-    public PersonaDto update(Long id, PersonaDto personaDto);
+    PersonaDto partialUpdate(Long id, PersonaDto partialDto);
 
-    public PersonaDto partialUpdate(Long id, PersonaDto partialDto);
+    List<PersonaDto> personaNoMiembro();
 
-    public Iterable<PersonaDto> personaNoMiembro();
-
-    public PersonaDto buscarCi(String ci);
+    PersonaDto buscarCi(String ci);
 
     String updateProfilePhoto(Long id, MultipartFile file) throws IOException;
 }

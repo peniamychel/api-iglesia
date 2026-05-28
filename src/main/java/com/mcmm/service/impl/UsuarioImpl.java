@@ -1,7 +1,10 @@
 package com.mcmm.service.impl;
 
+import com.mcmm.exception.BadRequestException;
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.RolDao;
 import com.mcmm.model.dao.UsuarioDao;
+import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
@@ -11,146 +14,124 @@ import com.mcmm.model.entity.Rol;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IUsuario;
-import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 @Service
-@Transactional
 public class UsuarioImpl implements IUsuario {
 
-    @Autowired
-    private UsuarioDao usuarioDao;
+    private static final String USUARIOS_DIR = "usuarios/";
 
-    @Autowired
-    private RolImpl rolService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private RolDao rolDao;
-
-    private ModelMapper modelMapper = new ModelMapper();
-
-    @Autowired
-    private FileStorageService fileStorageService;
-
-    @Value("${file.base-url}")
-    private String baseUrl;
+    private final ModelMapper modelMapper;
+    private final UsuarioDao usuarioDao;
+    private final PasswordEncoder passwordEncoder;
+    private final RolDao rolDao;
+    private final FileStorageService fileStorageService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    public UsuarioImpl() {
+    public UsuarioImpl(ModelMapper modelMapper, UsuarioDao usuarioDao,
+                       PasswordEncoder passwordEncoder, RolDao rolDao,
+                       FileStorageService fileStorageService) {
+        this.modelMapper = modelMapper;
+        this.usuarioDao = usuarioDao;
+        this.passwordEncoder = passwordEncoder;
+        this.rolDao = rolDao;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
-    public Iterable<UsuarioDtoRes> findAll() {
-        List<UsuarioDtoRes> usuarioDtoRes = new ArrayList<>();
-        Iterable<Usuario> usuarios = usuarioDao.findAll();
-
-        for (Usuario usuario : usuarios) {
-            UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
-            if (usuario.getUriFoto() != null) {
-                String fileUrl = ServletUriComponentsBuilder
-                        .fromCurrentContextPath()
-                        .path(uploadDir)
-                        .path("/")
-                        .path(USUARIOS_DIR)
-                        .path(dto.getUriFoto())
-                        .toUriString();
-                dto.setUriFoto(fileUrl);
-            }
-            usuarioDtoRes.add(dto);
-
-        }
-        return usuarioDtoRes;
+    @Transactional(readOnly = true)
+    public List<UsuarioDtoRes> findAll() {
+        return StreamSupport.stream(usuarioDao.findAll().spliterator(), false)
+                .map(this::buildDtoWithPhotoUrl)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UsuarioDtoRes findById(Long id) {
-        Usuario usuario = usuarioDao.findById(id).orElse(null);
-        if (usuario != null) {
-            UsuarioDtoRes usuarioDtoRes = modelMapper.map(usuario, UsuarioDtoRes.class);
-            String fileUrl = ServletUriComponentsBuilder
-                    .fromCurrentContextPath()
-                    .path(uploadDir)
-                    .path("/")
-                    .path(USUARIOS_DIR)
-                    .path(usuarioDtoRes.getUriFoto())
-                    .toUriString();
-            usuarioDtoRes.setUriFoto(fileUrl);
-            return usuarioDtoRes;
-        }
-        return null;
+        Usuario usuario = usuarioDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
+        return buildDtoWithPhotoUrl(usuario);
     }
 
     @Override
-    public UsuarioDto create(Usuario usuario) {
-        Usuario guardado = usuarioDao.save(usuario);
-        UsuarioDto usuarioDtores = modelMapper.map(guardado, UsuarioDto.class);
-        usuarioDtores.setPassword("pass oculto");
-        return usuarioDtores;
+    @Transactional(readOnly = true)
+    public UsuarioDtoRes findByUsername(String username) {
+        Usuario usuario = usuarioDao.findByUsername(username)
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "username", username));
+        return buildDtoWithPhotoUrl(usuario);
     }
-
-    @Override
-    public void delete(Long id) {
-
-    }
-
-    @Override
-    public Usuario updateUserRoles(UsuarioDto usuarioDto) {
-        Usuario usuario = usuarioDao.findById(usuarioDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + usuarioDto.getId()));
-
-        Set<Rol> newRoles = new HashSet<>();
-
-        for (String roleName : usuarioDto.getRoles()) {
-            try {
-                ERole eRole = ERole.valueOf(roleName);
-                Rol rol = rolDao.findByNameWithLock(eRole)
-                        .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado: " + roleName));
-                newRoles.add(rol);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Rol inválido: " + roleName);
-            }
-        }
-
-        // Actualizar los roles del usuario
-        usuario.getRoles().clear();
-        usuario.getRoles().addAll(newRoles);
-
-        return usuarioDao.save(usuario);
-    }
-
 
     @Override
     @Transactional
-    public Usuario updateUser(UsuarioUpdateDto usuarioUpdateDto) {
+    public UsuarioDtoRes create(UsuarioDto usuarioDto) {
+        if (usuarioDao.existsByUsername(usuarioDto.getUsername())) {
+            throw new BadRequestException("El nombre de usuario ya existe");
+        }
+
+        if (usuarioDao.existsByEmail(usuarioDto.getEmail())) {
+            throw new BadRequestException("El email ya existe");
+        }
+
+        Usuario usuario = modelMapper.map(usuarioDto, Usuario.class);
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuario.setRoles(resolveRoles(usuarioDto.getRoles()));
+
+        Usuario saved = usuarioDao.save(usuario);
+        return buildDtoWithPhotoUrl(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Usuario usuario = usuarioDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
+        usuarioDao.delete(usuario);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioDtoRes updateUserRoles(UsuarioDto usuarioDto) {
+        Usuario usuario = usuarioDao.findById(usuarioDto.getId())
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioDto.getId()));
+
+        usuario.getRoles().clear();
+        usuario.getRoles().addAll(resolveRoles(usuarioDto.getRoles()));
+
+        Usuario saved = usuarioDao.save(usuario);
+        return buildDtoWithPhotoUrl(saved);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioDtoRes updateUser(UsuarioUpdateDto usuarioUpdateDto) {
         Usuario usuario = usuarioDao.findById(usuarioUpdateDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioUpdateDto.getId()));
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioUpdateDto.getId()));
 
         if (usuarioUpdateDto.getUsername() != null &&
                 !usuarioUpdateDto.getUsername().equals(usuario.getUsername()) &&
                 usuarioDao.existsByUsername(usuarioUpdateDto.getUsername())) {
-            throw new IllegalArgumentException("Username is already taken");
+            throw new BadRequestException("El nombre de usuario ya está en uso");
         }
 
         if (usuarioUpdateDto.getEmail() != null &&
                 !usuarioUpdateDto.getEmail().equals(usuario.getEmail()) &&
                 usuarioDao.existsByEmail(usuarioUpdateDto.getEmail())) {
-            throw new IllegalArgumentException("Email is already in use");
+            throw new BadRequestException("El email ya está en uso");
         }
 
         if (usuarioUpdateDto.getUsername() != null) {
@@ -172,37 +153,22 @@ public class UsuarioImpl implements IUsuario {
             usuario.setEstado(usuarioUpdateDto.getEstado());
         }
 
-        return usuarioDao.save(usuario);
+        Usuario saved = usuarioDao.save(usuario);
+        return buildDtoWithPhotoUrl(saved);
     }
-
-
-//    @Override
-//    @Transactional
-//    public void changePassword(ChangePasswordDto changePasswordDto) {
-//        Usuario usuario = usuarioDao.findById(changePasswordDto.getId())
-//                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + changePasswordDto.getId()));
-//
-//        if (!passwordEncoder.matches(changePasswordDto.getCurrentPassword(), usuario.getPassword())) {
-//            throw new IllegalArgumentException("Current password is incorrect");
-//        }
-//
-//        usuario.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
-//        usuarioDao.save(usuario);
-//    }
-
 
     @Override
     @Transactional
     public void changePassword(UsuarioChangePasswordDto usuarioChangePasswordDto, String currentUsername) {
         Usuario usuario = usuarioDao.findById(usuarioChangePasswordDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioChangePasswordDto.getId()));
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioChangePasswordDto.getId()));
 
         if (!usuario.getUsername().equals(currentUsername)) {
             throw new AccessDeniedException("Solo puedes cambiar tu propia contraseña");
         }
 
         if (!passwordEncoder.matches(usuarioChangePasswordDto.getCurrentPassword(), usuario.getPassword())) {
-            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+            throw new BadRequestException("La contraseña actual es incorrecta");
         }
 
         usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
@@ -213,7 +179,7 @@ public class UsuarioImpl implements IUsuario {
     @Transactional
     public void resetPassword(UsuarioResetPasswordDto usuarioResetPasswordDto) {
         Usuario usuario = usuarioDao.findById(usuarioResetPasswordDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + usuarioResetPasswordDto.getId()));
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioResetPasswordDto.getId()));
 
         usuario.setPassword(passwordEncoder.encode(usuarioResetPasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
@@ -222,19 +188,16 @@ public class UsuarioImpl implements IUsuario {
     @Override
     @Transactional
     public String updateProfilePhoto(Long id, MultipartFile file) throws IOException {
-
         Usuario usuario = usuarioDao.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + id));
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
 
-        // Si existe una foto anterior, la eliminamos
         if (usuario.getUriFoto() != null) {
             String oldFileName = USUARIOS_DIR + usuario.getUriFoto().substring(usuario.getUriFoto().lastIndexOf("/") + 1);
             fileStorageService.deleteFile(oldFileName);
         }
-        // Guardamos la nueva foto
+
         String fileName = fileStorageService.storeFile(file, usuario.getUsername(), USUARIOS_DIR);
 
-        // Construimos la URL completa
         String fileUrl = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path(uploadDir)
@@ -246,8 +209,40 @@ public class UsuarioImpl implements IUsuario {
         usuarioDao.save(usuario);
         return fileUrl;
     }
+
+    private Set<Rol> resolveRoles(Set<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            Rol defaultRol = rolDao.findByName(ERole.ENCARGADO_EVENTO)
+                    .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", ERole.ENCARGADO_EVENTO));
+            return Collections.singleton(defaultRol);
+        }
+
+        Set<Rol> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            try {
+                ERole eRole = ERole.valueOf(roleName);
+                Rol rol = rolDao.findByName(eRole)
+                        .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", eRole));
+                roles.add(rol);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Rol inválido: " + roleName);
+            }
+        }
+        return roles;
+    }
+
+    private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
+        UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
+        if (dto.getUriFoto() != null) {
+            String fileUrl = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path(uploadDir)
+                    .path("/")
+                    .path(USUARIOS_DIR)
+                    .path(dto.getUriFoto())
+                    .toUriString();
+            dto.setUriFoto(fileUrl);
+        }
+        return dto;
+    }
 }
-
-
-
-

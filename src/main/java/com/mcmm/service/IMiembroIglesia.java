@@ -1,25 +1,26 @@
 package com.mcmm.service;
 
-import com.mcmm.model.dto.*;
+import com.mcmm.model.dto.GraficoDataDto;
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.dto.MiembroIglesiaDto;
 
 import java.util.List;
 
 public interface IMiembroIglesia {
 
-    public Iterable<MiembroIglesiaDto> findAll();
+    List<MiembroIglesiaDto> findAll();
 
-    public MiembroIglesiaDto findById(Long id);
+    MiembroIglesiaDto findById(Long id);
 
-    public MiembroIglesiaDto save(MiembroIglesiaDto miembroIglesiaDto);
+    MiembroIglesiaDto save(MiembroIglesiaDto miembroIglesiaDto);
 
-    public void delete(MiembroIglesiaDto miembroIglesiaDto);
+    void delete(Long id);
 
-    public MiembroIglesiaDto update(MiembroIglesiaDto miembroIglesiaDto);
+    MiembroIglesiaDto update(MiembroIglesiaDto miembroIglesiaDto);
 
-    public boolean estado(Long id);
+    MiembroIglesiaDto estado(Long id);
 
-    Iterable<MiembroDto> findMiembrosIglesia(Long id);
+    List<MiembroDto> findMiembrosIglesia(Long id);
 
     boolean findByIdMiembro(Long id);
 

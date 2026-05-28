@@ -1,93 +1,84 @@
 package com.mcmm.service.impl;
 
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.CargoTipoDao;
 import com.mcmm.model.dto.CargoTipoDto;
 import com.mcmm.model.entity.CargoTipo;
 import com.mcmm.service.ICargoTipo;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class CargoTipoImpl implements ICargoTipo {
-    private ModelMapper modelMapper = new ModelMapper();
 
-    @Autowired
-    private CargoTipoDao cargoTipoDao;
+    private final ModelMapper modelMapper;
+    private final CargoTipoDao cargoTipoDao;
+
     @Override
-    public Iterable<CargoTipoDto> findAll() {
-        List<CargoTipoDto> cargosTipoDtos = new ArrayList<>();
-        Iterable<CargoTipo> cargosTipo = cargoTipoDao.findAll();
-
-        for (CargoTipo cargoTipo : cargosTipo) {
-            CargoTipoDto cargoDto = modelMapper.map(cargoTipo, CargoTipoDto.class);
-
-            cargosTipoDtos.add(cargoDto);
-        }
-        return cargosTipoDtos;
+    @Transactional(readOnly = true)
+    public List<CargoTipoDto> findAll() {
+        return StreamSupport.stream(cargoTipoDao.findAll().spliterator(), false)
+                .map(cargoTipo -> modelMapper.map(cargoTipo, CargoTipoDto.class))
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CargoTipoDto findById(Long id) {
-        CargoTipo cargoTipo = cargoTipoDao.findById(id).orElse(null);
-        if (cargoTipo != null) {
-            return modelMapper.map(cargoTipo, CargoTipoDto.class);
-        }
-        return null;
+        CargoTipo cargoTipo = cargoTipoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", id));
+        return modelMapper.map(cargoTipo, CargoTipoDto.class);
     }
 
     @Override
+    @Transactional
     public CargoTipoDto create(CargoTipoDto cargoTipoDto) {
         CargoTipo cargoTipo = modelMapper.map(cargoTipoDto, CargoTipo.class);
-
-        // Convertir el personaId en una entidad de Persona antes de guardar
-//        if (cargoDto.getTipoCargoId() != null) {
-//            CargoTipo cargoTipo = cargoDao.findById(miembroDto.getPersonaId())
-//                    .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
-//            miembro.setPersona(persona);
-//        }
-
         CargoTipo savedCargoTipo = cargoTipoDao.save(cargoTipo);
-        CargoTipoDto cargoTipoDtoSave = modelMapper.map(savedCargoTipo, CargoTipoDto.class);
-//        cargoDtoSave.setPersonaId(miembro.getPersona().getId());
-        return cargoTipoDtoSave;
+        return modelMapper.map(savedCargoTipo, CargoTipoDto.class);
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-
+        CargoTipo cargoTipo = cargoTipoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", id));
+        cargoTipoDao.delete(cargoTipo);
     }
 
     @Override
-    public void estado(Long id) {
-        cargoTipoDao.toggleEstado(id);
+    @Transactional
+    public CargoTipoDto estado(Long id) {
+        CargoTipo cargoTipo = cargoTipoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", id));
+        cargoTipo.setEstado(!cargoTipo.getEstado());
+        CargoTipo updated = cargoTipoDao.save(cargoTipo);
+        return modelMapper.map(updated, CargoTipoDto.class);
     }
 
     @Override
+    @Transactional
     public CargoTipoDto update(CargoTipoDto cargoTipoDto) {
-        CargoTipo cargoTipoR = cargoTipoDao.findById(cargoTipoDto.getId()).orElse(null);
-        if (cargoTipoR != null) {
-            cargoTipoR.setTipo(cargoTipoDto.getTipo());
-            cargoTipoR.setNombre(cargoTipoDto.getNombre());
-
-            cargoTipoR = cargoTipoDao.save(cargoTipoR);
-        }
-        return modelMapper.map(cargoTipoR, CargoTipoDto.class);
+        CargoTipo cargoTipoR = cargoTipoDao.findById(cargoTipoDto.getId())
+                .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", cargoTipoDto.getId()));
+        cargoTipoR.setTipo(cargoTipoDto.getTipo());
+        cargoTipoR.setNombre(cargoTipoDto.getNombre());
+        CargoTipo updated = cargoTipoDao.save(cargoTipoR);
+        return modelMapper.map(updated, CargoTipoDto.class);
     }
 
     @Override
+    @Transactional
     public CargoTipoDto save(CargoTipoDto cargoTipoDto) {
-        try {
-            CargoTipo cargoTipo = modelMapper.map(cargoTipoDto, CargoTipo.class);
-            CargoTipo savedIglesia = cargoTipoDao.save(cargoTipo);
-
-            return modelMapper.map(savedIglesia, CargoTipoDto.class);
-        } catch (DataIntegrityViolationException ex) {
-            throw new RuntimeException("Error en la base datos contacte al administrador.");
-        }
+        CargoTipo cargoTipo = modelMapper.map(cargoTipoDto, CargoTipo.class);
+        CargoTipo saved = cargoTipoDao.save(cargoTipo);
+        return modelMapper.map(saved, CargoTipoDto.class);
     }
 }
