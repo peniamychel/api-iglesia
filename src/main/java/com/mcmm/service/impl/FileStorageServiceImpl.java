@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -42,14 +43,19 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public String storeFile(MultipartFile file, String nameModel, String nameDir) throws IOException {
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
-        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String fileNameNative = nameModel + "-" + UUID.randomUUID().toString() + fileExtension;
-        String dirFile = nameDir + fileNameNative;
-
-        Path targetLocation = this.fileStorageLocation.resolve(dirFile);
+        // Validate file
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("El archivo está vacío");
+        }
+        String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+        String fileNameNative = nameModel + "-" + UUID.randomUUID() + fileExtension;
+        // Build directory path safely
+        Path directory = this.fileStorageLocation.resolve(nameDir).normalize();
+        // Ensure directory exists (it should have been created, but guard just in case)
+        Files.createDirectories(directory);
+        Path targetLocation = directory.resolve(fileNameNative);
         Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
         return fileNameNative;
     }
 

@@ -144,6 +144,10 @@ public class SwaggerConfig {
                             "  })();\n" +
                             "</script>";
                     
+                    // Inyectar el CSS del modo oscuro en el <head>
+                    String darkCssLink = "<link rel=\"stylesheet\" type=\"text/css\" href=\"/custom-css/custom-dark.css\" />";
+                    html = html.replace("</head>", darkCssLink + "\n  </head>");
+
                     html = html.replace("</body>", customJs + "</body>");
                     return new TransformedResource(resource, html.getBytes(StandardCharsets.UTF_8));
                 }

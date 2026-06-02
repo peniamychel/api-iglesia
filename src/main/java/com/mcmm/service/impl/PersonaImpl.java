@@ -126,9 +126,14 @@ public class PersonaImpl implements IPersona {
         Persona persona = personaDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Persona", "id", id));
 
-        if (persona.getUriFoto() != null) {
-            String oldFileName = PERSONAS_DIR + persona.getUriFoto().substring(persona.getUriFoto().lastIndexOf("/") + 1);
-            fileStorageService.deleteFile(oldFileName);
+        if (persona.getUriFoto() != null && !persona.getUriFoto().isBlank()) {
+            String uriFoto = persona.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    fileStorageService.deleteFile(PERSONAS_DIR + fileNameOnly);
+                }
+            }
         }
 
         String fileName = fileStorageService.storeFile(file, persona.getNombre(), PERSONAS_DIR);
@@ -143,6 +148,30 @@ public class PersonaImpl implements IPersona {
         persona.setUriFoto(fileName);
         personaDao.save(persona);
         return fileUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfilePhoto(Long id) {
+        Persona persona = personaDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Persona", "id", id));
+
+        if (persona.getUriFoto() != null && !persona.getUriFoto().isBlank()) {
+            String uriFoto = persona.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    try {
+                        fileStorageService.deleteFile(PERSONAS_DIR + fileNameOnly);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error al eliminar la foto: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        persona.setUriFoto(null);
+        personaDao.save(persona);
     }
 
     private PersonaDto buildDtoWithPhotoUrl(Persona persona) {

@@ -155,4 +155,16 @@ public class PersonaController {
             throw new RuntimeException("Error al subir la foto: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Personas')")
+    public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
+        personaService.deleteProfilePhoto(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Foto de perfil eliminada exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Persona")
+                        .build());
+    }
 }

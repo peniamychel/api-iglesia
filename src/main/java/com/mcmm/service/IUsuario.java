@@ -31,4 +31,6 @@ public interface IUsuario {
     void resetPassword(UsuarioResetPasswordDto usuarioResetPasswordDto);
 
     String updateProfilePhoto(Long userId, MultipartFile file) throws IOException;
+
+    void deleteProfilePhoto(Long id);
 }

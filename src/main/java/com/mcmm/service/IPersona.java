@@ -25,4 +25,6 @@ public interface IPersona {
     PersonaDto buscarCi(String ci);
 
     String updateProfilePhoto(Long id, MultipartFile file) throws IOException;
+
+    void deleteProfilePhoto(Long id);
 }

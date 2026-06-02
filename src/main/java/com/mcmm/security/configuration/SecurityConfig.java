@@ -50,6 +50,7 @@ public class SecurityConfig {
                             "/v3/api-docs/**",
                             "/swagger-resources/**",
                             "/webjars/**",
+                            "/custom-css/**",
                             "/swagger-ui.html").permitAll();
                     auth.requestMatchers("/auth/**").permitAll();
                     // auth.requestMatchers("/helloseguro").authenticated();

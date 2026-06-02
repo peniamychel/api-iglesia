@@ -147,7 +147,11 @@ public class UsuarioImpl implements IUsuario {
             usuario.setApellidos(usuarioUpdateDto.getApellidos());
         }
         if (usuarioUpdateDto.getUriFoto() != null) {
-            usuario.setUriFoto(usuarioUpdateDto.getUriFoto());
+            String photoUri = usuarioUpdateDto.getUriFoto();
+            if (photoUri.contains("/")) {
+                photoUri = photoUri.substring(photoUri.lastIndexOf("/") + 1);
+            }
+            usuario.setUriFoto(photoUri);
         }
         if (usuarioUpdateDto.getEstado() != null) {
             usuario.setEstado(usuarioUpdateDto.getEstado());
@@ -191,23 +195,51 @@ public class UsuarioImpl implements IUsuario {
         Usuario usuario = usuarioDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
 
-        if (usuario.getUriFoto() != null) {
-            String oldFileName = USUARIOS_DIR + usuario.getUriFoto().substring(usuario.getUriFoto().lastIndexOf("/") + 1);
-            fileStorageService.deleteFile(oldFileName);
+        if (usuario.getUriFoto() != null && !usuario.getUriFoto().isBlank()) {
+            String uriFoto = usuario.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    fileStorageService.deleteFile(USUARIOS_DIR + fileNameOnly);
+                }
+            }
         }
 
         String fileName = fileStorageService.storeFile(file, usuario.getUsername(), USUARIOS_DIR);
 
         String fileUrl = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path(uploadDir)
-                .path("/")
+                .path("/uploads/")
                 .path(USUARIOS_DIR)
                 .path(fileName)
                 .toUriString();
         usuario.setUriFoto(fileName);
         usuarioDao.save(usuario);
         return fileUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfilePhoto(Long id) {
+        Usuario usuario = usuarioDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
+
+        if (usuario.getUriFoto() != null && !usuario.getUriFoto().isBlank()) {
+            String uriFoto = usuario.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    try {
+                        fileStorageService.deleteFile(USUARIOS_DIR + fileNameOnly);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error al eliminar la foto: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        usuario.setUriFoto(null);
+        usuarioDao.save(usuario);
     }
 
     private Set<Rol> resolveRoles(Set<String> roleNames) {
@@ -236,8 +268,7 @@ public class UsuarioImpl implements IUsuario {
         if (dto.getUriFoto() != null) {
             String fileUrl = ServletUriComponentsBuilder
                     .fromCurrentContextPath()
-                    .path(uploadDir)
-                    .path("/")
+                    .path("/uploads/")
                     .path(USUARIOS_DIR)
                     .path(dto.getUriFoto())
                     .toUriString();

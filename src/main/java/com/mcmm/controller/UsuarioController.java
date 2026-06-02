@@ -132,11 +132,11 @@ public class UsuarioController {
                         .build());
     }
 
-    @PostMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
+    @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @RequestPart("file") MultipartFile file) {
         try {
             String fileUrl = usuarioService.updateProfilePhoto(id, file);
             return ResponseEntity.ok(
@@ -148,6 +148,18 @@ public class UsuarioController {
         } catch (IOException e) {
             throw new RuntimeException("Error al subir la foto: " + e.getMessage());
         }
+    }
+
+    @DeleteMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+    public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
+        usuarioService.deleteProfilePhoto(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Foto de perfil eliminada exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Usuario")
+                        .build());
     }
 
     @GetMapping("/findbyusername")

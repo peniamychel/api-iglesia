@@ -25,5 +25,17 @@ public class FileConfig implements WebMvcConfigurer {
                 .addResourceLocations(absolutePath)
                 .setCachePeriod(3600)
                 .resourceChain(true);
+
+        // Servir los recursos estáticos de Swagger UI (webjars)
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+
+        registry.addResourceHandler("/swagger-ui/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
+
+        // Servir el CSS personalizado de modo oscuro
+        registry.addResourceHandler("/custom-css/**")
+                .addResourceLocations("classpath:/static/custom-css/")
+                .resourceChain(true);
     }
 }
