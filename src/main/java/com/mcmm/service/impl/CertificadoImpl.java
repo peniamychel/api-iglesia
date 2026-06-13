@@ -1,65 +1,65 @@
 package com.mcmm.service.impl;
 
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dto.certificado.CertificadoDto;
 import com.mcmm.model.entity.Certificado;
 import com.mcmm.model.entity.Evento;
 import com.mcmm.model.entity.TipoCertificado;
 import com.mcmm.model.dao.CertificadoDao;
 import com.mcmm.model.dao.EventoDao;
+import com.mcmm.model.dao.PlantillaCertificadoRepository;
 import com.mcmm.model.dao.TipoCertificadoDao;
+import com.mcmm.model.dao.ParticipacionEventoDao;
+import com.mcmm.service.FileStorageService;
 import com.mcmm.service.ICertificado;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class CertificadoImpl implements ICertificado {
+
+    private static final String CERTIFICADOS_DIR = "certificados/";
 
     private final CertificadoDao certificadoDao;
     private final EventoDao eventoDao;
     private final TipoCertificadoDao tipoCertificadoDao;
-    private final ModelMapper modelMapper = new ModelMapper();
+    private final PlantillaCertificadoRepository plantillaCertificadoDao;
+    private final ParticipacionEventoDao participacionEventoDao;
+    private final ModelMapper modelMapper;
+    private final FileStorageService fileStorageService;
 
-    public CertificadoImpl(CertificadoDao certificadoDao, EventoDao eventoDao, TipoCertificadoDao tipoCertificadoDao) {
-        this.certificadoDao = certificadoDao;
-        this.eventoDao = eventoDao;
-        this.tipoCertificadoDao = tipoCertificadoDao;
-    }
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Override
+    @Transactional(readOnly = true)
     public List<CertificadoDto> findAll() {
-        List<Certificado> certificados = certificadoDao.findAll();
-        return certificados.stream()
-                .map(certificado -> {
-                    CertificadoDto dto = modelMapper.map(certificado, CertificadoDto.class);
-                    if (certificado.getEvento() != null) {
-                        dto.setEventoId(certificado.getEvento().getId());
-                    }
-                    if (certificado.getTipoCertificado() != null) {
-                        dto.setTipoCertificadoId(certificado.getTipoCertificado().getId());
-                    }
-                    return dto;
-                })
+        return StreamSupport.stream(certificadoDao.findAll().spliterator(), false)
+                .map(this::buildDtoWithPhotoUrl)
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CertificadoDto findById(Long id) {
-        Certificado certificado = certificadoDao.findById(id).orElse(null);
-        if (certificado == null) return null;
-        CertificadoDto dto = modelMapper.map(certificado, CertificadoDto.class);
-        if (certificado.getEvento() != null) {
-            dto.setEventoId(certificado.getEvento().getId());
-        }
-        if (certificado.getTipoCertificado() != null) {
-            dto.setTipoCertificadoId(certificado.getTipoCertificado().getId());
-        }
-        return dto;
+        Certificado certificado = certificadoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", id));
+        return buildDtoWithPhotoUrl(certificado);
     }
 
     @Override
+    @Transactional
     public CertificadoDto create(CertificadoDto certificadoDto) {
         Certificado certificado = modelMapper.map(certificadoDto, Certificado.class);
         if (certificadoDto.getEventoId() != null) {
@@ -70,20 +70,22 @@ public class CertificadoImpl implements ICertificado {
             TipoCertificado tipoCertificado = tipoCertificadoDao.findById(certificadoDto.getTipoCertificadoId()).orElse(null);
             certificado.setTipoCertificado(tipoCertificado);
         }
-        Certificado savedCertificado = certificadoDao.save(certificado);
-        CertificadoDto dto = modelMapper.map(savedCertificado, CertificadoDto.class);
-        if (savedCertificado.getEvento() != null) {
-            dto.setEventoId(savedCertificado.getEvento().getId());
+        if (certificadoDto.getPlantillaCertificadoId() != null) {
+            com.mcmm.model.entity.PlantillaCertificado plantilla = plantillaCertificadoDao.findById(certificadoDto.getPlantillaCertificadoId()).orElse(null);
+            certificado.setPlantillaCertificado(plantilla);
         }
-        if (savedCertificado.getTipoCertificado() != null) {
-            dto.setTipoCertificadoId(savedCertificado.getTipoCertificado().getId());
-        }
-        return dto;
+        Certificado saved = certificadoDao.save(certificado);
+        return buildDtoWithPhotoUrl(saved);
     }
 
     @Override
+    @Transactional
     public CertificadoDto update(CertificadoDto certificadoDto) {
-        Certificado certificado = modelMapper.map(certificadoDto, Certificado.class);
+        Certificado certificado = certificadoDao.findById(certificadoDto.getId())
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", certificadoDto.getId()));
+        certificado.setMotivoCertificado(certificadoDto.getMotivoCertificado());
+        certificado.setCodigoCertificado(certificadoDto.getCodigoCertificado());
+        certificado.setEstado(certificadoDto.getEstado());
         if (certificadoDto.getEventoId() != null) {
             Evento evento = eventoDao.findById(certificadoDto.getEventoId()).orElse(null);
             certificado.setEvento(evento);
@@ -92,24 +94,122 @@ public class CertificadoImpl implements ICertificado {
             TipoCertificado tipoCertificado = tipoCertificadoDao.findById(certificadoDto.getTipoCertificadoId()).orElse(null);
             certificado.setTipoCertificado(tipoCertificado);
         }
-        Certificado updatedCertificado = certificadoDao.save(certificado);
-        CertificadoDto dto = modelMapper.map(updatedCertificado, CertificadoDto.class);
-        if (updatedCertificado.getEvento() != null) {
-            dto.setEventoId(updatedCertificado.getEvento().getId());
+        if (certificadoDto.getPlantillaCertificadoId() != null) {
+            com.mcmm.model.entity.PlantillaCertificado plantilla = plantillaCertificadoDao.findById(certificadoDto.getPlantillaCertificadoId()).orElse(null);
+            certificado.setPlantillaCertificado(plantilla);
         }
-        if (updatedCertificado.getTipoCertificado() != null) {
-            dto.setTipoCertificadoId(updatedCertificado.getTipoCertificado().getId());
-        }
-        return dto;
+        Certificado saved = certificadoDao.save(certificado);
+        return buildDtoWithPhotoUrl(saved);
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        certificadoDao.deleteById(id);
+        Certificado certificado = certificadoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", id));
+                
+        if (certificado.getUriFoto() != null && !certificado.getUriFoto().isBlank()) {
+            try {
+                fileStorageService.deleteFile(CERTIFICADOS_DIR + certificado.getUriFoto());
+            } catch (IOException e) {
+                throw new RuntimeException("Error al eliminar la foto: " + e.getMessage());
+            }
+        }
+        
+        com.mcmm.model.entity.PlantillaCertificado plantilla = certificado.getPlantillaCertificado();
+        
+        // Detach the certificate from any participations to avoid foreign key constraints
+        participacionEventoDao.detachCertificado(id);
+        
+        // Remove reference first to avoid foreign key issues
+        certificado.setPlantillaCertificado(null);
+        certificadoDao.delete(certificado);
+        
+        if (plantilla != null) {
+            try {
+                if (plantilla.getUriLogo() != null && !plantilla.getUriLogo().isBlank()) {
+                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriLogo());
+                }
+                if (plantilla.getUriMarcaAgua() != null && !plantilla.getUriMarcaAgua().isBlank()) {
+                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriMarcaAgua());
+                }
+                if (plantilla.getUriFirma() != null && !plantilla.getUriFirma().isBlank()) {
+                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriFirma());
+                }
+            } catch (Exception e) {
+                System.err.println("Error al eliminar imágenes de plantilla: " + e.getMessage());
+            }
+            plantillaCertificadoDao.delete(plantilla);
+        }
     }
 
     @Override
+    @Transactional
     public void estado(Long id) {
         certificadoDao.toggleEstado(id);
+    }
+
+    @Override
+    @Transactional
+    public String uploadProfilePhoto(Long id, MultipartFile file) throws IOException {
+        Certificado certificado = certificadoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", id));
+
+        if (certificado.getUriFoto() != null && !certificado.getUriFoto().isBlank()) {
+            fileStorageService.deleteFile(CERTIFICADOS_DIR + certificado.getUriFoto());
+        }
+
+        String fileName = fileStorageService.storeFile(file, "certificado", CERTIFICADOS_DIR);
+
+        String fileUrl = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/uploads/")
+                .path(CERTIFICADOS_DIR)
+                .path(fileName)
+                .toUriString();
+        certificado.setUriFoto(fileName);
+        certificadoDao.save(certificado);
+        return fileUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfilePhoto(Long id) {
+        Certificado certificado = certificadoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", id));
+
+        if (certificado.getUriFoto() != null && !certificado.getUriFoto().isBlank()) {
+            try {
+                fileStorageService.deleteFile(CERTIFICADOS_DIR + certificado.getUriFoto());
+            } catch (IOException e) {
+                throw new RuntimeException("Error al eliminar la foto: " + e.getMessage());
+            }
+        }
+
+        certificado.setUriFoto(null);
+        certificadoDao.save(certificado);
+    }
+
+    private CertificadoDto buildDtoWithPhotoUrl(Certificado certificado) {
+        CertificadoDto dto = modelMapper.map(certificado, CertificadoDto.class);
+        if (certificado.getEvento() != null) {
+            dto.setEventoId(certificado.getEvento().getId());
+        }
+        if (certificado.getTipoCertificado() != null) {
+            dto.setTipoCertificadoId(certificado.getTipoCertificado().getId());
+        }
+        if (certificado.getPlantillaCertificado() != null) {
+            dto.setPlantillaCertificadoId(certificado.getPlantillaCertificado().getId());
+        }
+        if (dto.getUriFoto() != null) {
+            String fileUrl = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path("/uploads/")
+                    .path(CERTIFICADOS_DIR)
+                    .path(dto.getUriFoto())
+                    .toUriString();
+            dto.setUriFoto(fileUrl);
+        }
+        return dto;
     }
 }

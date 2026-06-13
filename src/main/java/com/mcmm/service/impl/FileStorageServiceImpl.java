@@ -35,6 +35,12 @@ public class FileStorageServiceImpl implements FileStorageService {
             Path subDirectoryPatito = this.fileStorageLocation.resolve("personas");
             Files.createDirectories(subDirectoryPatito);
 
+            Path subDirectoryCertificados = this.fileStorageLocation.resolve("certificados");
+            Files.createDirectories(subDirectoryCertificados);
+
+            Path subDirectoryPlantillas = this.fileStorageLocation.resolve("plantillas");
+            Files.createDirectories(subDirectoryPlantillas);
+
 
         } catch (IOException ex) {
             throw new RuntimeException("No se pudo crear el directorio de almacenamiento. ", ex);

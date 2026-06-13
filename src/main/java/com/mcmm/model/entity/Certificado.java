@@ -23,6 +23,10 @@ public class Certificado {
     @JoinColumn(name = "evento_id")
     private Evento evento;
 
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = PlantillaCertificado.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "plantilla_certificado_id")
+    private PlantillaCertificado plantillaCertificado;
+
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = TipoCertificado.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "tipo_certificado_id")
     private TipoCertificado tipoCertificado;
@@ -32,6 +36,9 @@ public class Certificado {
 
     @Column(name = "codigo_certificado", length = 254)
     private String codigoCertificado;
+
+    @Column(name = "uri_foto")
+    private String uriFoto;
 
     private Boolean estado;
 

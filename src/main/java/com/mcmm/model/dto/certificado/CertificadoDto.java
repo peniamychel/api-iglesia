@@ -18,6 +18,7 @@ public class CertificadoDto {
 
     private Long eventoId; // FK to Evento
     private Long tipoCertificadoId; // FK to TipoCertificado
+    private Long plantillaCertificadoId; // FK to PlantillaCertificado
 
     @NotBlank
     @Size(max = 254)
@@ -25,6 +26,8 @@ public class CertificadoDto {
 
     @Size(max = 254)
     private String codigoCertificado;
+
+    private String uriFoto;
 
     private Boolean estado;
     private LocalDateTime createdAt;

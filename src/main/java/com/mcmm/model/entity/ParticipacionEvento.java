@@ -37,10 +37,23 @@ public class ParticipacionEvento {
 
     private Boolean estado;
 
+    @Column(name = "entregado")
+    private Boolean entregado;
+
+    @Column(name = "fecha_entrega")
+    private LocalDateTime fechaEntrega;
+
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Usuario.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "entregado_por")
+    private Usuario entregadoPor;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "codigo_unico", unique = true)
+    private String codigoUnico;
 
     @PrePersist
     protected void onCreate() {
@@ -48,6 +61,9 @@ public class ParticipacionEvento {
         updatedAt = LocalDateTime.now();
         if (estado == null) {
             estado = true; // Establecer estado en true si no se ha asignado
+        }
+        if (codigoUnico == null || codigoUnico.isEmpty()) {
+            codigoUnico = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
     }
 

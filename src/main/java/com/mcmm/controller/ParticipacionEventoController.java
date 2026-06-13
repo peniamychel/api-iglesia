@@ -1,6 +1,5 @@
 package com.mcmm.controller;
 
-import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dto.participacionEvento.ParticipacionEventoDto;
 import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IParticipacionEvento;
@@ -9,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class ParticipacionEventoController {
     private final IParticipacionEvento participacionEventoService;
 
     @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<ParticipacionEventoDto>> create(@Valid @RequestBody ParticipacionEventoDto participacionEventoDto) {
         ParticipacionEventoDto saved = participacionEventoService.create(participacionEventoDto);
         return new ResponseEntity<>(ApiResponse.<ParticipacionEventoDto>builder()
@@ -44,7 +46,6 @@ public class ParticipacionEventoController {
     @GetMapping("/showbyid/{id}")
     public ResponseEntity<ApiResponse<ParticipacionEventoDto>> showById(@PathVariable Long id) {
         ParticipacionEventoDto participacion = participacionEventoService.findById(id);
-        if (participacion == null) throw new NotFoundExceptionResource("ParticipacionEvento", "id", id);
         return ResponseEntity.ok(ApiResponse.<ParticipacionEventoDto>builder()
                 .message("Participación en evento encontrada.")
                 .datos(participacion)
@@ -77,6 +78,18 @@ public class ParticipacionEventoController {
         participacionEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado de la participación en evento actualizado exitosamente.")
+                .datos(null)
+                .nombreModelo("ParticipacionEvento")
+                .build());
+    }
+
+    @PutMapping("/entregado/{id}")
+    public ResponseEntity<ApiResponse<Void>> toggleEntregado(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        participacionEventoService.toggleEntregado(id, username);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Estado de entrega del certificado actualizado exitosamente.")
                 .datos(null)
                 .nombreModelo("ParticipacionEvento")
                 .build());

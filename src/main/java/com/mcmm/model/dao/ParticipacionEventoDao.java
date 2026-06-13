@@ -15,4 +15,9 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
     @Transactional
     @Query("UPDATE ParticipacionEvento p SET p.estado = NOT p.estado, p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
     void toggleEstado(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE ParticipacionEvento p SET p.certificado = null, p.updatedAt = CURRENT_TIMESTAMP WHERE p.certificado.id = :certificadoId")
+    void detachCertificado(@Param("certificadoId") Long certificadoId);
 }

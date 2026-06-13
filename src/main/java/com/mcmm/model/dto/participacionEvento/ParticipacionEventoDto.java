@@ -24,6 +24,10 @@ public class ParticipacionEventoDto {
 
     private Date fecha;
     private Boolean estado;
+    private Boolean entregado;
+    private LocalDateTime fechaEntrega;
+    private Long entregadoPorId;
+    private String codigoUnico;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
