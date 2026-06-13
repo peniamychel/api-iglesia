@@ -1,5 +1,6 @@
 package com.mcmm.model.dto.MiembroDto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,19 @@ public class MiembroDtoEdit {
     private String interventores;
     private String detalles;
 
-    private Long personaId; // Para propósitos de creación y actualizació
+    @NotBlank(message = "El nombre es obligatorio.")
+    private String nombre;
+    
+    @NotBlank(message = "El apellido es obligatorio.")
+    private String apellido;
+    
+    private String ci;
+    private Date fechaNac;
+    private String celular;
+    private String sexo;
+    private String direccion;
+    private String uriFoto;
+
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

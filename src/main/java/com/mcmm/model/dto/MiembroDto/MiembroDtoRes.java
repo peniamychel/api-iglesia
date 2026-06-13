@@ -19,7 +19,14 @@ public class MiembroDtoRes {
     private String interventores;
     private String detalles;
 
-    private Long personaId; // Para propósitos de creación y actualizació
+    private String nombre;
+    private String apellido;
+    private String ci;
+    private Date fechaNac;
+    private String celular;
+    private String sexo;
+    private String direccion;
+    private String uriFoto;
 
     private Boolean estado;
     private LocalDateTime createdAt;

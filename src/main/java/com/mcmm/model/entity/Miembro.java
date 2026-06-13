@@ -25,9 +25,24 @@ public class Miembro {
     @OneToMany(fetch = FetchType.LAZY, targetEntity = MiembroIglesia.class, cascade = CascadeType.PERSIST, mappedBy = "miembro")
     private List<MiembroIglesia> miembroIglesias;
 
-    @OneToOne (fetch = FetchType.LAZY,targetEntity = Persona.class, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "persona_id")
-    private Persona persona;
+    private String nombre;
+
+    private String apellido;
+
+    @Column(name = "ci", unique = true)
+    private String ci;
+
+    @Column(name = "fecha_nac")
+    private Date fechaNac;
+
+    private String celular;
+
+    private String sexo;
+
+    private String direccion;
+
+    @Column(name = "uri_foto")
+    private String uriFoto;
 
     @OneToMany(fetch = FetchType.LAZY, targetEntity = Cargo.class, cascade = CascadeType.PERSIST, mappedBy = "miembro")
     private List<Cargo> cargos;

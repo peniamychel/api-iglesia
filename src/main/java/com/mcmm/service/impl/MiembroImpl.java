@@ -2,17 +2,19 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.MiembroDao;
-import com.mcmm.model.dao.PersonaDao;
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
-import com.mcmm.model.dto.personaDto.PersonaDto;
 import com.mcmm.model.entity.Miembro;
-import com.mcmm.model.entity.Persona;
+import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IMiembro;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,26 +22,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MiembroImpl implements IMiembro {
 
+    private static final String MIEMBROS_DIR = "miembros/";
+
     private final ModelMapper modelMapper;
     private final MiembroDao miembroDao;
-    private final PersonaDao personaDao;
+    private final FileStorageService fileStorageService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Override
     @Transactional
     public MiembroDto create(MiembroDto miembroDto) {
         Miembro miembro = modelMapper.map(miembroDto, Miembro.class);
-
-        // Convertir el personaId en una entidad de Persona antes de guardar
-        if (miembroDto.getPersonaId() != null) {
-            Persona persona = personaDao.findById(miembroDto.getPersonaId())
-                    .orElseThrow(() -> new NotFoundExceptionResource("Persona", "id", miembroDto.getPersonaId()));
-            miembro.setPersona(persona);
-        }
-
         Miembro savedMiembro = miembroDao.save(miembro);
-        MiembroDto miembroDtoSave = modelMapper.map(savedMiembro, MiembroDto.class);
-        miembroDtoSave.setPersonaId(miembro.getPersona().getId());
-        return miembroDtoSave;
+        return buildDtoWithPhotoUrl(savedMiembro);
     }
 
     @Override
@@ -49,12 +46,7 @@ public class MiembroImpl implements IMiembro {
         Iterable<Miembro> miembros = miembroDao.findAll();
 
         for (Miembro miembro : miembros) {
-            MiembroDto miembroDto = modelMapper.map(miembro, MiembroDto.class);
-            if (miembro.getPersona() != null) {
-                PersonaDto personaDto = modelMapper.map(miembro.getPersona(), PersonaDto.class);
-                miembroDto.setPersonaDto(personaDto);
-            }
-            miembroDtos.add(miembroDto);
+            miembroDtos.add(buildDtoWithPhotoUrl(miembro));
         }
         return miembroDtos;
     }
@@ -64,13 +56,7 @@ public class MiembroImpl implements IMiembro {
     public MiembroDto findById(Long id) {
         Miembro miembro = miembroDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
-        
-        MiembroDto miembroDto = modelMapper.map(miembro, MiembroDto.class);
-        if (miembro.getPersona() != null) {
-            PersonaDto personaDto = modelMapper.map(miembro.getPersona(), PersonaDto.class);
-            miembroDto.setPersonaDto(personaDto);
-        }
-        return miembroDto;
+        return buildDtoWithPhotoUrl(miembro);
     }
 
     @Override
@@ -79,20 +65,22 @@ public class MiembroImpl implements IMiembro {
         Miembro miembroExistente = miembroDao.findById(miembroDto.getId())
                 .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", miembroDto.getId()));
 
+        miembroExistente.setNombre(miembroDto.getNombre());
+        miembroExistente.setApellido(miembroDto.getApellido());
+        miembroExistente.setCi(miembroDto.getCi());
+        miembroExistente.setFechaNac(miembroDto.getFechaNac());
+        miembroExistente.setCelular(miembroDto.getCelular());
+        miembroExistente.setSexo(miembroDto.getSexo());
+        miembroExistente.setDireccion(miembroDto.getDireccion());
+        miembroExistente.setUriFoto(miembroDto.getUriFoto());
         miembroExistente.setFechaConvercion(miembroDto.getFechaConvercion());
         miembroExistente.setLugarConvercion(miembroDto.getLugarConvercion());
         miembroExistente.setInterventores(miembroDto.getInterventores());
         miembroExistente.setDetalles(miembroDto.getDetalles());
         miembroExistente.setEstado(miembroDto.getEstado());
 
-        if (miembroDto.getPersonaId() != null) {
-            Persona persona = personaDao.findById(miembroDto.getPersonaId())
-                    .orElseThrow(() -> new NotFoundExceptionResource("Persona", "id", miembroDto.getPersonaId()));
-            miembroExistente.setPersona(persona);
-        }
-
         Miembro miembroActualizado = miembroDao.save(miembroExistente);
-        return modelMapper.map(miembroActualizado, MiembroDto.class);
+        return buildDtoWithPhotoUrl(miembroActualizado);
     }
 
     @Override
@@ -100,6 +88,16 @@ public class MiembroImpl implements IMiembro {
     public void delete(Long id) {
         Miembro miembro = miembroDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
+        
+        // Eliminar foto si existe
+        if (miembro.getUriFoto() != null && !miembro.getUriFoto().isBlank()) {
+            try {
+                fileStorageService.deleteFile(MIEMBROS_DIR + miembro.getUriFoto());
+            } catch (IOException e) {
+                // log error or proceed
+            }
+        }
+        
         miembroDao.delete(miembro);
     }
 
@@ -110,6 +108,85 @@ public class MiembroImpl implements IMiembro {
                 .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
         miembro.setEstado(!miembro.getEstado());
         Miembro updated = miembroDao.save(miembro);
-        return modelMapper.map(updated, MiembroDto.class);
+        return buildDtoWithPhotoUrl(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MiembroDto buscarCi(String ci) {
+        Miembro miembro = miembroDao.findByCi(ci);
+        if (miembro != null) {
+            return buildDtoWithPhotoUrl(miembro);
+        }
+        return null;
+    }
+
+    @Override
+    @Transactional
+    public String updateProfilePhoto(Long id, MultipartFile file) throws IOException {
+        Miembro miembro = miembroDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
+
+        if (miembro.getUriFoto() != null && !miembro.getUriFoto().isBlank()) {
+            String uriFoto = miembro.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    fileStorageService.deleteFile(MIEMBROS_DIR + fileNameOnly);
+                }
+            }
+        }
+
+        String fileName = fileStorageService.storeFile(file, miembro.getNombre(), MIEMBROS_DIR);
+
+        String fileUrl = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(uploadDir)
+                .path("/")
+                .path(MIEMBROS_DIR)
+                .path(fileName)
+                .toUriString();
+        miembro.setUriFoto(fileName);
+        miembroDao.save(miembro);
+        return fileUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfilePhoto(Long id) {
+        Miembro miembro = miembroDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
+
+        if (miembro.getUriFoto() != null && !miembro.getUriFoto().isBlank()) {
+            String uriFoto = miembro.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    try {
+                        fileStorageService.deleteFile(MIEMBROS_DIR + fileNameOnly);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error al eliminar la foto: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        miembro.setUriFoto(null);
+        miembroDao.save(miembro);
+    }
+
+    private MiembroDto buildDtoWithPhotoUrl(Miembro miembro) {
+        MiembroDto dto = modelMapper.map(miembro, MiembroDto.class);
+        if (dto.getUriFoto() != null) {
+            String fileUrl = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path(uploadDir)
+                    .path("/")
+                    .path(MIEMBROS_DIR)
+                    .path(dto.getUriFoto())
+                    .toUriString();
+            dto.setUriFoto(fileUrl);
+        }
+        return dto;
     }
 }

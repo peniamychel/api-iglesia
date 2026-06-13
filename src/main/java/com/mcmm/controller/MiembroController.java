@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 /**
  * Controlador REST para la gestión de Miembros de la iglesia.
@@ -141,5 +143,56 @@ public class MiembroController {
                         .nombreModelo("Miembro")
                         .build()
         );
+    }
+
+    @GetMapping("/buscarci/{ci}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<MiembroDto>> buscarCi(@PathVariable("ci") String ci) {
+        MiembroDto miembroDto = miembroService.buscarCi(ci);
+        if (miembroDto == null) {
+            return new ResponseEntity<>(
+                    ApiResponse.<MiembroDto>builder()
+                            .message("Miembro no encontrado con CI: " + ci)
+                            .datos(null)
+                            .nombreModelo("Miembro")
+                            .build(),
+                    HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroDto>builder()
+                        .message("Miembro encontrado.")
+                        .datos(miembroDto)
+                        .nombreModelo("Miembro")
+                        .build());
+    }
+
+    @PostMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = miembroService.updateProfilePhoto(id, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Foto de perfil actualizada exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("Miembro")
+                            .build());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al subir la foto: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/foto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
+        miembroService.deleteProfilePhoto(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Foto de perfil eliminada exitosamente.")
+                        .datos(null)
+                        .nombreModelo("Miembro")
+                        .build());
     }
 }
