@@ -91,17 +91,7 @@ public class UsuarioController {
                         .build());
     }
 
-    @PutMapping("/update-roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUserRoles(@RequestBody UsuarioDto usuarioDto) {
-        UsuarioDtoRes usuarioActualizado = usuarioService.updateUserRoles(usuarioDto);
-        return ResponseEntity.ok(
-                ApiResponse.<UsuarioDtoRes>builder()
-                        .message("Roles de usuario actualizados exitosamente.")
-                        .datos(usuarioActualizado)
-                        .nombreModelo("Usuario")
-                        .build());
-    }
+
 
     @PutMapping("/change-password")
     @PreAuthorize("isAuthenticated()")

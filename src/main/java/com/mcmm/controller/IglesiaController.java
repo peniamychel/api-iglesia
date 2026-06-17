@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -174,6 +176,38 @@ public class IglesiaController {
                 ApiResponse.<List<IglesiaDto>>builder()
                         .message("Listado de iglesias activas")
                         .datos(iglesiaDtos)
+                        .nombreModelo("Iglesia")
+                        .build());
+    }
+
+    @PostMapping("/{id}/foto")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
+    public ResponseEntity<ApiResponse<String>> uploadFoto(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = iglesiaService.updateFoto(id, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Foto de iglesia actualizada exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("Iglesia")
+                            .build());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al subir la foto: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/foto")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
+    public ResponseEntity<ApiResponse<Void>> deleteFoto(@PathVariable Long id) {
+        iglesiaService.deleteFoto(id);
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Foto de iglesia eliminada exitosamente.")
+                        .datos(null)
                         .nombreModelo("Iglesia")
                         .build());
     }

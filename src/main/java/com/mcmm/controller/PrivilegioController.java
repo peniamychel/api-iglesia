@@ -1,13 +1,10 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.PrivilegioDto;
-import com.mcmm.model.dto.RolDto;
-import com.mcmm.model.entity.ERole;
+import com.mcmm.model.dto.RolCargoDto;
 import com.mcmm.model.entity.Privilegio;
-import com.mcmm.model.entity.Rol;
 import com.mcmm.service.IPrivilegio;
-import com.mcmm.service.IRol;
-import org.modelmapper.ModelMapper;
+import com.mcmm.service.IRolCargo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/privilegios/v1")
@@ -27,9 +23,7 @@ public class PrivilegioController {
     private IPrivilegio privilegioService;
 
     @Autowired
-    private IRol rolService;
-
-    private ModelMapper modelMapper = new ModelMapper();
+    private IRolCargo rolCargoService;
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
@@ -79,39 +73,31 @@ public class PrivilegioController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/rol/{rolName}/add/{privilegioId}")
+    @PostMapping("/rol-cargo/{rolCargoId}/add/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
-    public ResponseEntity<RolDto> addPrivilegioToRol(
-            @PathVariable String rolName,
+    public ResponseEntity<RolCargoDto> addPrivilegioToRolCargo(
+            @PathVariable Long rolCargoId,
             @PathVariable Long privilegioId) {
-        ERole eRole = ERole.valueOf(rolName.toUpperCase());
-        Rol updated = rolService.addPrivilegio(eRole, privilegioId);
-        RolDto dto = modelMapper.map(updated, RolDto.class);
-        return ResponseEntity.ok(dto);
+        RolCargoDto updated = rolCargoService.addPrivilegio(rolCargoId, privilegioId);
+        return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/rol/{rolName}/remove/{privilegioId}")
+    @DeleteMapping("/rol-cargo/{rolCargoId}/remove/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
-    public ResponseEntity<RolDto> removePrivilegioFromRol(
-            @PathVariable String rolName,
+    public ResponseEntity<RolCargoDto> removePrivilegioFromRolCargo(
+            @PathVariable Long rolCargoId,
             @PathVariable Long privilegioId) {
-        ERole eRole = ERole.valueOf(rolName.toUpperCase());
-        Rol updated = rolService.removePrivilegio(eRole, privilegioId);
-        RolDto dto = modelMapper.map(updated, RolDto.class);
-        return ResponseEntity.ok(dto);
+        RolCargoDto updated = rolCargoService.removePrivilegio(rolCargoId, privilegioId);
+        return ResponseEntity.ok(updated);
     }
 
-    @GetMapping("/rol/{rolName}/privilegios")
+    @GetMapping("/rol-cargo/{rolCargoId}/privilegios")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Set<PrivilegioDto>> getPrivilegiosByRol(
-            @PathVariable String rolName) {
-        ERole eRole = ERole.valueOf(rolName.toUpperCase());
-        Set<Privilegio> privilegios = rolService.getPrivilegiosByRol(eRole);
-        Set<PrivilegioDto> dtos = privilegios.stream()
-                .map(p -> modelMapper.map(p, PrivilegioDto.class))
-                .collect(Collectors.toSet());
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<Set<PrivilegioDto>> getPrivilegiosByRolCargo(
+            @PathVariable Long rolCargoId) {
+        RolCargoDto rolCargo = rolCargoService.findById(rolCargoId);
+        return ResponseEntity.ok(rolCargo.getPrivilegios());
     }
 }

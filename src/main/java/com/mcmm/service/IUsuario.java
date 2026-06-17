@@ -22,8 +22,6 @@ public interface IUsuario {
 
     void delete(Long id);
 
-    UsuarioDtoRes updateUserRoles(UsuarioDto usuarioDto);
-
     UsuarioDtoRes updateUser(UsuarioUpdateDto usuarioUpdateDto);
 
     void changePassword(UsuarioChangePasswordDto usuarioChangePasswordDto, String currentUsername);

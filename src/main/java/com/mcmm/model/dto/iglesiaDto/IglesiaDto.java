@@ -33,4 +33,5 @@ public class IglesiaDto implements java.io.Serializable {
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String uriFoto;
 }

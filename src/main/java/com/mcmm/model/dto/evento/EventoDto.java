@@ -19,6 +19,8 @@ public class EventoDto {
 
     private Long tipoEventoId; // FK to TipoEvento
 
+    private Long iglesiaId; // FK to Iglesia
+
     @NotBlank
     @Size(max = 254)
     private String nombre;

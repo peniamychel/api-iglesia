@@ -1,0 +1,23 @@
+package com.mcmm.service;
+
+import com.mcmm.model.dto.RolCargoDto;
+
+import java.util.List;
+
+public interface IRolCargo {
+    List<RolCargoDto> findAll();
+
+    RolCargoDto findById(Long id);
+
+    RolCargoDto create(RolCargoDto rolCargoDto);
+
+    RolCargoDto update(RolCargoDto rolCargoDto);
+
+    void delete(Long id);
+
+    void estado(Long id);
+
+    RolCargoDto addPrivilegio(Long rolCargoId, Long privilegioId);
+
+    RolCargoDto removePrivilegio(Long rolCargoId, Long privilegioId);
+}

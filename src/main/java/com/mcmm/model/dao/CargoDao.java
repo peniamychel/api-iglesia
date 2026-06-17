@@ -20,6 +20,5 @@ public interface CargoDao extends JpaRepository<Cargo, Long> {
     // Trae cargos filtrando por el estado de la iglesia y el estado del miembro
     List<Cargo> findByIglesia_EstadoTrueAndMiembro_EstadoTrue();
 
-
-
+    List<Cargo> findByIglesiaId(Long iglesiaId);
 }

@@ -1,6 +1,6 @@
 package com.mcmm.model.dto.usuarioDto;
 
-import com.mcmm.model.dto.RolDto;
+import com.mcmm.model.dto.RolCargoDto;
 import lombok.*;
 
 import java.util.Set;
@@ -18,5 +18,6 @@ public class UsuarioDtoRes {
     private String uriFoto;
     private Boolean estado;
     private String password;
-    private Set<RolDto> roles;
+    private Long miembroId;
+    private Set<RolCargoDto> roles;
 }

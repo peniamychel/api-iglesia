@@ -2,23 +2,26 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.CargoDao;
-import com.mcmm.model.dao.CargoTipoDao;
+import com.mcmm.model.dao.RolCargoDao;
 import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dao.MiembroDao;
 import com.mcmm.model.dto.CargoDto;
 import com.mcmm.model.entity.Cargo;
-import com.mcmm.model.entity.CargoTipo;
+import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.Miembro;
 import com.mcmm.service.ICargo;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +31,26 @@ public class CargoImpl implements ICargo {
     private final CargoDao cargoDao;
     private final IglesiaDao iglesiaDao;
     private final MiembroDao miembroDao;
-    private final CargoTipoDao cargoTipoDao;
+    private final RolCargoDao rolCargoDao;
+
+    private Long getCurrentIglesiaId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getDetails() instanceof Map) {
+            Map<?, ?> details = (Map<?, ?>) authentication.getDetails();
+            Object iglesiaIdObj = details.get("iglesiaId");
+            if (iglesiaIdObj instanceof Long) {
+                return (Long) iglesiaIdObj;
+            }
+        }
+        return null;
+    }
 
     @Override
     @Transactional(readOnly = true)
     public Iterable<CargoDto> findAll() {
         List<CargoDto> cargosDtos = new ArrayList<>();
-        Iterable<Cargo> cargos = cargoDao.findAll();
+        Long iglesiaId = getCurrentIglesiaId();
+        Iterable<Cargo> cargos = iglesiaId != null ? cargoDao.findByIglesiaId(iglesiaId) : cargoDao.findAll();
 
         for (Cargo cargo : cargos) {
             CargoDto cargoDto = modelMapper.map(cargo, CargoDto.class);
@@ -57,7 +73,12 @@ public class CargoImpl implements ICargo {
         Cargo cargo = modelMapper.map(cargoDto, Cargo.class);
 
         //tratar id de iglesia
-        if (cargoDto.getIglesiaId() != null) {
+        Long iglesiaId = getCurrentIglesiaId();
+        if (iglesiaId != null) {
+            Iglesia iglesia = iglesiaDao.findById(iglesiaId)
+                    .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+            cargo.setIglesia(iglesia);
+        } else if (cargoDto.getIglesiaId() != null) {
             Iglesia iglesia = iglesiaDao.findById(cargoDto.getIglesiaId())
                     .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", cargoDto.getIglesiaId()));
             if (!iglesia.getEstado()) throw new IllegalArgumentException("La iglesia proporcionada está inactiva.");
@@ -72,12 +93,12 @@ public class CargoImpl implements ICargo {
             cargo.setMiembro(miembro);
         }
 
-        //tratar id tipo cargo
-        if (cargoDto.getTipoCargoId() != null) {
-            CargoTipo cargoTipo = cargoTipoDao.findById(cargoDto.getTipoCargoId())
-                    .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", cargoDto.getTipoCargoId()));
-            if (!cargoTipo.getEstado()) throw new IllegalArgumentException("El tipo de cargo proporcionado está inactivo.");
-            cargo.setTipoCargo(cargoTipo);
+        //tratar id rol cargo
+        if (cargoDto.getRolCargoId() != null) {
+            RolCargo rolCargo = rolCargoDao.findById(cargoDto.getRolCargoId())
+                    .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", cargoDto.getRolCargoId()));
+            if (!rolCargo.getEstado()) throw new IllegalArgumentException("El Rol/Cargo proporcionado está inactivo.");
+            cargo.setRolCargo(rolCargo);
         }
 
         Cargo savedCargo = cargoDao.save(cargo);
@@ -108,7 +129,12 @@ public class CargoImpl implements ICargo {
         Cargo cargoR = cargoDao.findById(cargoDto.getId())
                 .orElseThrow(() -> new NotFoundExceptionResource("Cargo", "id", cargoDto.getId()));
 
-        if (cargoDto.getIglesiaId() != null) {
+        Long iglesiaId = getCurrentIglesiaId();
+        if (iglesiaId != null) {
+            Iglesia iglesia = iglesiaDao.findById(iglesiaId)
+                    .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+            cargoR.setIglesia(iglesia);
+        } else if (cargoDto.getIglesiaId() != null) {
             Iglesia iglesia = iglesiaDao.findById(cargoDto.getIglesiaId())
                     .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", cargoDto.getIglesiaId()));
             if (!iglesia.getEstado()) throw new IllegalArgumentException("La iglesia proporcionada está inactiva.");
@@ -122,11 +148,11 @@ public class CargoImpl implements ICargo {
             cargoR.setMiembro(miembro);
         }
 
-        if (cargoDto.getTipoCargoId() != null) {
-            CargoTipo cargoTipo = cargoTipoDao.findById(cargoDto.getTipoCargoId())
-                    .orElseThrow(() -> new NotFoundExceptionResource("CargoTipo", "id", cargoDto.getTipoCargoId()));
-            if (!cargoTipo.getEstado()) throw new IllegalArgumentException("El tipo de cargo proporcionado está inactivo.");
-            cargoR.setTipoCargo(cargoTipo);
+        if (cargoDto.getRolCargoId() != null) {
+            RolCargo rolCargo = rolCargoDao.findById(cargoDto.getRolCargoId())
+                    .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", cargoDto.getRolCargoId()));
+            if (!rolCargo.getEstado()) throw new IllegalArgumentException("El Rol/Cargo proporcionado está inactivo.");
+            cargoR.setRolCargo(rolCargo);
         }
 
         cargoR.setDetalle(cargoDto.getDetalle());

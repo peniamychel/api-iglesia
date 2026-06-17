@@ -30,12 +30,15 @@ public class SecurityConfig {
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    JwtAuthorizationFilter jwtAuthorizationFilter;
+    private JwtAuthorizationFilter jwtAuthorizationFilter;
+
+    @Autowired
+    private com.mcmm.model.dao.UsuarioDao usuarioDao;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager autohenticationManager)
             throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils, usuarioDao);
         jwtAuthenticationFilter.setAuthenticationManager(autohenticationManager);
         jwtAuthenticationFilter.setFilterProcessesUrl("/login");
 

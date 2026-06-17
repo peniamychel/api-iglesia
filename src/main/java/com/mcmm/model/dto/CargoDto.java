@@ -15,8 +15,8 @@ public class CargoDto {
 
     private Long id;
 
-    @NotNull(message = "Requiere el tipoCargoId.")
-    private Long tipoCargoId;
+    @NotNull(message = "Requiere el rolCargoId.")
+    private Long rolCargoId;
 
     @NotNull(message = "Requiere el iglesiaId.")
     private Long iglesiaId;

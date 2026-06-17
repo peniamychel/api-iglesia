@@ -2,6 +2,9 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.DataAccessResourceException;
 import com.mcmm.model.dao.UsuarioDao;
+import com.mcmm.model.dao.PrivilegioDao;
+import com.mcmm.model.entity.Cargo;
+import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -23,6 +27,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private UsuarioDao usuarioDao;
 
+    @Autowired
+    private PrivilegioDao privilegioDao;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessResourceException {
         Usuario usuario = usuarioDao
@@ -31,14 +38,38 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        usuario.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority("ROLE_".concat(role.getName().name())));
-            role.getPrivilegios().forEach(privilegio -> {
-                if (privilegio.getNombre() != null) {
-                    authorities.add(new SimpleGrantedAuthority(privilegio.getNombre()));
+        if (usuario.getMiembro() == null) {
+            // Super-administrador global
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            privilegioDao.findAll().forEach(p -> {
+                if (p.getNombre() != null) {
+                    authorities.add(new SimpleGrantedAuthority(p.getNombre()));
                 }
             });
-        });
+        } else {
+            // Miembro con cargos
+            Date now = new Date();
+            if (usuario.getMiembro().getCargos() != null) {
+                usuario.getMiembro().getCargos().forEach(cargo -> {
+                    if (Boolean.TRUE.equals(cargo.getEstado()) &&
+                            (cargo.getFechaFin() == null || cargo.getFechaFin().after(now))) {
+                        RolCargo rc = cargo.getRolCargo();
+                        if (rc != null) {
+                            if (rc.getNombreRol() != null) {
+                                authorities.add(new SimpleGrantedAuthority("ROLE_" + rc.getNombreRol()));
+                            }
+                            if (rc.getPrivilegios() != null) {
+                                rc.getPrivilegios().forEach(p -> {
+                                    if (p.getNombre() != null) {
+                                        authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+        }
 
         return new User(
                 usuario.getUsername(),

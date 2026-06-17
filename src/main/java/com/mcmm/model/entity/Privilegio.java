@@ -40,7 +40,7 @@ public class Privilegio implements java.io.Serializable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
-    private Set<Rol> roles = new HashSet<>();
+    private Set<RolCargo> roles = new HashSet<>();
 
     // Este método se ejecuta antes de insertar un nuevo registro
     @PrePersist

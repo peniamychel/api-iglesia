@@ -20,9 +20,9 @@ public class Cargo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = CargoTipo.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "tipo_cargo_id")
-    private CargoTipo tipoCargo;
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = RolCargo.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "rol_cargo_id")
+    private RolCargo rolCargo;
 
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "iglesia_id")

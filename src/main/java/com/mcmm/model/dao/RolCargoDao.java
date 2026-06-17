@@ -1,6 +1,6 @@
 package com.mcmm.model.dao;
 
-import com.mcmm.model.entity.CargoTipo;
+import com.mcmm.model.entity.RolCargo;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,11 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
-public interface CargoTipoDao extends JpaRepository<CargoTipo, Long> {
+public interface RolCargoDao extends JpaRepository<RolCargo, Long> {
+
+    Optional<RolCargo> findByNombre(String nombre);
+    Optional<RolCargo> findByNombreRol(String nombreRol);
 
     @Modifying
     @Transactional
-    @Query("UPDATE CargoTipo c SET c.estado = NOT c.estado, c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :id")
+    @Query("UPDATE RolCargo c SET c.estado = NOT c.estado, c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :id")
     void toggleEstado(@Param("id") Long id);
 }

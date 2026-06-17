@@ -25,6 +25,7 @@ public class UsuarioDto {
     private String apellidos;
     private String uriFoto;
     private Boolean estado;
+    private Long miembroId;
     @NotBlank
     private String password;
     private Set<String> roles;

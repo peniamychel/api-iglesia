@@ -47,6 +47,9 @@ public class Iglesia implements java.io.Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "uri_foto")
+    private String uriFoto;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -17,4 +17,5 @@ public class UsuarioUpdateDto {
     private String apellidos;
     private String uriFoto;
     private Boolean estado;
+    private Long miembroId;
 }

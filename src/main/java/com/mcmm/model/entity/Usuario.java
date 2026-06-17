@@ -42,13 +42,13 @@ public class Usuario {
 
     private Boolean estado;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "miembro_id", nullable = true)
+    private Miembro miembro;
+
     @NotBlank
     @Size(min = 3, max = 100)
     private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER, targetEntity = Rol.class, cascade = CascadeType.PERSIST)
-    @JoinTable(name = "usuario_rol", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "rol_id"))
-    private Set<Rol> roles;
 
     @PrePersist
     protected void onCreate() {

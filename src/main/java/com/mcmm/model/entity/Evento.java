@@ -24,6 +24,10 @@ public class Evento {
     @JoinColumn(name = "tipo_evento_id")
     private TipoEvento tipoEvento;
 
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "iglesia_id", nullable = true)
+    private Iglesia iglesia;
+
     @Column(name = "nombre", length = 254)
     private String nombre;
 

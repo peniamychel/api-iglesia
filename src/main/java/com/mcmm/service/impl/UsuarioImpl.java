@@ -2,15 +2,16 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.BadRequestException;
 import com.mcmm.exception.NotFoundExceptionResource;
-import com.mcmm.model.dao.RolDao;
+import com.mcmm.model.dao.MiembroDao;
+import com.mcmm.model.dao.RolCargoDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
-import com.mcmm.model.entity.ERole;
-import com.mcmm.model.entity.Rol;
+import com.mcmm.model.entity.Miembro;
+import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IUsuario;
@@ -36,19 +37,21 @@ public class UsuarioImpl implements IUsuario {
     private final ModelMapper modelMapper;
     private final UsuarioDao usuarioDao;
     private final PasswordEncoder passwordEncoder;
-    private final RolDao rolDao;
+    private final RolCargoDao rolCargoDao;
+    private final MiembroDao miembroDao;
     private final FileStorageService fileStorageService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     public UsuarioImpl(ModelMapper modelMapper, UsuarioDao usuarioDao,
-                       PasswordEncoder passwordEncoder, RolDao rolDao,
-                       FileStorageService fileStorageService) {
+                       PasswordEncoder passwordEncoder, RolCargoDao rolCargoDao,
+                       MiembroDao miembroDao, FileStorageService fileStorageService) {
         this.modelMapper = modelMapper;
         this.usuarioDao = usuarioDao;
         this.passwordEncoder = passwordEncoder;
-        this.rolDao = rolDao;
+        this.rolCargoDao = rolCargoDao;
+        this.miembroDao = miembroDao;
         this.fileStorageService = fileStorageService;
     }
 
@@ -89,7 +92,11 @@ public class UsuarioImpl implements IUsuario {
 
         Usuario usuario = modelMapper.map(usuarioDto, Usuario.class);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-        usuario.setRoles(resolveRoles(usuarioDto.getRoles()));
+        
+        if (usuarioDto.getMiembroId() != null) {
+            Miembro miembro = miembroDao.findById(usuarioDto.getMiembroId()).orElse(null);
+            usuario.setMiembro(miembro);
+        }
 
         Usuario saved = usuarioDao.save(usuario);
         return buildDtoWithPhotoUrl(saved);
@@ -101,19 +108,6 @@ public class UsuarioImpl implements IUsuario {
         Usuario usuario = usuarioDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
         usuarioDao.delete(usuario);
-    }
-
-    @Override
-    @Transactional
-    public UsuarioDtoRes updateUserRoles(UsuarioDto usuarioDto) {
-        Usuario usuario = usuarioDao.findById(usuarioDto.getId())
-                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioDto.getId()));
-
-        usuario.getRoles().clear();
-        usuario.getRoles().addAll(resolveRoles(usuarioDto.getRoles()));
-
-        Usuario saved = usuarioDao.save(usuario);
-        return buildDtoWithPhotoUrl(saved);
     }
 
     @Override
@@ -155,6 +149,12 @@ public class UsuarioImpl implements IUsuario {
         }
         if (usuarioUpdateDto.getEstado() != null) {
             usuario.setEstado(usuarioUpdateDto.getEstado());
+        }
+        if (usuarioUpdateDto.getMiembroId() != null) {
+            Miembro miembro = miembroDao.findById(usuarioUpdateDto.getMiembroId()).orElse(null);
+            usuario.setMiembro(miembro);
+        } else if (usuarioUpdateDto.getMiembroId() == null) {
+            usuario.setMiembro(null);
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -242,27 +242,6 @@ public class UsuarioImpl implements IUsuario {
         usuarioDao.save(usuario);
     }
 
-    private Set<Rol> resolveRoles(Set<String> roleNames) {
-        if (roleNames == null || roleNames.isEmpty()) {
-            Rol defaultRol = rolDao.findByName(ERole.ENCARGADO_EVENTO)
-                    .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", ERole.ENCARGADO_EVENTO));
-            return Collections.singleton(defaultRol);
-        }
-
-        Set<Rol> roles = new HashSet<>();
-        for (String roleName : roleNames) {
-            try {
-                ERole eRole = ERole.valueOf(roleName);
-                Rol rol = rolDao.findByName(eRole)
-                        .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", eRole));
-                roles.add(rol);
-            } catch (IllegalArgumentException e) {
-                throw new BadRequestException("Rol inválido: " + roleName);
-            }
-        }
-        return roles;
-    }
-
     private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
         UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
         if (dto.getUriFoto() != null) {
@@ -274,6 +253,26 @@ public class UsuarioImpl implements IUsuario {
                     .toUriString();
             dto.setUriFoto(fileUrl);
         }
+
+        if (usuario.getMiembro() != null) {
+            dto.setMiembroId(usuario.getMiembro().getId());
+            if (usuario.getMiembro().getCargos() != null) {
+                Set<com.mcmm.model.dto.RolCargoDto> rolesDtos = usuario.getMiembro().getCargos().stream()
+                        .filter(c -> Boolean.TRUE.equals(c.getEstado()))
+                        .filter(c -> c.getRolCargo() != null)
+                        .map(c -> modelMapper.map(c.getRolCargo(), com.mcmm.model.dto.RolCargoDto.class))
+                        .collect(Collectors.toSet());
+                dto.setRoles(rolesDtos);
+            }
+        } else {
+            com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
+                    .nombre("Administrador Global")
+                    .nombreRol("ADMIN")
+                    .estado(true)
+                    .build();
+            dto.setRoles(Collections.singleton(adminDto));
+        }
+
         return dto;
     }
 }
