@@ -175,6 +175,17 @@ public class MiembroImpl implements IMiembro {
         miembroDao.save(miembro);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MiembroDto> findSinIglesia() {
+        List<MiembroDto> dtos = new ArrayList<>();
+        List<Miembro> miembros = miembroDao.findSinIglesia();
+        for (Miembro miembro : miembros) {
+            dtos.add(buildDtoWithPhotoUrl(miembro));
+        }
+        return dtos;
+    }
+
     private MiembroDto buildDtoWithPhotoUrl(Miembro miembro) {
         MiembroDto dto = modelMapper.map(miembro, MiembroDto.class);
         if (dto.getUriFoto() != null) {

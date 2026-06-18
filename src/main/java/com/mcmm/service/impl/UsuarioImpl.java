@@ -107,6 +107,21 @@ public class UsuarioImpl implements IUsuario {
     public void delete(Long id) {
         Usuario usuario = usuarioDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
+        
+        if (usuario.getUriFoto() != null && !usuario.getUriFoto().isBlank()) {
+            String uriFoto = usuario.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    try {
+                        fileStorageService.deleteFile(USUARIOS_DIR + fileNameOnly);
+                    } catch (IOException e) {
+                        // Logged or handled, continuing deletion process
+                    }
+                }
+            }
+        }
+        
         usuarioDao.delete(usuario);
     }
 
@@ -134,27 +149,26 @@ public class UsuarioImpl implements IUsuario {
         if (usuarioUpdateDto.getEmail() != null) {
             usuario.setEmail(usuarioUpdateDto.getEmail());
         }
-        if (usuarioUpdateDto.getName() != null) {
-            usuario.setName(usuarioUpdateDto.getName());
-        }
-        if (usuarioUpdateDto.getApellidos() != null) {
-            usuario.setApellidos(usuarioUpdateDto.getApellidos());
-        }
-        if (usuarioUpdateDto.getUriFoto() != null) {
-            String photoUri = usuarioUpdateDto.getUriFoto();
-            if (photoUri.contains("/")) {
-                photoUri = photoUri.substring(photoUri.lastIndexOf("/") + 1);
-            }
-            usuario.setUriFoto(photoUri);
-        }
-        if (usuarioUpdateDto.getEstado() != null) {
-            usuario.setEstado(usuarioUpdateDto.getEstado());
-        }
+        
         if (usuarioUpdateDto.getMiembroId() != null) {
             Miembro miembro = miembroDao.findById(usuarioUpdateDto.getMiembroId()).orElse(null);
             usuario.setMiembro(miembro);
+            if (miembro != null) {
+                usuario.setName(miembro.getNombre());
+                usuario.setApellidos(miembro.getApellido());
+            }
         } else if (usuarioUpdateDto.getMiembroId() == null) {
             usuario.setMiembro(null);
+            if (usuarioUpdateDto.getName() != null) {
+                usuario.setName(usuarioUpdateDto.getName());
+            }
+            if (usuarioUpdateDto.getApellidos() != null) {
+                usuario.setApellidos(usuarioUpdateDto.getApellidos());
+            }
+        }
+
+        if (usuarioUpdateDto.getEstado() != null) {
+            usuario.setEstado(usuarioUpdateDto.getEstado());
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -244,18 +258,24 @@ public class UsuarioImpl implements IUsuario {
 
     private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
         UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
-        if (dto.getUriFoto() != null) {
-            String fileUrl = ServletUriComponentsBuilder
-                    .fromCurrentContextPath()
-                    .path("/uploads/")
-                    .path(USUARIOS_DIR)
-                    .path(dto.getUriFoto())
-                    .toUriString();
-            dto.setUriFoto(fileUrl);
-        }
-
+        
         if (usuario.getMiembro() != null) {
             dto.setMiembroId(usuario.getMiembro().getId());
+            dto.setName(usuario.getMiembro().getNombre());
+            dto.setApellidos(usuario.getMiembro().getApellido());
+            
+            if (usuario.getMiembro().getUriFoto() != null) {
+                String fileUrl = ServletUriComponentsBuilder
+                        .fromCurrentContextPath()
+                        .path("/uploads/")
+                        .path("miembros/")
+                        .path(usuario.getMiembro().getUriFoto())
+                        .toUriString();
+                dto.setUriFoto(fileUrl);
+            } else {
+                dto.setUriFoto(null);
+            }
+            
             if (usuario.getMiembro().getCargos() != null) {
                 Set<com.mcmm.model.dto.RolCargoDto> rolesDtos = usuario.getMiembro().getCargos().stream()
                         .filter(c -> Boolean.TRUE.equals(c.getEstado()))
@@ -265,6 +285,7 @@ public class UsuarioImpl implements IUsuario {
                 dto.setRoles(rolesDtos);
             }
         } else {
+            dto.setUriFoto(null);
             com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
                     .nombre("Administrador Global")
                     .nombreRol("ADMIN")

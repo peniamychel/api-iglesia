@@ -39,6 +39,13 @@ public class MiembroIglesia implements java.io.Serializable{
     @Column(name = "uri_carta_traspaso")
     private String uriCartaTraspaso;
 
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class)
+    @JoinColumn(name = "id_iglesia_destino")
+    private Iglesia iglesiaDestino;
+
+    @Column(name = "estado_traspaso")
+    private String estadoTraspaso;
+
     private Boolean estado;
 
     @Column(name = "created_at", updatable = false)

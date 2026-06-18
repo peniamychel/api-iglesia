@@ -50,6 +50,9 @@ public class Iglesia implements java.io.Serializable {
     @Column(name = "uri_foto")
     private String uriFoto;
 
+    private Double latitud;
+    private Double longitud;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

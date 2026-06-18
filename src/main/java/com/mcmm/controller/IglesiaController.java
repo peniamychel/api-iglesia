@@ -46,7 +46,7 @@ public class IglesiaController {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> update(@RequestBody @Valid IglesiaDto iglesiaDto) {
-        IglesiaDto iglesiaUpdate = iglesiaService.save(iglesiaDto);
+        IglesiaDto iglesiaUpdate = iglesiaService.update(iglesiaDto.getId(), iglesiaDto);
         return ResponseEntity.ok(
                 ApiResponse.<IglesiaDto>builder()
                         .message("Iglesia actualizada exitosamente.")

@@ -11,4 +11,7 @@ public interface MiembroDao extends JpaRepository<Miembro, Long> {
 
     @Query("SELECT m FROM Miembro m WHERE m.ci = :ci")
     Miembro findByCi(@Param("ci") String ci);
+
+    @Query("SELECT m FROM Miembro m WHERE m.estado = true AND m.id NOT IN (SELECT mi.miembro.id FROM MiembroIglesia mi WHERE mi.estado = true)")
+    java.util.List<Miembro> findSinIglesia();
 }

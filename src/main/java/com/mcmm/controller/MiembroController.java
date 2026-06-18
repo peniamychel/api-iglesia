@@ -66,6 +66,19 @@ public class MiembroController {
         );
     }
 
+    @GetMapping("/sin-iglesia")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<java.util.List<MiembroDto>>> findSinIglesia() {
+        java.util.List<MiembroDto> miembroDtos = miembroService.findSinIglesia();
+        return ResponseEntity.ok(
+                ApiResponse.<java.util.List<MiembroDto>>builder()
+                        .message("Listado de Miembros sin Iglesia")
+                        .datos(miembroDtos)
+                        .nombreModelo("Miembro")
+                        .build()
+        );
+    }
+
     /**
      * Busca un miembro por su identificador único ID.
      * 

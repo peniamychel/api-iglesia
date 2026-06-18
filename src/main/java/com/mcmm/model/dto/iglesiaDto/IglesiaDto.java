@@ -34,4 +34,6 @@ public class IglesiaDto implements java.io.Serializable {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String uriFoto;
+    private Double latitud;
+    private Double longitud;
 }

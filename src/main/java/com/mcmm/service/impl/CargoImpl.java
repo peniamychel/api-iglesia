@@ -73,16 +73,18 @@ public class CargoImpl implements ICargo {
         Cargo cargo = modelMapper.map(cargoDto, Cargo.class);
 
         //tratar id de iglesia
-        Long iglesiaId = getCurrentIglesiaId();
-        if (iglesiaId != null) {
-            Iglesia iglesia = iglesiaDao.findById(iglesiaId)
-                    .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
-            cargo.setIglesia(iglesia);
-        } else if (cargoDto.getIglesiaId() != null) {
+        if (cargoDto.getIglesiaId() != null) {
             Iglesia iglesia = iglesiaDao.findById(cargoDto.getIglesiaId())
                     .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", cargoDto.getIglesiaId()));
             if (!iglesia.getEstado()) throw new IllegalArgumentException("La iglesia proporcionada está inactiva.");
             cargo.setIglesia(iglesia);
+        } else {
+            Long iglesiaId = getCurrentIglesiaId();
+            if (iglesiaId != null) {
+                Iglesia iglesia = iglesiaDao.findById(iglesiaId)
+                        .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+                cargo.setIglesia(iglesia);
+            }
         }
 
         //tratar id de miembro
@@ -129,16 +131,18 @@ public class CargoImpl implements ICargo {
         Cargo cargoR = cargoDao.findById(cargoDto.getId())
                 .orElseThrow(() -> new NotFoundExceptionResource("Cargo", "id", cargoDto.getId()));
 
-        Long iglesiaId = getCurrentIglesiaId();
-        if (iglesiaId != null) {
-            Iglesia iglesia = iglesiaDao.findById(iglesiaId)
-                    .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
-            cargoR.setIglesia(iglesia);
-        } else if (cargoDto.getIglesiaId() != null) {
+        if (cargoDto.getIglesiaId() != null) {
             Iglesia iglesia = iglesiaDao.findById(cargoDto.getIglesiaId())
                     .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", cargoDto.getIglesiaId()));
             if (!iglesia.getEstado()) throw new IllegalArgumentException("La iglesia proporcionada está inactiva.");
             cargoR.setIglesia(iglesia);
+        } else {
+            Long iglesiaId = getCurrentIglesiaId();
+            if (iglesiaId != null) {
+                Iglesia iglesia = iglesiaDao.findById(iglesiaId)
+                        .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+                cargoR.setIglesia(iglesia);
+            }
         }
 
         if (cargoDto.getIdMiembro() != null) {

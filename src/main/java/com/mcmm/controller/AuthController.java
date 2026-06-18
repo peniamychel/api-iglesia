@@ -1,5 +1,6 @@
 package com.mcmm.controller;
 
+import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.auth.RefreshTokenRequest;
 import com.mcmm.model.entity.Cargo;
@@ -36,6 +37,9 @@ public class AuthController {
 
     @Autowired
     private UsuarioDao usuarioDao;
+
+    @Autowired
+    private IglesiaDao iglesiaDao;
 
     @Data
     public static class SelectCargoRequest {
@@ -111,13 +115,29 @@ public class AuthController {
         }
 
         if (churchCargos.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "El usuario no tiene cargos activos en la iglesia seleccionada");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+            if (!isAdmin) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "El usuario no tiene cargos activos en la iglesia seleccionada");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
         }
 
-        Iglesia iglesia = churchCargos.get(0).getIglesia();
+        Iglesia iglesia = null;
+        String cargoNombre = null;
+        Long cargoId = null;
+
+        if (!churchCargos.isEmpty()) {
+            iglesia = churchCargos.get(0).getIglesia();
+            cargoId = churchCargos.get(0).getId();
+            cargoNombre = churchCargos.get(0).getRolCargo() != null ? churchCargos.get(0).getRolCargo().getNombre() : null;
+        } else {
+            iglesia = iglesiaDao.findById(request.getIglesiaId()).orElse(null);
+            cargoNombre = "Administrador Global";
+            cargoId = 0L;
+        }
+
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         try {
@@ -143,15 +163,19 @@ public class AuthController {
             }
         }
 
+        if (churchCargos.isEmpty()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
         List<GrantedAuthority> uniqueAuthorities = authorities.stream().distinct().collect(Collectors.toList());
 
         String token = jwtUtils.gerarAccessToken(
                 username,
                 uniqueAuthorities,
                 request.getIglesiaId(),
-                churchCargos.get(0).getId(),
-                iglesia.getNombre(),
-                churchCargos.get(0).getRolCargo() != null ? churchCargos.get(0).getRolCargo().getNombre() : null
+                cargoId,
+                iglesia != null ? iglesia.getNombre() : "Iglesia no encontrada",
+                cargoNombre
         );
         String refreshToken = jwtUtils.gerarRefreshToken(username);
 
@@ -208,13 +232,29 @@ public class AuthController {
         }
 
         if (churchCargos.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "El usuario no tiene cargos activos en la iglesia seleccionada");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+            if (!isAdmin) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "El usuario no tiene cargos activos en la iglesia seleccionada");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
         }
 
-        Iglesia iglesia = churchCargos.get(0).getIglesia();
+        Iglesia iglesia = null;
+        String cargoNombre = null;
+        Long cargoId = null;
+
+        if (!churchCargos.isEmpty()) {
+            iglesia = churchCargos.get(0).getIglesia();
+            cargoId = churchCargos.get(0).getId();
+            cargoNombre = churchCargos.get(0).getRolCargo() != null ? churchCargos.get(0).getRolCargo().getNombre() : null;
+        } else {
+            iglesia = iglesiaDao.findById(iglesiaId).orElse(null);
+            cargoNombre = "Administrador Global";
+            cargoId = 0L;
+        }
+
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         try {
@@ -240,15 +280,19 @@ public class AuthController {
             }
         }
 
+        if (churchCargos.isEmpty()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
         List<GrantedAuthority> uniqueAuthorities = authorities.stream().distinct().collect(Collectors.toList());
 
         String token = jwtUtils.gerarAccessToken(
                 username,
                 uniqueAuthorities,
                 iglesiaId,
-                churchCargos.get(0).getId(),
-                iglesia.getNombre(),
-                churchCargos.get(0).getRolCargo() != null ? churchCargos.get(0).getRolCargo().getNombre() : null
+                cargoId,
+                iglesia != null ? iglesia.getNombre() : "Iglesia no encontrada",
+                cargoNombre
         );
         String refreshToken = jwtUtils.gerarRefreshToken(username);
 
@@ -265,6 +309,22 @@ public class AuthController {
 
     private List<Map<String, Object>> getUserIglesias(Usuario usuario) {
         List<Map<String, Object>> iglesiasInfo = new ArrayList<>();
+        
+        boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+
+        if (isAdmin) {
+            for (Iglesia iglesia : iglesiaDao.findAll()) {
+                if (Boolean.TRUE.equals(iglesia.getEstado())) {
+                    Map<String, Object> iglesiaMap = new HashMap<>();
+                    iglesiaMap.put("iglesiaId", iglesia.getId());
+                    iglesiaMap.put("iglesiaNombre", iglesia.getNombre());
+                    iglesiaMap.put("cargos", Collections.singletonList("Administrador Global"));
+                    iglesiasInfo.add(iglesiaMap);
+                }
+            }
+            return iglesiasInfo;
+        }
+
         if (usuario != null && usuario.getMiembro() != null && usuario.getMiembro().getCargos() != null) {
             Date now = new Date();
             List<Cargo> activeCargos = new ArrayList<>();

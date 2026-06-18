@@ -82,6 +82,8 @@ public class IglesiaImpl implements IIglesia {
         iglesia.setTelefono(iglesiaDto.getTelefono());
         iglesia.setFechaFundacion(iglesiaDto.getFechaFundacion());
         iglesia.setEstado(iglesiaDto.getEstado());
+        iglesia.setLatitud(iglesiaDto.getLatitud());
+        iglesia.setLongitud(iglesiaDto.getLongitud());
         // uriFoto se preserva — no se toca aquí
         Iglesia updated = iglesiaDao.save(iglesia);
         return buildDtoWithPhotoUrl(updated);

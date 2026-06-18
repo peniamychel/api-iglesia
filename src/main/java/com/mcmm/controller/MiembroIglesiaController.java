@@ -121,12 +121,62 @@ public class MiembroIglesiaController {
     @PutMapping("/traspaso")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
-    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> traspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
-        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> solicitarTraspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
+        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.solicitarTraspaso(miembroIglesiaDto);
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
-                        .message("MiembroIglesia traspasado exitosamente.")
+                        .message("Solicitud de traspaso registrada exitosamente.")
                         .datos(miembroIglesiaActualizado)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
+    @PutMapping("/traspaso/{id}/aceptar")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> aceptarTraspaso(@PathVariable Long id) {
+        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.aceptarTraspaso(id);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("Traspaso aceptado exitosamente.")
+                        .datos(miembroIglesiaActualizado)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
+    @PutMapping("/traspaso/{id}/rechazar")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> rechazarTraspaso(@PathVariable Long id) {
+        MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.rechazarTraspaso(id);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("Traspaso rechazado exitosamente.")
+                        .datos(miembroIglesiaActualizado)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
+    @GetMapping("/traspaso/pendientes/{iglesiaId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> getSolicitudesPendientes(@PathVariable Long iglesiaId) {
+        List<MiembroIglesiaDto> solicitudes = miembroIglesiaService.getSolicitudesPendientes(iglesiaId);
+        return ResponseEntity.ok(
+                ApiResponse.<List<MiembroIglesiaDto>>builder()
+                        .message("Solicitudes de traspaso pendientes encontradas.")
+                        .datos(solicitudes)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
+    @GetMapping("/historial/{miembroId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> obtenerHistorialMiembro(@PathVariable Long miembroId) {
+        List<MiembroIglesiaDto> historial = miembroIglesiaService.obtenerHistorialMiembro(miembroId);
+        return ResponseEntity.ok(
+                ApiResponse.<List<MiembroIglesiaDto>>builder()
+                        .message("Historial del miembro encontrado.")
+                        .datos(historial)
                         .nombreModelo("MiembroIglesia")
                         .build());
     }
@@ -153,5 +203,23 @@ public class MiembroIglesiaController {
                         .datos(miembroIglesia)
                         .nombreModelo("MiembroIglesia")
                         .build());
+    }
+
+    @PostMapping("/{id}/carta-traspaso")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar MiembroIglesia')")
+    public ResponseEntity<ApiResponse<String>> uploadCartaTraspaso(
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String fileUrl = miembroIglesiaService.subirCartaTraspaso(id, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Carta de traspaso subida exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("MiembroIglesia")
+                            .build());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Error al subir el archivo: " + e.getMessage());
+        }
     }
 }
