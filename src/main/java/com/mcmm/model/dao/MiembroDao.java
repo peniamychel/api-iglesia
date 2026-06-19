@@ -14,4 +14,14 @@ public interface MiembroDao extends JpaRepository<Miembro, Long> {
 
     @Query("SELECT m FROM Miembro m WHERE m.estado = true AND m.id NOT IN (SELECT mi.miembro.id FROM MiembroIglesia mi WHERE mi.estado = true)")
     java.util.List<Miembro> findSinIglesia();
+
+    /**
+     * Obtiene miembros activos que NO están asignados a ninguna iglesia activa
+     * Y que NO tienen un cargo activo de tipo PASTOR.
+     * El patrón se pasa como parámetro para evitar conflictos con el parser de formato de jboss-logging.
+     */
+    @Query("SELECT m FROM Miembro m WHERE m.estado = true " +
+           "AND m.id NOT IN (SELECT mi.miembro.id FROM MiembroIglesia mi WHERE mi.estado = true) " +
+           "AND m.id NOT IN (SELECT c.miembro.id FROM Cargo c WHERE c.estado = true AND UPPER(c.rolCargo.nombre) LIKE :patronPastor)")
+    java.util.List<Miembro> findSinIglesiaParaAsignacion(@Param("patronPastor") String patronPastor);
 }

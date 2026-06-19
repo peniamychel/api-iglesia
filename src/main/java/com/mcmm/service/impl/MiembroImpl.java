@@ -72,7 +72,7 @@ public class MiembroImpl implements IMiembro {
         miembroExistente.setCelular(miembroDto.getCelular());
         miembroExistente.setSexo(miembroDto.getSexo());
         miembroExistente.setDireccion(miembroDto.getDireccion());
-        miembroExistente.setUriFoto(miembroDto.getUriFoto());
+        // uriFoto se preserva — se gestiona mediante endpoints dedicados para subir/eliminar foto
         miembroExistente.setFechaConvercion(miembroDto.getFechaConvercion());
         miembroExistente.setLugarConvercion(miembroDto.getLugarConvercion());
         miembroExistente.setInterventores(miembroDto.getInterventores());
@@ -186,6 +186,18 @@ public class MiembroImpl implements IMiembro {
         return dtos;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MiembroDto> findSinIglesiaParaAsignacion() {
+        List<MiembroDto> dtos = new ArrayList<>();
+        // El patrón se pasa como parámetro para evitar que '%P' sea interpretado como formato por jboss-logging
+        List<Miembro> miembros = miembroDao.findSinIglesiaParaAsignacion("%PASTOR%");
+        for (Miembro miembro : miembros) {
+            dtos.add(buildDtoWithPhotoUrl(miembro));
+        }
+        return dtos;
+    }
+
     private MiembroDto buildDtoWithPhotoUrl(Miembro miembro) {
         MiembroDto dto = modelMapper.map(miembro, MiembroDto.class);
         if (dto.getUriFoto() != null) {
@@ -198,6 +210,31 @@ public class MiembroImpl implements IMiembro {
                     .toUriString();
             dto.setUriFoto(fileUrl);
         }
+        
+        // Cargar nombre de la iglesia activa
+        if (miembro.getMiembroIglesias() != null) {
+            miembro.getMiembroIglesias().stream()
+                .filter(mi -> mi.getEstado() != null && mi.getEstado())
+                .findFirst()
+                .ifPresent(mi -> {
+                    if (mi.getIglesia() != null) {
+                        dto.setIglesiaNombre(mi.getIglesia().getNombre());
+                    }
+                });
+        }
+        
+        // Cargar nombre del cargo activo
+        if (miembro.getCargos() != null) {
+            miembro.getCargos().stream()
+                .filter(c -> c.getEstado() != null && c.getEstado())
+                .findFirst()
+                .ifPresent(c -> {
+                    if (c.getRolCargo() != null) {
+                        dto.setCargoNombre(c.getRolCargo().getNombre());
+                    }
+                });
+        }
+        
         return dto;
     }
 }

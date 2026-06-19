@@ -18,4 +18,5 @@ public interface IMiembro {
     String updateProfilePhoto(Long id, MultipartFile file) throws IOException;
     void deleteProfilePhoto(Long id);
     List<MiembroDto> findSinIglesia();
+    List<MiembroDto> findSinIglesiaParaAsignacion();
 }

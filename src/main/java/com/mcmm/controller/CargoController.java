@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/cargo/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 @RequiredArgsConstructor
 public class CargoController {
 
@@ -33,7 +33,7 @@ public class CargoController {
      */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
     public ResponseEntity<ApiResponse<CargoDto>> create(@RequestBody @Valid CargoDto cargoDto) {
         CargoDto cargoSave = cargoService.create(cargoDto);
         return new ResponseEntity<>(
@@ -70,7 +70,7 @@ public class CargoController {
      */
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
     public ResponseEntity<ApiResponse<CargoDto>> update(@RequestBody @Valid CargoDto cargoDto) {
         CargoDto cargoUpdate = cargoService.update(cargoDto);
         return ResponseEntity.ok(
@@ -106,9 +106,9 @@ public class CargoController {
      * @return ResponseEntity confirmando la eliminación del Cargo.
      */
     @DeleteMapping("/delete/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         cargoService.delete(id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
@@ -126,7 +126,7 @@ public class CargoController {
      */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Cargos')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
     public boolean estado(@PathVariable("id") Long id) {
         CargoDto cargoDto = cargoService.findById(id);
         cargoService.estado(id);

@@ -35,6 +35,8 @@ public class MiembroDto {
     private String sexo;
     private String direccion;
     private String uriFoto;
+    private String iglesiaNombre;
+    private String cargoNombre;
 
     private Boolean estado;
     private LocalDateTime createdAt;

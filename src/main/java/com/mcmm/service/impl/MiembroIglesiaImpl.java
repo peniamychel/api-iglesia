@@ -159,7 +159,32 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
     @Transactional(readOnly = true)
     public List<MiembroDto> findMiembrosIglesia(Long id) {
         return miembroIglesiaDao.findMiembrosIglesia(id).stream()
-                .map(miembro -> modelMapper.map(miembro, MiembroDto.class))
+                .map(miembro -> {
+                    MiembroDto dto = modelMapper.map(miembro, MiembroDto.class);
+                    if (dto.getUriFoto() != null && !dto.getUriFoto().isBlank()) {
+                        String fileUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                                .fromCurrentContextPath()
+                                .path(uploadDir)
+                                .path("/")
+                                .path("miembros/")
+                                .path(dto.getUriFoto())
+                                .toUriString();
+                        dto.setUriFoto(fileUrl);
+                    }
+                    
+                    // Cargar nombre del cargo activo
+                    if (miembro.getCargos() != null) {
+                        miembro.getCargos().stream()
+                            .filter(c -> c.getEstado() != null && c.getEstado())
+                            .findFirst()
+                            .ifPresent(c -> {
+                                if (c.getRolCargo() != null) {
+                                    dto.setCargoNombre(c.getRolCargo().getNombre());
+                                }
+                            });
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

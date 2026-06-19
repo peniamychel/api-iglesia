@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/api/miembro/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 @RequiredArgsConstructor
 public class MiembroController {
 
@@ -35,7 +35,7 @@ public class MiembroController {
      */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<MiembroDto>> create(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroSave = miembroService.create(miembroDto);
         return new ResponseEntity<>(
@@ -80,6 +80,24 @@ public class MiembroController {
     }
 
     /**
+     * Obtiene miembros activos disponibles para ser asignados a una iglesia.
+     * Excluye a miembros que ya pertenecen a una iglesia activa y a quienes
+     * tienen un cargo activo de PASTOR (filtrado seguro en el backend).
+     */
+    @GetMapping("/sin-iglesia-asignacion")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<java.util.List<MiembroDto>>> findSinIglesiaParaAsignacion() {
+        java.util.List<MiembroDto> miembroDtos = miembroService.findSinIglesiaParaAsignacion();
+        return ResponseEntity.ok(
+                ApiResponse.<java.util.List<MiembroDto>>builder()
+                        .message("Listado de Miembros disponibles para asignar a iglesia")
+                        .datos(miembroDtos)
+                        .nombreModelo("Miembro")
+                        .build()
+        );
+    }
+
+    /**
      * Busca un miembro por su identificador único ID.
      * 
      * @param id Identificador único del miembro.
@@ -106,7 +124,7 @@ public class MiembroController {
      */
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<MiembroDto>> update(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroActualizado = miembroService.update(miembroDto);
         return ResponseEntity.ok(
@@ -126,7 +144,7 @@ public class MiembroController {
      */
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         miembroService.delete(id);
         return ResponseEntity.ok(
@@ -146,7 +164,7 @@ public class MiembroController {
      */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<MiembroDto>> estado(@PathVariable Long id) {
         MiembroDto miembroActualizado = miembroService.estado(id);
         return ResponseEntity.ok(
@@ -180,7 +198,7 @@ public class MiembroController {
     }
 
     @PostMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -198,7 +216,7 @@ public class MiembroController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Miembros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Miembros')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         miembroService.deleteProfilePhoto(id);
         return ResponseEntity.ok(
