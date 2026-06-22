@@ -37,3 +37,6 @@ build/
 
 ### Archivos locales imagens, videos, etc. ###
 /uploads
+
+### Archivos reservados de Windows ###
+nul

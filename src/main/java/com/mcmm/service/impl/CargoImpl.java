@@ -10,16 +10,22 @@ import com.mcmm.model.entity.Cargo;
 import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.Miembro;
+import com.mcmm.service.FileStorageService;
 import com.mcmm.service.ICargo;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +33,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CargoImpl implements ICargo {
 
+    private static final String CARGOS_DIR = "cargos/";
+
     private final ModelMapper modelMapper;
     private final CargoDao cargoDao;
     private final IglesiaDao iglesiaDao;
     private final MiembroDao miembroDao;
     private final RolCargoDao rolCargoDao;
+    private final FileStorageService fileStorageService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     private Long getCurrentIglesiaId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -177,5 +189,66 @@ public class CargoImpl implements ICargo {
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException("Error de integridad de datos en la base de datos.");
         }
+    }
+
+    @Override
+    @Transactional
+    public String saveActaAsignacion(Long id, MultipartFile file) throws IOException {
+        Cargo cargo = cargoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Cargo", "id", id));
+
+        if (cargo.getUriActaAsignacion() != null && !cargo.getUriActaAsignacion().isBlank()) {
+            fileStorageService.deleteFile(CARGOS_DIR + cargo.getUriActaAsignacion());
+        }
+
+        String fileName = fileStorageService.storeFile(file, "acta-asignacion-cargo-" + id, CARGOS_DIR);
+        cargo.setUriActaAsignacion(fileName);
+        cargoDao.save(cargo);
+
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(uploadDir).path("/").path(CARGOS_DIR).path(fileName).toUriString();
+    }
+
+    @Override
+    @Transactional
+    public String saveActaDeslindacion(Long id, MultipartFile file) throws IOException {
+        Cargo cargo = cargoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Cargo", "id", id));
+
+        if (cargo.getUriActaDeslindacion() != null && !cargo.getUriActaDeslindacion().isBlank()) {
+            fileStorageService.deleteFile(CARGOS_DIR + cargo.getUriActaDeslindacion());
+        }
+
+        String fileName = fileStorageService.storeFile(file, "acta-deslindacion-cargo-" + id, CARGOS_DIR);
+        cargo.setUriActaDeslindacion(fileName);
+        cargoDao.save(cargo);
+
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(uploadDir).path("/").path(CARGOS_DIR).path(fileName).toUriString();
+    }
+
+    @Override
+    @Transactional
+    public boolean estadoConFecha(Long id, Date fechaFin) {
+        Cargo cargo = cargoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Cargo", "id", id));
+
+        boolean nuevoEstado = !cargo.getEstado();
+        cargo.setEstado(nuevoEstado);
+
+        if (!nuevoEstado) {
+            cargo.setFechaFin(fechaFin != null ? fechaFin : new Date());
+        } else {
+            cargo.setFechaFin(null);
+            if (cargo.getUriActaDeslindacion() != null && !cargo.getUriActaDeslindacion().isBlank()) {
+                try {
+                    fileStorageService.deleteFile(CARGOS_DIR + cargo.getUriActaDeslindacion());
+                } catch (IOException ignored) {}
+            }
+            cargo.setUriActaDeslindacion(null);
+        }
+
+        cargoDao.save(cargo);
+        return nuevoEstado;
     }
 }

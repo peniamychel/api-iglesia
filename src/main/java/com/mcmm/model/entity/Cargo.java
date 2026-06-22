@@ -43,6 +43,12 @@ public class Cargo {
 
     private Boolean estado;
 
+    @Column(name = "uri_acta_asignacion")
+    private String uriActaAsignacion;
+
+    @Column(name = "uri_acta_deslindacion")
+    private String uriActaDeslindacion;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

@@ -5,10 +5,15 @@ import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.ICargo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Date;
 
 /**
  * Controlador REST para la gestión de Cargos de miembros en la Iglesia.
@@ -120,16 +125,69 @@ public class CargoController {
 
     /**
      * Alterna el estado (activo/inactivo) de un Cargo específico por su ID.
+     * Opcionalmente acepta una fecha de fin para registrar el historial.
      * 
      * @param id Identificador del Cargo.
+     * @param fechaFin Fecha de finalización opcional (formato yyyy-MM-dd).
      * @return true si el nuevo estado es activo, false en caso contrario.
      */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
-    public boolean estado(@PathVariable("id") Long id) {
-        CargoDto cargoDto = cargoService.findById(id);
-        cargoService.estado(id);
-        return !cargoDto.getEstado();
+    public boolean estado(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "fechaFin", required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date fechaFin) {
+        return cargoService.estadoConFecha(id, fechaFin);
+    }
+
+    /**
+     * Sube el acta de asignación para un cargo específico.
+     * 
+     * @param id Identificador del Cargo.
+     * @param file Archivo a subir (imagen o PDF).
+     * @return ResponseEntity con la URL del archivo subido.
+     */
+    @PostMapping("/{id}/acta-asignacion")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
+    public ResponseEntity<ApiResponse<String>> uploadActaAsignacion(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = cargoService.saveActaAsignacion(id, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Acta de asignación cargada exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("Cargo")
+                            .build());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al subir el acta de asignación: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Sube el acta de deslindación para un cargo específico.
+     * 
+     * @param id Identificador del Cargo.
+     * @param file Archivo a subir (imagen o PDF).
+     * @return ResponseEntity con la URL del archivo subido.
+     */
+    @PostMapping("/{id}/acta-deslindacion")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Cargos')")
+    public ResponseEntity<ApiResponse<String>> uploadActaDeslindacion(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = cargoService.saveActaDeslindacion(id, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .message("Acta de deslindación cargada exitosamente.")
+                            .datos(fileUrl)
+                            .nombreModelo("Cargo")
+                            .build());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al subir el acta de deslindación: " + e.getMessage());
+        }
     }
 }

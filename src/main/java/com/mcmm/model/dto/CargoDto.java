@@ -29,6 +29,10 @@ public class CargoDto {
     private Date fechaFin;
 
     private Boolean estado;
+
+    private String uriActaAsignacion;
+    private String uriActaDeslindacion;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
