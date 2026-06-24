@@ -184,7 +184,10 @@ public class AuthController {
         response.put("token", token);
         response.put("refreshToken", refreshToken);
         response.put("username", username);
-        response.put("roles", uniqueAuthorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        List<Map<String, String>> uniqueRolesAsObjects = uniqueAuthorities.stream()
+                .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
+                .collect(Collectors.toList());
+        response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
 
         return ResponseEntity.ok(response);
@@ -301,7 +304,10 @@ public class AuthController {
         response.put("token", token);
         response.put("refreshToken", refreshToken);
         response.put("username", username);
-        response.put("roles", uniqueAuthorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        List<Map<String, String>> uniqueRolesAsObjects = uniqueAuthorities.stream()
+                .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
+                .collect(Collectors.toList());
+        response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
 
         return ResponseEntity.ok(response);

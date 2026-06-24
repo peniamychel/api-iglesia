@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tipo-certificado/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class TipoCertificadoController {
 
     private final ITipoCertificado tipoCertificadoService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoCertificadoDto>> create(@Valid @RequestBody TipoCertificadoDto tipoCertificadoDto) {
         TipoCertificadoDto saved = tipoCertificadoService.create(tipoCertificadoDto);
         return new ResponseEntity<>(ApiResponse.<TipoCertificadoDto>builder()
@@ -53,6 +54,7 @@ public class TipoCertificadoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoCertificadoDto>> update(@Valid @RequestBody TipoCertificadoDto tipoCertificadoDto) {
         TipoCertificadoDto updated = tipoCertificadoService.update(tipoCertificadoDto);
         return ResponseEntity.ok(ApiResponse.<TipoCertificadoDto>builder()
@@ -63,6 +65,7 @@ public class TipoCertificadoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         tipoCertificadoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -73,6 +76,7 @@ public class TipoCertificadoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         tipoCertificadoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

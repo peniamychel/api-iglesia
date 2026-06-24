@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tipo-evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class TipoEventoController {
 
     private final ITipoEvento tipoEventoService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> create(@Valid @RequestBody TipoEventoDto tipoEventoDto) {
         TipoEventoDto saved = tipoEventoService.create(tipoEventoDto);
         return new ResponseEntity<>(ApiResponse.<TipoEventoDto>builder()
@@ -53,6 +54,7 @@ public class TipoEventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> update(@Valid @RequestBody TipoEventoDto tipoEventoDto) {
         TipoEventoDto updated = tipoEventoService.update(tipoEventoDto);
         return ResponseEntity.ok(ApiResponse.<TipoEventoDto>builder()
@@ -63,6 +65,7 @@ public class TipoEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         tipoEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -73,6 +76,7 @@ public class TipoEventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         tipoEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

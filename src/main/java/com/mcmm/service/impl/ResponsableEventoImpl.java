@@ -12,7 +12,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class ResponsableEventoImpl implements IResponsableEvento {
@@ -28,9 +31,27 @@ public class ResponsableEventoImpl implements IResponsableEvento {
         this.cargoDao = cargoDao;
     }
 
+    private Long getCurrentIglesiaId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getDetails() instanceof Map) {
+            Map<?, ?> details = (Map<?, ?>) authentication.getDetails();
+            Object iglesiaIdObj = details.get("iglesiaId");
+            if (iglesiaIdObj instanceof Long) {
+                return (Long) iglesiaIdObj;
+            }
+        }
+        return null;
+    }
+
     @Override
     public List<ResponsableEventoDto> findAll() {
-        List<ResponsableEvento> responsables = responsableEventoDao.findAll();
+        Long iglesiaId = getCurrentIglesiaId();
+        List<ResponsableEvento> responsables;
+        if (iglesiaId != null) {
+            responsables = responsableEventoDao.findByEventoIglesiaId(iglesiaId);
+        } else {
+            responsables = responsableEventoDao.findAll();
+        }
         return responsables.stream()
                 .map(responsable -> {
                     ResponsableEventoDto dto = modelMapper.map(responsable, ResponsableEventoDto.class);

@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rol-cargo/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 @RequiredArgsConstructor
 public class RolCargoController {
 

@@ -20,4 +20,7 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
     @Transactional
     @Query("UPDATE ParticipacionEvento p SET p.certificado = null, p.updatedAt = CURRENT_TIMESTAMP WHERE p.certificado.id = :certificadoId")
     void detachCertificado(@Param("certificadoId") Long certificadoId);
+
+    @Query("SELECT p FROM ParticipacionEvento p WHERE p.evento.iglesia.id = :iglesiaId")
+    java.util.List<ParticipacionEvento> findByEventoIglesiaId(@Param("iglesiaId") Long iglesiaId);
 }

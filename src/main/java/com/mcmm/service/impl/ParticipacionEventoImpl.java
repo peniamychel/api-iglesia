@@ -20,8 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +37,30 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
     private final UsuarioDao usuarioDao;
     private final ModelMapper modelMapper;
 
+    private Long getCurrentIglesiaId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getDetails() instanceof Map) {
+            Map<?, ?> details = (Map<?, ?>) authentication.getDetails();
+            Object iglesiaIdObj = details.get("iglesiaId");
+            if (iglesiaIdObj instanceof Long) {
+                return (Long) iglesiaIdObj;
+            }
+        }
+        return null;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<ParticipacionEventoDto> findAll() {
-        return StreamSupport.stream(participacionEventoDao.findAll().spliterator(), false)
+        Long iglesiaId = getCurrentIglesiaId();
+        List<ParticipacionEvento> participaciones;
+        if (iglesiaId != null) {
+            participaciones = participacionEventoDao.findByEventoIglesiaId(iglesiaId);
+        } else {
+            participaciones = StreamSupport.stream(participacionEventoDao.findAll().spliterator(), false)
+                    .collect(Collectors.toList());
+        }
+        return participaciones.stream()
                 .map(this::buildDto)
                 .collect(Collectors.toList());
     }
@@ -82,6 +105,8 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
         if (participacionEventoDto.getCertificadoId() != null) {
             Certificado certificado = certificadoDao.findById(participacionEventoDto.getCertificadoId()).orElse(null);
             participacion.setCertificado(certificado);
+        } else {
+            participacion.setCertificado(null);
         }
         if (participacionEventoDto.getMiembroId() != null) {
             Miembro miembro = miembroDao.findById(participacionEventoDto.getMiembroId()).orElse(null);

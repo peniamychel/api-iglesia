@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class EventoController {
 
     private final IEvento eventoService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<EventoDto>> create(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto saved = eventoService.create(eventoDto);
         return new ResponseEntity<>(ApiResponse.<EventoDto>builder()
@@ -53,6 +54,7 @@ public class EventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<EventoDto>> update(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto updated = eventoService.update(eventoDto);
         return ResponseEntity.ok(ApiResponse.<EventoDto>builder()
@@ -63,6 +65,7 @@ public class EventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         eventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -73,6 +76,7 @@ public class EventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         eventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

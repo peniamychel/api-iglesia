@@ -17,13 +17,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/certificado/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class CertificadoController {
 
     private final ICertificado certificadoService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<CertificadoDto>> create(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto saved = certificadoService.create(certificadoDto);
         return new ResponseEntity<>(ApiResponse.<CertificadoDto>builder()
@@ -54,6 +55,7 @@ public class CertificadoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<CertificadoDto>> update(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto updated = certificadoService.update(certificadoDto);
         return ResponseEntity.ok(ApiResponse.<CertificadoDto>builder()
@@ -64,6 +66,7 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         certificadoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -74,6 +77,7 @@ public class CertificadoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         certificadoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -84,6 +88,7 @@ public class CertificadoController {
     }
 
     @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
@@ -101,6 +106,7 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/{id}/foto")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         certificadoService.deleteProfilePhoto(id);
         return ResponseEntity.ok(

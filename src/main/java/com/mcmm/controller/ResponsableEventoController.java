@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/responsable-evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class ResponsableEventoController {
 
     private final IResponsableEvento responsableEventoService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> create(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto saved = responsableEventoService.create(responsableEventoDto);
         return new ResponseEntity<>(ApiResponse.<ResponsableEventoDto>builder()
@@ -53,6 +54,7 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> update(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto updated = responsableEventoService.update(responsableEventoDto);
         return ResponseEntity.ok(ApiResponse.<ResponsableEventoDto>builder()
@@ -63,6 +65,7 @@ public class ResponsableEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         responsableEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -73,6 +76,7 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         responsableEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

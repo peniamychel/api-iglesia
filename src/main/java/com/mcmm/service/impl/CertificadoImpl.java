@@ -22,8 +22,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -42,10 +45,30 @@ public class CertificadoImpl implements ICertificado {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    private Long getCurrentIglesiaId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getDetails() instanceof Map) {
+            Map<?, ?> details = (Map<?, ?>) authentication.getDetails();
+            Object iglesiaIdObj = details.get("iglesiaId");
+            if (iglesiaIdObj instanceof Long) {
+                return (Long) iglesiaIdObj;
+            }
+        }
+        return null;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<CertificadoDto> findAll() {
-        return StreamSupport.stream(certificadoDao.findAll().spliterator(), false)
+        Long iglesiaId = getCurrentIglesiaId();
+        List<Certificado> certificados;
+        if (iglesiaId != null) {
+            certificados = certificadoDao.findByEventoIglesiaId(iglesiaId);
+        } else {
+            certificados = StreamSupport.stream(certificadoDao.findAll().spliterator(), false)
+                    .collect(Collectors.toList());
+        }
+        return certificados.stream()
                 .map(this::buildDtoWithPhotoUrl)
                 .collect(Collectors.toList());
     }

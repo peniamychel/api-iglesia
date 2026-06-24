@@ -17,13 +17,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/participacion-evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class ParticipacionEventoController {
 
     private final IParticipacionEvento participacionEventoService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<ParticipacionEventoDto>> create(@Valid @RequestBody ParticipacionEventoDto participacionEventoDto) {
         ParticipacionEventoDto saved = participacionEventoService.create(participacionEventoDto);
         return new ResponseEntity<>(ApiResponse.<ParticipacionEventoDto>builder()
@@ -54,6 +55,7 @@ public class ParticipacionEventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<ParticipacionEventoDto>> update(@Valid @RequestBody ParticipacionEventoDto participacionEventoDto) {
         ParticipacionEventoDto updated = participacionEventoService.update(participacionEventoDto);
         return ResponseEntity.ok(ApiResponse.<ParticipacionEventoDto>builder()
@@ -64,6 +66,7 @@ public class ParticipacionEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         participacionEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -74,6 +77,7 @@ public class ParticipacionEventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         participacionEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -84,6 +88,7 @@ public class ParticipacionEventoController {
     }
 
     @PutMapping("/entregado/{id}")
+    @PreAuthorize("hasAuthority('Gestionar Eventos')")
     public ResponseEntity<ApiResponse<Void>> toggleEntregado(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

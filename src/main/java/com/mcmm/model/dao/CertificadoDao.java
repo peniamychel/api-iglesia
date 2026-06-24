@@ -15,4 +15,7 @@ public interface CertificadoDao extends JpaRepository<Certificado, Long> {
     @Transactional
     @Query("UPDATE Certificado c SET c.estado = NOT c.estado, c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :id")
     void toggleEstado(@Param("id") Long id);
+
+    @Query("SELECT c FROM Certificado c WHERE c.evento.iglesia.id = :iglesiaId")
+    java.util.List<Certificado> findByEventoIglesiaId(@Param("iglesiaId") Long iglesiaId);
 }
