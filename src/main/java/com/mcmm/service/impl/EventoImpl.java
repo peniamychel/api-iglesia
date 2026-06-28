@@ -12,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,6 +39,8 @@ public class EventoImpl implements IEvento {
             Object iglesiaIdObj = details.get("iglesiaId");
             if (iglesiaIdObj instanceof Long) {
                 return (Long) iglesiaIdObj;
+            } else if (iglesiaIdObj instanceof Integer) {
+                return ((Integer) iglesiaIdObj).longValue();
             }
         }
         return null;
@@ -141,5 +145,45 @@ public class EventoImpl implements IEvento {
     @Override
     public void estado(Long id) {
         eventoDao.toggleEstado(id);
+    }
+
+    @Override
+    public void cloneYearEvents(int fromYear, int toYear) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(fromYear, Calendar.JANUARY, 1, 0, 0, 0);
+        Date start = cal.getTime();
+        cal.set(fromYear, Calendar.DECEMBER, 31, 23, 59, 59);
+        Date end = cal.getTime();
+
+        List<Evento> eventsFromYear = eventoDao.findByFechaInicioBetween(start, end);
+        int yearDiff = toYear - fromYear;
+
+        for (Evento original : eventsFromYear) {
+            if (Boolean.TRUE.equals(original.getMostrarEnCalendario()) || "GENERAL".equalsIgnoreCase(original.getAlcance())) {
+                Evento cloned = Evento.builder()
+                        .nombre(original.getNombre())
+                        .motivo(original.getMotivo())
+                        .ubicacion(original.getUbicacion())
+                        .tipoEvento(original.getTipoEvento())
+                        .iglesia(original.getIglesia())
+                        .alcance(original.getAlcance())
+                        .mostrarEnCalendario(original.getMostrarEnCalendario())
+                        .estado(true)
+                        .build();
+
+                if (original.getFechaInicio() != null) {
+                    cal.setTime(original.getFechaInicio());
+                    cal.add(Calendar.YEAR, yearDiff);
+                    cloned.setFechaInicio(cal.getTime());
+                }
+                if (original.getFechaFin() != null) {
+                    cal.setTime(original.getFechaFin());
+                    cal.add(Calendar.YEAR, yearDiff);
+                    cloned.setFechaFin(cal.getTime());
+                }
+
+                eventoDao.save(cloned);
+            }
+        }
     }
 }

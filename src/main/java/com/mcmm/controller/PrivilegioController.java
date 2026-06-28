@@ -16,7 +16,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/privilegios/v1")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class PrivilegioController {
 
     @Autowired
@@ -27,6 +27,7 @@ public class PrivilegioController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('Ver Privilegios')")
     public ResponseEntity<List<PrivilegioDto>> findAll() {
         List<PrivilegioDto> privilegios = (List<PrivilegioDto>) privilegioService.findAll();
         return ResponseEntity.ok(privilegios);
@@ -34,6 +35,7 @@ public class PrivilegioController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('Ver Privilegios')")
     public ResponseEntity<PrivilegioDto> findById(@PathVariable Long id) {
         PrivilegioDto privilegio = privilegioService.findById(id);
         if (privilegio != null) {
@@ -44,7 +46,7 @@ public class PrivilegioController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    @PreAuthorize("hasAuthority('Escribir Privilegios')")
     public ResponseEntity<PrivilegioDto> create(@RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto savedPrivilegio = privilegioService.save(privilegioDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPrivilegio);
@@ -52,7 +54,7 @@ public class PrivilegioController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    @PreAuthorize("hasAuthority('Escribir Privilegios')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         PrivilegioDto privilegio = privilegioService.findById(id);
         if (privilegio != null) {
@@ -64,7 +66,7 @@ public class PrivilegioController {
 
     @PutMapping("/update/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    @PreAuthorize("hasAuthority('Escribir Privilegios')")
     public ResponseEntity<PrivilegioDto> update(@PathVariable Long id, @RequestBody PrivilegioDto privilegioDto) {
         PrivilegioDto updatedPrivilegio = privilegioService.update(id, privilegioDto);
         if (updatedPrivilegio != null) {
@@ -75,7 +77,7 @@ public class PrivilegioController {
 
     @PostMapping("/rol-cargo/{rolCargoId}/add/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    @PreAuthorize("hasAuthority('Escribir Privilegios')")
     public ResponseEntity<RolCargoDto> addPrivilegioToRolCargo(
             @PathVariable Long rolCargoId,
             @PathVariable Long privilegioId) {
@@ -85,7 +87,7 @@ public class PrivilegioController {
 
     @DeleteMapping("/rol-cargo/{rolCargoId}/remove/{privilegioId}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN') AND hasAuthority('Gestionar Privilegios')")
+    @PreAuthorize("hasAuthority('Escribir Privilegios')")
     public ResponseEntity<RolCargoDto> removePrivilegioFromRolCargo(
             @PathVariable Long rolCargoId,
             @PathVariable Long privilegioId) {
@@ -95,6 +97,7 @@ public class PrivilegioController {
 
     @GetMapping("/rol-cargo/{rolCargoId}/privilegios")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('Ver Privilegios')")
     public ResponseEntity<Set<PrivilegioDto>> getPrivilegiosByRolCargo(
             @PathVariable Long rolCargoId) {
         RolCargoDto rolCargo = rolCargoService.findById(rolCargoId);

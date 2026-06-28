@@ -14,8 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.mcmm.model.dao.IglesiaDao;
+import com.mcmm.model.dao.MiembroIglesiaDao;
+import com.mcmm.model.entity.Iglesia;
+import com.mcmm.model.entity.MiembroIglesia;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -27,6 +36,8 @@ public class MiembroImpl implements IMiembro {
     private final ModelMapper modelMapper;
     private final MiembroDao miembroDao;
     private final FileStorageService fileStorageService;
+    private final IglesiaDao iglesiaDao;
+    private final MiembroIglesiaDao miembroIglesiaDao;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -237,4 +248,137 @@ public class MiembroImpl implements IMiembro {
         
         return dto;
     }
+
+    @Override
+    @Transactional
+    public int importFromExcel(MultipartFile file, Long iglesiaId) throws IOException {
+        int count = 0;
+        Iglesia iglesia = iglesiaDao.findById(iglesiaId)
+                .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue;
+
+                String ci = formatter.formatCellValue(row.getCell(0)).trim();
+                if (ci.isEmpty()) continue;
+
+                if (miembroDao.findByCi(ci) != null) {
+                    continue;
+                }
+
+                String nombre = formatter.formatCellValue(row.getCell(1)).trim();
+                String apellido = formatter.formatCellValue(row.getCell(2)).trim();
+                if (nombre.isEmpty() || apellido.isEmpty()) continue;
+
+                Miembro miembro = new Miembro();
+                miembro.setCi(ci);
+                miembro.setNombre(nombre);
+                miembro.setApellido(apellido);
+                
+                try {
+                    Cell cellNac = row.getCell(3);
+                    if (cellNac != null) {
+                        if (cellNac.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellNac)) {
+                            miembro.setFechaNac(cellNac.getDateCellValue());
+                        } else {
+                            String cellVal = formatter.formatCellValue(cellNac).trim();
+                            if (!cellVal.isEmpty()) {
+                                miembro.setFechaNac(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(cellVal));
+                            }
+                        }
+                    }
+                } catch (Exception e) {}
+
+                miembro.setCelular(formatter.formatCellValue(row.getCell(4)).trim());
+                miembro.setSexo(formatter.formatCellValue(row.getCell(5)).trim());
+                miembro.setDireccion(formatter.formatCellValue(row.getCell(6)).trim());
+
+                try {
+                    Cell cellConv = row.getCell(7);
+                    if (cellConv != null) {
+                        if (cellConv.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellConv)) {
+                            miembro.setFechaConvercion(cellConv.getDateCellValue());
+                        } else {
+                            String cellVal = formatter.formatCellValue(cellConv).trim();
+                            if (!cellVal.isEmpty()) {
+                                miembro.setFechaConvercion(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(cellVal));
+                            }
+                        }
+                    }
+                } catch (Exception e) {}
+
+                miembro.setLugarConvercion(formatter.formatCellValue(row.getCell(8)).trim());
+                miembro.setInterventores(formatter.formatCellValue(row.getCell(9)).trim());
+                miembro.setDetalles(formatter.formatCellValue(row.getCell(10)).trim());
+                miembro.setEstado(true);
+
+                Miembro savedMiembro = miembroDao.save(miembro);
+
+                MiembroIglesia mi = new MiembroIglesia();
+                mi.setMiembro(savedMiembro);
+                mi.setIglesia(iglesia);
+                mi.setFecha(new Date());
+                mi.setEstado(true);
+                miembroIglesiaDao.save(mi);
+
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public byte[] generateExcelTemplate() throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Plantilla Miembros");
+            
+            // Header font and style
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerFont);
+            
+            // Headers
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {
+                "CI", "Nombre", "Apellido", "Fecha Nacimiento (AAAA-MM-DD)", 
+                "Celular", "Sexo (M/F)", "Direccion", 
+                "Fecha Conversion (AAAA-MM-DD)", "Lugar Conversion", 
+                "Interventores", "Detalles"
+            };
+            
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+            
+            // Sample data row
+            Row sampleRow = sheet.createRow(1);
+            sampleRow.createCell(0).setCellValue("12345678");
+            sampleRow.createCell(1).setCellValue("Juan");
+            sampleRow.createCell(2).setCellValue("Pérez");
+            sampleRow.createCell(3).setCellValue("1995-04-25");
+            sampleRow.createCell(4).setCellValue("78945612");
+            sampleRow.createCell(5).setCellValue("M");
+            sampleRow.createCell(6).setCellValue("Av. Principal #123");
+            sampleRow.createCell(7).setCellValue("2018-09-12");
+            sampleRow.createCell(8).setCellValue("Templo Central");
+            sampleRow.createCell(9).setCellValue("Pastor Carlos Gomez");
+            sampleRow.createCell(10).setCellValue("Ejemplo de registro");
+            
+            // Auto size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
 }
+

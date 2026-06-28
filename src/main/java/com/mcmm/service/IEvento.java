@@ -11,4 +11,5 @@ public interface IEvento {
     EventoDto update(EventoDto eventoDto);
     void delete(Long id);
     void estado(Long id);
+    void cloneYearEvents(int fromYear, int toYear);
 }

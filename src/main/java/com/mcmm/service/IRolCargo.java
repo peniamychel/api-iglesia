@@ -7,6 +7,8 @@ import java.util.List;
 public interface IRolCargo {
     List<RolCargoDto> findAll();
 
+    List<RolCargoDto> findAllCargo();
+
     RolCargoDto findById(Long id);
 
     RolCargoDto create(RolCargoDto rolCargoDto);

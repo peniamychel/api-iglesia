@@ -3,6 +3,7 @@ package com.mcmm.service.impl;
 import com.mcmm.exception.BadRequestException;
 import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.MiembroDao;
+import com.mcmm.model.dao.PrivilegioDao;
 import com.mcmm.model.dao.RolCargoDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
@@ -11,6 +12,7 @@ import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
 import com.mcmm.model.entity.Miembro;
+import com.mcmm.model.entity.Privilegio;
 import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.FileStorageService;
@@ -40,19 +42,22 @@ public class UsuarioImpl implements IUsuario {
     private final RolCargoDao rolCargoDao;
     private final MiembroDao miembroDao;
     private final FileStorageService fileStorageService;
+    private final PrivilegioDao privilegioDao;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     public UsuarioImpl(ModelMapper modelMapper, UsuarioDao usuarioDao,
                        PasswordEncoder passwordEncoder, RolCargoDao rolCargoDao,
-                       MiembroDao miembroDao, FileStorageService fileStorageService) {
+                       MiembroDao miembroDao, FileStorageService fileStorageService,
+                       PrivilegioDao privilegioDao) {
         this.modelMapper = modelMapper;
         this.usuarioDao = usuarioDao;
         this.passwordEncoder = passwordEncoder;
         this.rolCargoDao = rolCargoDao;
         this.miembroDao = miembroDao;
         this.fileStorageService = fileStorageService;
+        this.privilegioDao = privilegioDao;
     }
 
     @Override
@@ -90,12 +95,23 @@ public class UsuarioImpl implements IUsuario {
             throw new BadRequestException("El email ya existe");
         }
 
+        if (usuarioDto.getMiembroId() != null && usuarioDao.existsByMiembroIdAndEstadoTrue(usuarioDto.getMiembroId())) {
+            throw new BadRequestException("Este miembro ya cuenta con una cuenta de usuario activa.");
+        }
+
         Usuario usuario = modelMapper.map(usuarioDto, Usuario.class);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         
         if (usuarioDto.getMiembroId() != null) {
             Miembro miembro = miembroDao.findById(usuarioDto.getMiembroId()).orElse(null);
             usuario.setMiembro(miembro);
+        }
+
+        if (usuarioDto.getPrivilegioIds() != null && !usuarioDto.getPrivilegioIds().isEmpty()) {
+            Set<Privilegio> privilegios = new HashSet<>(privilegioDao.findAllById(usuarioDto.getPrivilegioIds()));
+            usuario.setPrivilegios(privilegios);
+        } else {
+            usuario.setPrivilegios(new HashSet<>());
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -169,6 +185,11 @@ public class UsuarioImpl implements IUsuario {
 
         if (usuarioUpdateDto.getEstado() != null) {
             usuario.setEstado(usuarioUpdateDto.getEstado());
+        }
+
+        if (usuarioUpdateDto.getPrivilegioIds() != null) {
+            Set<Privilegio> privilegios = new HashSet<>(privilegioDao.findAllById(usuarioUpdateDto.getPrivilegioIds()));
+            usuario.setPrivilegios(privilegios);
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -276,6 +297,16 @@ public class UsuarioImpl implements IUsuario {
                 dto.setUriFoto(null);
             }
             
+            if (usuario.getMiembro().getMiembroIglesias() != null) {
+                String iglesiaName = usuario.getMiembro().getMiembroIglesias().stream()
+                        .filter(mi -> Boolean.TRUE.equals(mi.getEstado()))
+                        .map(mi -> mi.getIglesia() != null ? mi.getIglesia().getNombre() : null)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null);
+                dto.setIglesiaNombre(iglesiaName);
+            }
+
             if (usuario.getMiembro().getCargos() != null) {
                 Set<com.mcmm.model.dto.RolCargoDto> rolesDtos = usuario.getMiembro().getCargos().stream()
                         .filter(c -> Boolean.TRUE.equals(c.getEstado()))
@@ -286,12 +317,22 @@ public class UsuarioImpl implements IUsuario {
             }
         } else {
             dto.setUriFoto(null);
+            dto.setIglesiaNombre("Administración Central");
             com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
                     .nombre("Administrador Global")
                     .nombreRol("ADMIN")
                     .estado(true)
                     .build();
             dto.setRoles(Collections.singleton(adminDto));
+        }
+
+        if (usuario.getPrivilegios() != null) {
+            Set<com.mcmm.model.dto.PrivilegioDto> privDtos = usuario.getPrivilegios().stream()
+                    .map(p -> modelMapper.map(p, com.mcmm.model.dto.PrivilegioDto.class))
+                    .collect(Collectors.toSet());
+            dto.setPrivilegios(privDtos);
+        } else {
+            dto.setPrivilegios(new HashSet<>());
         }
 
         return dto;

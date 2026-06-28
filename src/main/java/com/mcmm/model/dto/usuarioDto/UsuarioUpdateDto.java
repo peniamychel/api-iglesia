@@ -18,4 +18,5 @@ public class UsuarioUpdateDto {
     private String uriFoto;
     private Boolean estado;
     private Long miembroId;
+    private java.util.Set<Long> privilegioIds;
 }

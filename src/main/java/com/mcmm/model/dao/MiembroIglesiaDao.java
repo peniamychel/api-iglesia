@@ -52,4 +52,9 @@ public interface MiembroIglesiaDao extends JpaRepository<MiembroIglesia, Long> {
     @Query(value = "CALL obtener_iglesias_con_mas_miembros(:limite)", nativeQuery = true)
     List<Object[]> obtenerIglesiasConMasMiembros(@Param("limite") Long limite);
 
+    @Query("SELECT COUNT(mi) > 0 FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estado = true")
+    boolean existsByMiembroIdAndEstadoTrue(@Param("miembroId") Long miembroId);
+
+    @Query("SELECT COUNT(mi) > 0 FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estadoTraspaso = 'PENDIENTE'")
+    boolean existsByMiembroIdAndEstadoTraspasoPending(@Param("miembroId") Long miembroId);
 }

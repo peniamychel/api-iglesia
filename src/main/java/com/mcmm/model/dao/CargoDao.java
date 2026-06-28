@@ -21,4 +21,7 @@ public interface CargoDao extends JpaRepository<Cargo, Long> {
     List<Cargo> findByIglesia_EstadoTrueAndMiembro_EstadoTrue();
 
     List<Cargo> findByIglesiaId(Long iglesiaId);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cargo c WHERE c.miembro.id = :miembroId AND c.estado = true")
+    boolean existsByMiembroIdAndEstadoTrue(@org.springframework.data.repository.query.Param("miembroId") Long miembroId);
 }

@@ -16,4 +16,5 @@ public interface ICargo {
     public CargoDto save(CargoDto cargoDto);
     String saveActaAsignacion(Long id, MultipartFile file) throws IOException;
     String saveActaDeslindacion(Long id, MultipartFile file) throws IOException;
+    java.util.List<CargoDto> findMisColaboradores();
 }

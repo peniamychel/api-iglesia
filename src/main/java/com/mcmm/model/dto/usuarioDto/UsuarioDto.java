@@ -29,4 +29,5 @@ public class UsuarioDto {
     @NotBlank
     private String password;
     private Set<String> roles;
+    private Set<Long> privilegioIds;
 }

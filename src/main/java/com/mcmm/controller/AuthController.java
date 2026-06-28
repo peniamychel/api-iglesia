@@ -41,6 +41,26 @@ public class AuthController {
     @Autowired
     private IglesiaDao iglesiaDao;
 
+    @Autowired
+    private com.mcmm.service.IBitacora bitacoraService;
+
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest request;
+
+    private void registrarLog(String username, String accion, String descripcion) {
+        try {
+            String clientIp = request.getHeader("X-Forwarded-For");
+            if (clientIp == null || clientIp.isEmpty()) {
+                clientIp = request.getRemoteAddr();
+            } else {
+                clientIp = clientIp.split(",")[0].trim();
+            }
+            bitacoraService.registrar(null, username, accion, "AUTENTICACION", descripcion, clientIp);
+        } catch (Exception e) {
+            // Ignorar
+        }
+    }
+
     @Data
     public static class SelectCargoRequest {
         private String preAuthToken;
@@ -190,6 +210,8 @@ public class AuthController {
         response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
 
+        registrarLog(username, "Acceso", "Seleccionó cargo e iglesia activa: " + (iglesia != null ? iglesia.getNombre() : "Iglesia " + request.getIglesiaId()) + " como " + cargoNombre);
+
         return ResponseEntity.ok(response);
     }
 
@@ -309,6 +331,8 @@ public class AuthController {
                 .collect(Collectors.toList());
         response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
+
+        registrarLog(username, "Acceso", "Cambió de iglesia activa a: " + (iglesia != null ? iglesia.getNombre() : "Iglesia " + iglesiaId) + " como " + cargoNombre);
 
         return ResponseEntity.ok(response);
     }

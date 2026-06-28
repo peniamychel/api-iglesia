@@ -8,12 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 
 @Repository
 public interface EventoDao extends JpaRepository<Evento, Long> {
 
     List<Evento> findByIglesiaId(Long iglesiaId);
+
+    List<Evento> findByFechaInicioBetween(Date start, Date end);
 
     @Modifying
     @Transactional

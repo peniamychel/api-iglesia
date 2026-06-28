@@ -26,4 +26,6 @@ public interface UsuarioDao extends JpaRepository<Usuario, Long> {
     @Query("SELECT u FROM Usuario u WHERE u.username = ?1")
     Optional<Usuario> getName(String username);
 
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.miembro.id = :miembroId AND u.estado = true")
+    boolean existsByMiembroIdAndEstadoTrue(@org.springframework.data.repository.query.Param("miembroId") Long miembroId);
 }

@@ -33,6 +33,7 @@ public class TipoCertificadoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('Ver Certificados')")
     public ResponseEntity<ApiResponse<List<TipoCertificadoDto>>> findAll() {
         List<TipoCertificadoDto> tipoCertificados = tipoCertificadoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<TipoCertificadoDto>>builder()
@@ -43,6 +44,7 @@ public class TipoCertificadoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('Ver Certificados')")
     public ResponseEntity<ApiResponse<TipoCertificadoDto>> showById(@PathVariable Long id) {
         TipoCertificadoDto tipoCertificado = tipoCertificadoService.findById(id);
         if (tipoCertificado == null) throw new NotFoundExceptionResource("TipoCertificado", "id", id);

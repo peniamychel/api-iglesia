@@ -19,5 +19,7 @@ public class UsuarioDtoRes {
     private Boolean estado;
     private String password;
     private Long miembroId;
+    private String iglesiaNombre;
     private Set<RolCargoDto> roles;
+    private Set<com.mcmm.model.dto.PrivilegioDto> privilegios;
 }

@@ -44,6 +44,8 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
             Object iglesiaIdObj = details.get("iglesiaId");
             if (iglesiaIdObj instanceof Long) {
                 return (Long) iglesiaIdObj;
+            } else if (iglesiaIdObj instanceof Integer) {
+                return ((Integer) iglesiaIdObj).longValue();
             }
         }
         return null;
@@ -76,6 +78,12 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
     @Override
     @Transactional
     public ParticipacionEventoDto create(ParticipacionEventoDto participacionEventoDto) {
+        if (participacionEventoDto.getEventoId() != null && participacionEventoDto.getMiembroId() != null) {
+            if (participacionEventoDao.existsByEventoIdAndMiembroId(participacionEventoDto.getEventoId(), participacionEventoDto.getMiembroId())) {
+                throw new IllegalArgumentException("Esta persona ya está registrada como participante en este evento.");
+            }
+        }
+
         ParticipacionEvento participacion = modelMapper.map(participacionEventoDto, ParticipacionEvento.class);
         if (participacionEventoDto.getCertificadoId() != null) {
             Certificado certificado = certificadoDao.findById(participacionEventoDto.getCertificadoId()).orElse(null);

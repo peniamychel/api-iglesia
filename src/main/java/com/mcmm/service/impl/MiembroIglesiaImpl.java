@@ -210,6 +210,10 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
     @Override
     @Transactional
     public MiembroIglesiaDto solicitarTraspaso(MiembroIglesiaDto dto) {
+        if (miembroIglesiaDao.existsByMiembroIdAndEstadoTraspasoPending(dto.getMiembroId())) {
+            throw new IllegalArgumentException("El miembro ya cuenta con un proceso de traspaso pendiente.");
+        }
+
         MiembroIglesia active = miembroIglesiaDao.findActiveByMiembroId(dto.getMiembroId())
                 .orElseThrow(() -> new IllegalArgumentException("El miembro no está asignado a ninguna iglesia actualmente."));
 

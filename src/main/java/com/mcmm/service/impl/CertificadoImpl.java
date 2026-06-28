@@ -52,6 +52,8 @@ public class CertificadoImpl implements ICertificado {
             Object iglesiaIdObj = details.get("iglesiaId");
             if (iglesiaIdObj instanceof Long) {
                 return (Long) iglesiaIdObj;
+            } else if (iglesiaIdObj instanceof Integer) {
+                return ((Integer) iglesiaIdObj).longValue();
             }
         }
         return null;

@@ -23,4 +23,7 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
 
     @Query("SELECT p FROM ParticipacionEvento p WHERE p.evento.iglesia.id = :iglesiaId")
     java.util.List<ParticipacionEvento> findByEventoIglesiaId(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT COUNT(p) > 0 FROM ParticipacionEvento p WHERE p.evento.id = :eventoId AND p.miembro.id = :miembroId")
+    boolean existsByEventoIdAndMiembroId(@Param("eventoId") Long eventoId, @Param("miembroId") Long miembroId);
 }

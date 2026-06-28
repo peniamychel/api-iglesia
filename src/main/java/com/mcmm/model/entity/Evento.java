@@ -48,6 +48,12 @@ public class Evento {
 
     private Boolean estado;
 
+    @Column(name = "alcance", length = 50)
+    private String alcance; // LOCAL or GENERAL
+
+    @Column(name = "mostrar_en_calendario")
+    private Boolean mostrarEnCalendario;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")

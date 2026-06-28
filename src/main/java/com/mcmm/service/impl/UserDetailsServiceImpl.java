@@ -38,6 +38,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 
+        // Privilegios directos asignados al usuario
+        if (usuario.getPrivilegios() != null) {
+            usuario.getPrivilegios().forEach(p -> {
+                if (p.getNombre() != null) {
+                    authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                }
+            });
+        }
+
         if (usuario.getMiembro() == null) {
             // Super-administrador global
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));

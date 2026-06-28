@@ -33,6 +33,7 @@ public class TipoEventoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<List<TipoEventoDto>>> findAll() {
         List<TipoEventoDto> tipoEventos = tipoEventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<TipoEventoDto>>builder()
@@ -43,6 +44,7 @@ public class TipoEventoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> showById(@PathVariable Long id) {
         TipoEventoDto tipoEvento = tipoEventoService.findById(id);
         if (tipoEvento == null) throw new NotFoundExceptionResource("TipoEvento", "id", id);

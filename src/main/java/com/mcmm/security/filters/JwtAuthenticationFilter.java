@@ -33,10 +33,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private JwtUtils jwtUtils;
     private UsuarioDao usuarioDao;
+    private com.mcmm.service.IBitacora bitacoraService;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils, UsuarioDao usuarioDao) {
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, UsuarioDao usuarioDao, com.mcmm.service.IBitacora bitacoraService) {
         this.jwtUtils = jwtUtils;
         this.usuarioDao = usuarioDao;
+        this.bitacoraService = bitacoraService;
     }
     @Override
     public Authentication attemptAuthentication(@NonNull HttpServletRequest request,
@@ -119,6 +121,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
                 response.getWriter().flush();
+                bitacoraService.registrar(usuario.getId(), usuario.getUsername(), "Acceso", "AUTENTICACION", "Pre-autenticación exitosa (requiere selección de iglesia/cargo)", getClientIp(request));
                 return;
             } else if (cargosByChurch.size() == 1) {
                 Map.Entry<Long, List<Cargo>> entry = cargosByChurch.entrySet().iterator().next();
@@ -171,6 +174,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
                 response.getWriter().flush();
 
+                bitacoraService.registrar(usuario.getId(), usuario.getUsername(), "Acceso", "AUTENTICACION", "Inicio de sesión exitoso (Iglesia: " + iglesia.getNombre() + ")", getClientIp(request));
+
                 super.successfulAuthentication(request, response, chain, authResult);
                 return;
             }
@@ -200,6 +205,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
         response.getWriter().flush();
 
+        if (usuario != null) {
+            bitacoraService.registrar(usuario.getId(), usuario.getUsername(), "Acceso", "AUTENTICACION", "Inicio de sesión exitoso (Super Admin)", getClientIp(request));
+        }
+
         super.successfulAuthentication(request, response, chain, authResult);
     }
 
@@ -212,10 +221,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         httpResponse.put("message", "Error de autenticación: Usuario o contraseña incorrectos");
         httpResponse.put("error", failed.getClass().getSimpleName());
 
-
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
         response.getWriter().flush();
+
+        // Intentar registrar el fallo en bitácora
+        bitacoraService.registrar(null, "Desconocido", "Advertencia", "AUTENTICACION", "Intento fallido de inicio de sesión (Credenciales incorrectas)", getClientIp(request));
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null || xfHeader.isEmpty()) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0].trim();
     }
 }

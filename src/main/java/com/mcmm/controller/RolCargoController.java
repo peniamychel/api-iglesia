@@ -22,6 +22,7 @@ public class RolCargoController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('Ver Privilegios')")
     public ResponseEntity<ApiResponse<List<RolCargoDto>>> findAll() {
         List<RolCargoDto> list = rolCargoService.findAll();
         return ResponseEntity.ok(
@@ -33,8 +34,22 @@ public class RolCargoController {
         );
     }
 
+    @GetMapping("/findall-cargo")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse<List<RolCargoDto>>> findAllCargo() {
+        List<RolCargoDto> list = rolCargoService.findAllCargo();
+        return ResponseEntity.ok(
+                ApiResponse.<List<RolCargoDto>>builder()
+                        .message("Listado de Cargos para Colaboradores")
+                        .datos(list)
+                        .nombreModelo("RolCargo")
+                        .build()
+        );
+    }
+
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('Ver Privilegios')")
     public ResponseEntity<ApiResponse<RolCargoDto>> findById(@PathVariable Long id) {
         RolCargoDto dto = rolCargoService.findById(id);
         return ResponseEntity.ok(

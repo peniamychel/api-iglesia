@@ -26,7 +26,7 @@ public class IglesiaController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> create(@RequestBody @Valid IglesiaDto iglesiaDto) {
         IglesiaDto existeIglesia = iglesiaService.buscarNombreIglesia(iglesiaDto.getNombre());
         if (existeIglesia != null) {
@@ -44,7 +44,7 @@ public class IglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> update(@RequestBody @Valid IglesiaDto iglesiaDto) {
         IglesiaDto iglesiaUpdate = iglesiaService.update(iglesiaDto.getId(), iglesiaDto);
         return ResponseEntity.ok(
@@ -57,7 +57,7 @@ public class IglesiaController {
 
     @PutMapping("/update2/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> update(
             @PathVariable Long id,
             @RequestBody @Valid IglesiaDto iglesiaDto) {
@@ -72,7 +72,7 @@ public class IglesiaController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         iglesiaService.delete(id);
         return ResponseEntity.ok(
@@ -85,6 +85,7 @@ public class IglesiaController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> showById(@PathVariable("id") Long id) {
         IglesiaDto iglesiaFiedById = iglesiaService.findById(id);
         return ResponseEntity.ok(
@@ -97,6 +98,7 @@ public class IglesiaController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<List<IglesiaDto>>> findAll() {
         List<IglesiaDto> iglesiaDtos = iglesiaService.findAll();
         return ResponseEntity.ok(
@@ -109,7 +111,7 @@ public class IglesiaController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> estado(@PathVariable("id") Long id) {
         IglesiaDto iglesiaActualizado = iglesiaService.estado(id);
         return ResponseEntity.ok(
@@ -122,6 +124,7 @@ public class IglesiaController {
 
     @GetMapping("/showbynombreiglesia/{nameIglesia}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> buscarNombreIglesia(
             @PathVariable("nameIglesia") String nameIglesia) {
         IglesiaDto buscarNombreIglesia = iglesiaService.buscarNombreIglesia(nameIglesia);
@@ -138,6 +141,7 @@ public class IglesiaController {
 
     @GetMapping("/showbynombreiglesiaexceptoid/{nameIglesia}/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> buscarNombreIglesiaExceptoId(
             @PathVariable("nameIglesia") String nameIglesia, @PathVariable("id") Long id) {
         IglesiaDto buscarNombreIglesia = iglesiaService.buscarNombreIglesiaExceptoId(id, nameIglesia);
@@ -154,6 +158,7 @@ public class IglesiaController {
 
     @GetMapping("/checkbynombreandidnot/{nameIglesia}/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<IglesiaDto>> findByNombreAndIdNot(
             @PathVariable("nameIglesia") String nameIglesia, @PathVariable("id") Long id) {
         IglesiaDto buscarNombreIglesia = iglesiaService.findByNombreAndIdNot(nameIglesia, id);
@@ -170,6 +175,7 @@ public class IglesiaController {
 
     @GetMapping("/findall-activas")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Iglesias')")
     public ResponseEntity<ApiResponse<List<IglesiaDto>>> findByEstadoTrue() {
         List<IglesiaDto> iglesiaDtos = iglesiaService.findByEstadoTrue();
         return ResponseEntity.ok(
@@ -182,7 +188,7 @@ public class IglesiaController {
 
     @PostMapping("/{id}/foto")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<String>> uploadFoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -201,7 +207,7 @@ public class IglesiaController {
 
     @DeleteMapping("/{id}/foto")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Iglesias')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Iglesias')")
     public ResponseEntity<ApiResponse<Void>> deleteFoto(@PathVariable Long id) {
         iglesiaService.deleteFoto(id);
         return ResponseEntity.ok(

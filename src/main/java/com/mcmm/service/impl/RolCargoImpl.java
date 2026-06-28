@@ -37,6 +37,14 @@ public class RolCargoImpl implements IRolCargo {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RolCargoDto> findAllCargo() {
+        return rolCargoDao.findByEstadoTrueAndNombreRolNot("ADMIN").stream()
+                .map(rc -> modelMapper.map(rc, RolCargoDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public RolCargoDto findById(Long id) {
         RolCargo rc = rolCargoDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", id));

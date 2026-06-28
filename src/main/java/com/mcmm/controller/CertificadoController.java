@@ -21,12 +21,33 @@ import java.util.List;
 public class CertificadoController {
 
     private final ICertificado certificadoService;
+    private final com.mcmm.service.IBitacora bitacoraService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private jakarta.servlet.http.HttpServletRequest request;
+
+    private void registrarLog(String accion, String descripcion) {
+        try {
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "Sistema";
+            String clientIp = request.getHeader("X-Forwarded-For");
+            if (clientIp == null || clientIp.isEmpty()) {
+                clientIp = request.getRemoteAddr();
+            } else {
+                clientIp = clientIp.split(",")[0].trim();
+            }
+            bitacoraService.registrar(null, username, accion, "CERTIFICADO", descripcion, clientIp);
+        } catch (Exception e) {
+            // Ignorar
+        }
+    }
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<CertificadoDto>> create(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto saved = certificadoService.create(certificadoDto);
+        registrarLog("CREAR", "Creó el certificado ID: " + saved.getId() + " para el evento ID: " + saved.getEventoId());
         return new ResponseEntity<>(ApiResponse.<CertificadoDto>builder()
                 .message("Certificado creado exitosamente.")
                 .datos(saved)
@@ -35,6 +56,7 @@ public class CertificadoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('Ver Certificados')")
     public ResponseEntity<ApiResponse<List<CertificadoDto>>> findAll() {
         List<CertificadoDto> certificados = certificadoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<CertificadoDto>>builder()
@@ -45,6 +67,7 @@ public class CertificadoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('Ver Certificados')")
     public ResponseEntity<ApiResponse<CertificadoDto>> showById(@PathVariable Long id) {
         CertificadoDto certificado = certificadoService.findById(id);
         return ResponseEntity.ok(ApiResponse.<CertificadoDto>builder()
@@ -55,9 +78,10 @@ public class CertificadoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<CertificadoDto>> update(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto updated = certificadoService.update(certificadoDto);
+        registrarLog("MODIFICAR", "Actualizó el certificado ID: " + updated.getId());
         return ResponseEntity.ok(ApiResponse.<CertificadoDto>builder()
                 .message("Certificado actualizado exitosamente.")
                 .datos(updated)
@@ -66,9 +90,10 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         certificadoService.delete(id);
+        registrarLog("ELIMINAR", "Eliminó el certificado ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Certificado eliminado exitosamente.")
                 .datos(null)
@@ -77,9 +102,10 @@ public class CertificadoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         certificadoService.estado(id);
+        registrarLog("MODIFICAR_ESTADO", "Modificó el estado del certificado ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del certificado actualizado exitosamente.")
                 .datos(null)
@@ -88,12 +114,13 @@ public class CertificadoController {
     }
 
     @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
         try {
             String fileUrl = certificadoService.uploadProfilePhoto(id, file);
+            registrarLog("SUBIR_FOTO", "Actualizó foto del certificado ID: " + id);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .message("Foto del certificado actualizada exitosamente.")
@@ -106,9 +133,10 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Certificados')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         certificadoService.deleteProfilePhoto(id);
+        registrarLog("ELIMINAR_FOTO", "Eliminó la foto/carta del certificado ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Foto del certificado eliminada exitosamente.")

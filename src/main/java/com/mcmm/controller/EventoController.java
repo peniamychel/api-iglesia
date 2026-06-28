@@ -20,11 +20,32 @@ import java.util.List;
 public class EventoController {
 
     private final IEvento eventoService;
+    private final com.mcmm.service.IBitacora bitacoraService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private jakarta.servlet.http.HttpServletRequest request;
+
+    private void registrarLog(String accion, String descripcion) {
+        try {
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "Sistema";
+            String clientIp = request.getHeader("X-Forwarded-For");
+            if (clientIp == null || clientIp.isEmpty()) {
+                clientIp = request.getRemoteAddr();
+            } else {
+                clientIp = clientIp.split(",")[0].trim();
+            }
+            bitacoraService.registrar(null, username, accion, "EVENTO", descripcion, clientIp);
+        } catch (Exception e) {
+            // Ignorar
+        }
+    }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<EventoDto>> create(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto saved = eventoService.create(eventoDto);
+        registrarLog("CREAR", "Creó el evento: " + saved.getNombre() + " (Fecha: " + saved.getFechaInicio() + ")");
         return new ResponseEntity<>(ApiResponse.<EventoDto>builder()
                 .message("Evento creado exitosamente.")
                 .datos(saved)
@@ -33,6 +54,7 @@ public class EventoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<List<EventoDto>>> findAll() {
         List<EventoDto> eventos = eventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<EventoDto>>builder()
@@ -43,6 +65,7 @@ public class EventoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<EventoDto>> showById(@PathVariable Long id) {
         EventoDto evento = eventoService.findById(id);
         if (evento == null) throw new NotFoundExceptionResource("Evento", "id", id);
@@ -54,9 +77,10 @@ public class EventoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<EventoDto>> update(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto updated = eventoService.update(eventoDto);
+        registrarLog("MODIFICAR", "Actualizó el evento ID: " + updated.getId() + " - " + updated.getNombre());
         return ResponseEntity.ok(ApiResponse.<EventoDto>builder()
                 .message("Evento actualizado exitosamente.")
                 .datos(updated)
@@ -65,9 +89,10 @@ public class EventoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         eventoService.delete(id);
+        registrarLog("ELIMINAR", "Eliminó el evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Evento eliminado exitosamente.")
                 .datos(null)
@@ -76,11 +101,26 @@ public class EventoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         eventoService.estado(id);
+        registrarLog("MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del evento actualizado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PostMapping("/clonar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> cloneYear(
+            @RequestParam("from") int fromYear,
+            @RequestParam("to") int toYear) {
+        eventoService.cloneYearEvents(fromYear, toYear);
+        registrarLog("CLONAR", "Clonó los eventos anuales de la gestión " + fromYear + " a la gestión " + toYear);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Eventos clonados exitosamente de la gestión " + fromYear + " a " + toYear)
                 .datos(null)
                 .nombreModelo("Evento")
                 .build());

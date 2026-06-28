@@ -22,7 +22,7 @@ public class ResponsableEventoController {
     private final IResponsableEvento responsableEventoService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> create(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto saved = responsableEventoService.create(responsableEventoDto);
         return new ResponseEntity<>(ApiResponse.<ResponsableEventoDto>builder()
@@ -33,6 +33,7 @@ public class ResponsableEventoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<List<ResponsableEventoDto>>> findAll() {
         List<ResponsableEventoDto> responsables = responsableEventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<ResponsableEventoDto>>builder()
@@ -43,6 +44,7 @@ public class ResponsableEventoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('Ver Eventos')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> showById(@PathVariable Long id) {
         ResponsableEventoDto responsable = responsableEventoService.findById(id);
         if (responsable == null) throw new NotFoundExceptionResource("ResponsableEvento", "id", id);
@@ -54,7 +56,7 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> update(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto updated = responsableEventoService.update(responsableEventoDto);
         return ResponseEntity.ok(ApiResponse.<ResponsableEventoDto>builder()
@@ -65,7 +67,7 @@ public class ResponsableEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         responsableEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -76,7 +78,7 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Gestionar Eventos')")
+    @PreAuthorize("hasAuthority('Escribir Eventos')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         responsableEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

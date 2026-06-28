@@ -24,10 +24,30 @@ import java.util.List;
 public class MiembroIglesiaController {
 
     private final IMiembroIglesia miembroIglesiaService;
+    private final com.mcmm.service.IBitacora bitacoraService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private jakarta.servlet.http.HttpServletRequest request;
+
+    private void registrarLog(String accion, String descripcion) {
+        try {
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "Sistema";
+            String clientIp = request.getHeader("X-Forwarded-For");
+            if (clientIp == null || clientIp.isEmpty()) {
+                clientIp = request.getRemoteAddr();
+            } else {
+                clientIp = clientIp.split(",")[0].trim();
+            }
+            bitacoraService.registrar(null, username, accion, "TRASPASO", descripcion, clientIp);
+        } catch (Exception e) {
+            // Ignorar
+        }
+    }
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> create(@RequestBody @Valid MiembroIglesiaDto miembroDto) {
         MiembroIglesiaDto miembroIglesiaSave = miembroIglesiaService.save(miembroDto);
         return new ResponseEntity<>(
@@ -41,7 +61,7 @@ public class MiembroIglesiaController {
 
     @PostMapping("/created")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> created(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         boolean result = miembroIglesiaService.findByIdMiembro(miembroIglesiaDto.getMiembroId());
         if (!result) {
@@ -59,6 +79,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> findAll() {
         List<MiembroIglesiaDto> miembroIglesiaDtos = miembroIglesiaService.findAll();
         return ResponseEntity.ok(
@@ -71,6 +92,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> findById(@PathVariable("id") Long id) {
         MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.findById(id);
         return ResponseEntity.ok(
@@ -83,7 +105,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> update(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
         return ResponseEntity.ok(
@@ -96,7 +118,7 @@ public class MiembroIglesiaController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         miembroIglesiaService.delete(id);
         return ResponseEntity.ok(
@@ -109,7 +131,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> estado(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.estado(id);
         return ResponseEntity.ok(
@@ -122,9 +144,10 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> solicitarTraspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.solicitarTraspaso(miembroIglesiaDto);
+        registrarLog("SOLICITAR_TRASPASO", "Solicitó traspaso para el miembro ID: " + miembroIglesiaActualizado.getMiembroId() + " a la iglesia ID: " + miembroIglesiaActualizado.getIglesiaId());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Solicitud de traspaso registrada exitosamente.")
@@ -135,9 +158,10 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso/{id}/aceptar")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> aceptarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.aceptarTraspaso(id);
+        registrarLog("ACEPTAR_TRASPASO", "Aceptó solicitud de traspaso ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Traspaso aceptado exitosamente.")
@@ -148,9 +172,10 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso/{id}/rechazar")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> rechazarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.rechazarTraspaso(id);
+        registrarLog("RECHAZAR_TRASPASO", "Rechazó solicitud de traspaso ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Traspaso rechazado exitosamente.")
@@ -161,6 +186,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/traspaso/pendientes/{iglesiaId}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> getSolicitudesPendientes(@PathVariable Long iglesiaId) {
         List<MiembroIglesiaDto> solicitudes = miembroIglesiaService.getSolicitudesPendientes(iglesiaId);
         return ResponseEntity.ok(
@@ -173,6 +199,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/historial/{miembroId}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> obtenerHistorialMiembro(@PathVariable Long miembroId) {
         List<MiembroIglesiaDto> historial = miembroIglesiaService.obtenerHistorialMiembro(miembroId);
         return ResponseEntity.ok(
@@ -185,6 +212,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/listmiembrosiglesia/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<List<MiembroDto>>> findMiembrosIglesia(@PathVariable("id") Long id) {
         List<MiembroDto> miembroDtos = miembroIglesiaService.findMiembrosIglesia(id);
         return ResponseEntity.ok(
@@ -208,7 +236,13 @@ public class MiembroIglesiaController {
         if (details == null) {
             throw new BadRequestException("No se encontraron detalles de autenticación.");
         }
-        Long iglesiaId = (Long) details.get("iglesiaId");
+        Long iglesiaId = null;
+        Object iglesiaIdObj = details.get("iglesiaId");
+        if (iglesiaIdObj instanceof Long) {
+            iglesiaId = (Long) iglesiaIdObj;
+        } else if (iglesiaIdObj instanceof Integer) {
+            iglesiaId = ((Integer) iglesiaIdObj).longValue();
+        }
         if (iglesiaId == null) {
             throw new BadRequestException("El usuario no tiene una iglesia asociada en su sesión.");
         }
@@ -223,6 +257,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/graficomiembrosiglesia/{cant}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
     public ResponseEntity<ApiResponse<List<GraficoDataDto>>> graficoMiembrosIglesia(@PathVariable("cant") Long cant) {
         List<GraficoDataDto> miembroIglesia = miembroIglesiaService.graficoMiembrosIglesia(cant);
         return ResponseEntity.ok(
@@ -234,12 +269,13 @@ public class MiembroIglesiaController {
     }
 
     @PostMapping("/{id}/carta-traspaso")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar MiembroIglesia')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
     public ResponseEntity<ApiResponse<String>> uploadCartaTraspaso(
             @PathVariable Long id,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             String fileUrl = miembroIglesiaService.subirCartaTraspaso(id, file);
+            registrarLog("SUBIR_FOTO", "Subió carta de traspaso firmada para solicitud ID: " + id);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .message("Carta de traspaso subida exitosamente.")

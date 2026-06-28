@@ -38,6 +38,8 @@ public class EventoDto {
     private Date fechaFin;
 
     private Boolean estado;
+    private String alcance;
+    private Boolean mostrarEnCalendario;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

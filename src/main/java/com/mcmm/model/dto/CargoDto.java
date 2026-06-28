@@ -35,4 +35,30 @@ public class CargoDto {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Datos embebidos para el endpoint mis-colaboradores (evita múltiples llamadas desde el frontend)
+    private MiembroInfo miembro;
+    private RolCargoInfo rolCargo;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class MiembroInfo {
+        private Long id;
+        private String nombre;
+        private String apellido;
+        private String ci;
+        private String uriFoto;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class RolCargoInfo {
+        private Long id;
+        private String nombre;
+        private String tipo;
+    }
 }

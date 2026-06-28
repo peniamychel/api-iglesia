@@ -19,4 +19,7 @@ public interface IMiembro {
     void deleteProfilePhoto(Long id);
     List<MiembroDto> findSinIglesia();
     List<MiembroDto> findSinIglesiaParaAsignacion();
+    int importFromExcel(MultipartFile file, Long iglesiaId) throws IOException;
+    byte[] generateExcelTemplate() throws IOException;
 }
+

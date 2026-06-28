@@ -52,6 +52,8 @@ public class CargoImpl implements ICargo {
             Object iglesiaIdObj = details.get("iglesiaId");
             if (iglesiaIdObj instanceof Long) {
                 return (Long) iglesiaIdObj;
+            } else if (iglesiaIdObj instanceof Integer) {
+                return ((Integer) iglesiaIdObj).longValue();
             }
         }
         return null;
@@ -101,6 +103,9 @@ public class CargoImpl implements ICargo {
 
         //tratar id de miembro
         if (cargoDto.getIdMiembro() != null) {
+            if (cargoDao.existsByMiembroIdAndEstadoTrue(cargoDto.getIdMiembro())) {
+                throw new IllegalArgumentException("Este miembro ya tiene un rol activo.");
+            }
             Miembro miembro = miembroDao.findById(cargoDto.getIdMiembro())
                     .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", cargoDto.getIdMiembro()));
             if (!miembro.getEstado()) throw new IllegalArgumentException("El miembro proporcionado está inactivo.");
@@ -250,5 +255,64 @@ public class CargoImpl implements ICargo {
 
         cargoDao.save(cargo);
         return nuevoEstado;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CargoDto> findMisColaboradores() {
+        Long iglesiaId = getCurrentIglesiaId();
+        List<Cargo> cargos;
+        if (iglesiaId != null) {
+            cargos = cargoDao.findByIglesiaId(iglesiaId);
+        } else {
+            cargos = cargoDao.findAll();
+        }
+
+        List<CargoDto> result = new ArrayList<>();
+        for (Cargo cargo : cargos) {
+            CargoDto dto = new CargoDto();
+            dto.setId(cargo.getId());
+            dto.setIglesiaId(cargo.getIglesia() != null ? cargo.getIglesia().getId() : null);
+            dto.setRolCargoId(cargo.getRolCargo() != null ? cargo.getRolCargo().getId() : null);
+            dto.setIdMiembro(cargo.getMiembro() != null ? cargo.getMiembro().getId() : null);
+            dto.setDetalle(cargo.getDetalle());
+            dto.setFechaInicio(cargo.getFechaInicio());
+            dto.setFechaFin(cargo.getFechaFin());
+            dto.setEstado(cargo.getEstado());
+            dto.setUriActaAsignacion(cargo.getUriActaAsignacion());
+            dto.setUriActaDeslindacion(cargo.getUriActaDeslindacion());
+            dto.setCreatedAt(cargo.getCreatedAt());
+            dto.setUpdatedAt(cargo.getUpdatedAt());
+
+            // Embed miembro info
+            if (cargo.getMiembro() != null) {
+                com.mcmm.model.entity.Miembro m = cargo.getMiembro();
+                String fotoUrl = null;
+                if (m.getUriFoto() != null && !m.getUriFoto().isBlank()) {
+                    fotoUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                            .path(uploadDir).path("/").path("miembros/").path(m.getUriFoto()).toUriString();
+                }
+                dto.setMiembro(CargoDto.MiembroInfo.builder()
+                        .id(m.getId())
+                        .nombre(m.getNombre())
+                        .apellido(m.getApellido())
+                        .ci(m.getCi())
+                        .uriFoto(fotoUrl)
+                        .build());
+            }
+
+            // Embed rolCargo info
+            if (cargo.getRolCargo() != null) {
+                com.mcmm.model.entity.RolCargo rc = cargo.getRolCargo();
+                dto.setRolCargo(CargoDto.RolCargoInfo.builder()
+                        .id(rc.getId())
+                        .nombre(rc.getNombre())
+                        .tipo(rc.getTipo())
+                        .build());
+            }
+
+            result.add(dto);
+        }
+        return result;
     }
 }

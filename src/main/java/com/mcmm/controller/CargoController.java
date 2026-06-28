@@ -38,7 +38,7 @@ public class CargoController {
      */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public ResponseEntity<ApiResponse<CargoDto>> create(@RequestBody @Valid CargoDto cargoDto) {
         CargoDto cargoSave = cargoService.create(cargoDto);
         return new ResponseEntity<>(
@@ -57,11 +57,32 @@ public class CargoController {
      */
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Cargos')")
     public ResponseEntity<ApiResponse<Iterable<CargoDto>>> findAll() {
         Iterable<CargoDto> cargoDtos = cargoService.findAll();
         return ResponseEntity.ok(
                 ApiResponse.<Iterable<CargoDto>>builder()
                         .message("Listado de Cargos")
+                        .datos(cargoDtos)
+                        .nombreModelo("Cargo")
+                        .build());
+    }
+
+    /**
+     * Obtiene los colaboradores de la iglesia activa del usuario autenticado,
+     * con datos completos del miembro y rol embebidos.
+     * Accesible para PASTOR, ADMIN, ENCARGADO_IGLESIA.
+     *
+     * @return Lista de cargos con información de miembro y rolCargo incluida.
+     */
+    @GetMapping("/mis-colaboradores")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+    public ResponseEntity<ApiResponse<java.util.List<CargoDto>>> findMisColaboradores() {
+        java.util.List<CargoDto> cargoDtos = cargoService.findMisColaboradores();
+        return ResponseEntity.ok(
+                ApiResponse.<java.util.List<CargoDto>>builder()
+                        .message("Colaboradores de la iglesia")
                         .datos(cargoDtos)
                         .nombreModelo("Cargo")
                         .build());
@@ -75,7 +96,7 @@ public class CargoController {
      */
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public ResponseEntity<ApiResponse<CargoDto>> update(@RequestBody @Valid CargoDto cargoDto) {
         CargoDto cargoUpdate = cargoService.update(cargoDto);
         return ResponseEntity.ok(
@@ -94,6 +115,7 @@ public class CargoController {
      */
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Cargos')")
     public ResponseEntity<ApiResponse<CargoDto>> showById(@PathVariable("id") Long id) {
         CargoDto cargoFiedById = cargoService.findById(id);
         return ResponseEntity.ok(
@@ -112,7 +134,7 @@ public class CargoController {
      */
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         cargoService.delete(id);
         return ResponseEntity.ok(
@@ -133,7 +155,7 @@ public class CargoController {
      */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public boolean estado(
             @PathVariable("id") Long id,
             @RequestParam(value = "fechaFin", required = false)
@@ -149,7 +171,7 @@ public class CargoController {
      * @return ResponseEntity con la URL del archivo subido.
      */
     @PostMapping("/{id}/acta-asignacion")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public ResponseEntity<ApiResponse<String>> uploadActaAsignacion(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -174,7 +196,7 @@ public class CargoController {
      * @return ResponseEntity con la URL del archivo subido.
      */
     @PostMapping("/{id}/acta-deslindacion")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Gestionar Obreros')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Cargos')")
     public ResponseEntity<ApiResponse<String>> uploadActaDeslindacion(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {

@@ -35,10 +35,13 @@ public class SecurityConfig {
     @Autowired
     private com.mcmm.model.dao.UsuarioDao usuarioDao;
 
+    @Autowired
+    private com.mcmm.service.IBitacora bitacoraService;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager autohenticationManager)
             throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils, usuarioDao);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils, usuarioDao, bitacoraService);
         jwtAuthenticationFilter.setAuthenticationManager(autohenticationManager);
         jwtAuthenticationFilter.setFilterProcessesUrl("/login");
 
