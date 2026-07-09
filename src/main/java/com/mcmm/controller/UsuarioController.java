@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuario/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR', 'TESORERO')")
 @RequiredArgsConstructor
 public class UsuarioController {
 
@@ -50,7 +50,7 @@ public class UsuarioController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('Escribir Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
         UsuarioDtoRes usuarioCreado = usuarioService.create(usuarioDto);
         registrarLog("CREAR", "Creó un nuevo usuario: " + usuarioCreado.getUsername() + " (Nombre: " + usuarioCreado.getName() + " " + usuarioCreado.getApellidos() + ")");
@@ -65,7 +65,7 @@ public class UsuarioController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('Ver Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UsuarioDtoRes>>> findAll() {
         List<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
         return ResponseEntity.ok(
@@ -78,7 +78,7 @@ public class UsuarioController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('Escribir Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         usuarioService.delete(id);
         registrarLog("ELIMINAR", "Eliminó al usuario con ID: " + id);
@@ -92,7 +92,7 @@ public class UsuarioController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('Ver Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> showById(@PathVariable("id") Long id) {
         UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
         return ResponseEntity.ok(
@@ -104,7 +104,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Escribir Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
         UsuarioDtoRes usuarioActualizado = usuarioService.updateUser(usuarioUpdateDto);
         registrarLog("MODIFICAR", "Actualizó el usuario: " + usuarioActualizado.getUsername() + " (ID: " + usuarioActualizado.getId() + ")");
@@ -148,7 +148,7 @@ public class UsuarioController {
     }
 
     @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Escribir Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
@@ -166,7 +166,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAuthority('Escribir Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         usuarioService.deleteProfilePhoto(id);
         return ResponseEntity.ok(

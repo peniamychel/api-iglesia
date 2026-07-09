@@ -16,13 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tipo-evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') OR hasAuthority('EVENTOS:VER')")
 public class TipoEventoController {
 
     private final ITipoEvento tipoEventoService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('EVENTOS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> create(@Valid @RequestBody TipoEventoDto tipoEventoDto) {
         TipoEventoDto saved = tipoEventoService.create(tipoEventoDto);
         return new ResponseEntity<>(ApiResponse.<TipoEventoDto>builder()
@@ -33,7 +33,7 @@ public class TipoEventoController {
     }
 
     @GetMapping("/findall")
-    @PreAuthorize("hasAuthority('Ver Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<TipoEventoDto>>> findAll() {
         List<TipoEventoDto> tipoEventos = tipoEventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<TipoEventoDto>>builder()
@@ -44,7 +44,7 @@ public class TipoEventoController {
     }
 
     @GetMapping("/showbyid/{id}")
-    @PreAuthorize("hasAuthority('Ver Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> showById(@PathVariable Long id) {
         TipoEventoDto tipoEvento = tipoEventoService.findById(id);
         if (tipoEvento == null) throw new NotFoundExceptionResource("TipoEvento", "id", id);
@@ -56,7 +56,7 @@ public class TipoEventoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TipoEventoDto>> update(@Valid @RequestBody TipoEventoDto tipoEventoDto) {
         TipoEventoDto updated = tipoEventoService.update(tipoEventoDto);
         return ResponseEntity.ok(ApiResponse.<TipoEventoDto>builder()
@@ -67,7 +67,7 @@ public class TipoEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('EVENTOS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         tipoEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -78,7 +78,7 @@ public class TipoEventoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         tipoEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

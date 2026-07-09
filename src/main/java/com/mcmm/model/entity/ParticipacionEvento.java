@@ -63,7 +63,13 @@ public class ParticipacionEvento {
             estado = true; // Establecer estado en true si no se ha asignado
         }
         if (codigoUnico == null || codigoUnico.isEmpty()) {
-            codigoUnico = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            StringBuilder sb = new StringBuilder(4);
+            for (int i = 0; i < 4; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            codigoUnico = sb.toString();
         }
     }
 

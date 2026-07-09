@@ -57,10 +57,9 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
         Long iglesiaId = getCurrentIglesiaId();
         List<ParticipacionEvento> participaciones;
         if (iglesiaId != null) {
-            participaciones = participacionEventoDao.findByEventoIglesiaId(iglesiaId);
+            participaciones = participacionEventoDao.findByEventoIglesiaIdWithRelations(iglesiaId);
         } else {
-            participaciones = StreamSupport.stream(participacionEventoDao.findAll().spliterator(), false)
-                    .collect(Collectors.toList());
+            participaciones = participacionEventoDao.findAllWithRelations();
         }
         return participaciones.stream()
                 .map(this::buildDto)
@@ -164,6 +163,31 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
             participacion.setFechaEntrega(null);
             participacion.setEntregadoPor(null);
         }
+
+        participacionEventoDao.save(participacion);
+    }
+
+    @Override
+    @Transactional
+    public void toggleEntregadoWithCertificado(Long id, Long certificadoId, String username) {
+        ParticipacionEvento participacion = participacionEventoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("ParticipacionEvento", "id", id));
+
+        Usuario usuario = usuarioDao.findByUsername(username)
+                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "username", username));
+
+        Certificado certificado = certificadoDao.findById(certificadoId)
+                .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", certificadoId));
+
+        // Siempre marcar como entregado y asociar el certificado al imprimir/entregar, no alternar (toggle)
+        participacion.setEntregado(true);
+        if (participacion.getFechaEntrega() == null) {
+            participacion.setFechaEntrega(LocalDateTime.now());
+        }
+        if (participacion.getEntregadoPor() == null) {
+            participacion.setEntregadoPor(usuario);
+        }
+        participacion.setCertificado(certificado);
 
         participacionEventoDao.save(participacion);
     }

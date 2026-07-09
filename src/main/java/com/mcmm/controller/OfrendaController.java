@@ -62,7 +62,7 @@ public class OfrendaController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TESORERO')")
+    @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<OfrendaDto>> create(@Valid @RequestBody OfrendaDto ofrendaDto) {
         Long usuarioId = getCurrentUserId();
         OfrendaDto saved = ofrendaService.create(ofrendaDto, usuarioId);
@@ -96,7 +96,7 @@ public class OfrendaController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TESORERO')")
+    @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<OfrendaDto>> update(@Valid @RequestBody OfrendaDto ofrendaDto) {
         OfrendaDto updated = ofrendaService.update(ofrendaDto);
         registrarLog("MODIFICAR", "Actualizó la ofrenda ID: " + updated.getId() + " (" + updated.getTipoMovimiento() + ") - Nuevo Monto: " + updated.getMonto());
@@ -108,7 +108,7 @@ public class OfrendaController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TESORERO')")
+    @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         ofrendaService.delete(id);
         registrarLog("ELIMINAR", "Eliminó el registro de ofrenda ID: " + id);

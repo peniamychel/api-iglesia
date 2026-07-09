@@ -42,7 +42,7 @@ public class EventoController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('Escribir Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> create(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto saved = eventoService.create(eventoDto);
         registrarLog("CREAR", "Creó el evento: " + saved.getNombre() + " (Fecha: " + saved.getFechaInicio() + ")");
@@ -54,7 +54,7 @@ public class EventoController {
     }
 
     @GetMapping("/findall")
-    @PreAuthorize("hasAuthority('Ver Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<EventoDto>>> findAll() {
         List<EventoDto> eventos = eventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<EventoDto>>builder()
@@ -65,7 +65,7 @@ public class EventoController {
     }
 
     @GetMapping("/showbyid/{id}")
-    @PreAuthorize("hasAuthority('Ver Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> showById(@PathVariable Long id) {
         EventoDto evento = eventoService.findById(id);
         if (evento == null) throw new NotFoundExceptionResource("Evento", "id", id);
@@ -77,7 +77,7 @@ public class EventoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Escribir Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> update(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto updated = eventoService.update(eventoDto);
         registrarLog("MODIFICAR", "Actualizó el evento ID: " + updated.getId() + " - " + updated.getNombre());
@@ -89,7 +89,7 @@ public class EventoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('Escribir Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         eventoService.delete(id);
         registrarLog("ELIMINAR", "Eliminó el evento ID: " + id);
@@ -101,7 +101,7 @@ public class EventoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Escribir Eventos')")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         eventoService.estado(id);
         registrarLog("MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);

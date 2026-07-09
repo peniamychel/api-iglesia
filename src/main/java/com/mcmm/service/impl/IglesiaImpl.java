@@ -43,7 +43,7 @@ public class IglesiaImpl implements IIglesia {
     @Override
     @Transactional(readOnly = true)
     public List<IglesiaDto> findAll() {
-        return StreamSupport.stream(iglesiaDao.findAllByOrderByCreatedAtDesc().spliterator(), false)
+        return StreamSupport.stream(iglesiaDao.findAllOrderByOrdenAscAndCreatedAtDesc().spliterator(), false)
                 .map(this::buildDtoWithPhotoUrl)
                 .collect(Collectors.toList());
     }
@@ -191,6 +191,19 @@ public class IglesiaImpl implements IIglesia {
 
         iglesia.setUriFoto(null);
         iglesiaDao.save(iglesia);
+    }
+
+    @Override
+    @Transactional
+    public void updateOrden(List<Long> ids) {
+        for (int i = 0; i < ids.size(); i++) {
+            Long id = ids.get(i);
+            int finalI = i;
+            iglesiaDao.findById(id).ifPresent(iglesia -> {
+                iglesia.setOrden(finalI + 1);
+                iglesiaDao.save(iglesia);
+            });
+        }
     }
 
     private IglesiaDto buildDtoWithPhotoUrl(Iglesia iglesia) {

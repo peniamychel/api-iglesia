@@ -1,7 +1,6 @@
 package com.mcmm.model.dto.MiembroDto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ public class MiembroDto {
 
     private Long id;
 
-//    private Long iglesiaId;
+    // private Long iglesiaId;
 
     private Date fechaConvercion;
     private String lugarConvercion;
@@ -25,10 +24,10 @@ public class MiembroDto {
 
     @NotBlank(message = "El nombre es obligatorio.")
     private String nombre;
-    
+
     @NotBlank(message = "El apellido es obligatorio.")
     private String apellido;
-    
+
     private String ci;
     private Date fechaNac;
     private String celular;

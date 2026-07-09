@@ -24,9 +24,6 @@ public class CertificadoDto {
     @Size(max = 254)
     private String motivoCertificado;
 
-    @Size(max = 254)
-    private String codigoCertificado;
-
     private String uriFoto;
 
     private Boolean estado;

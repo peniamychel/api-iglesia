@@ -14,7 +14,6 @@ import java.util.Date;
 public class OfrendaDto {
     private Long id;
 
-    @NotNull(message = "Requiere el iglesiaId.")
     private Long iglesiaId;
     private String iglesiaNombre;
 

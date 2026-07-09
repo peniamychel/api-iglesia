@@ -19,4 +19,5 @@ public interface IIglesia {
     IglesiaDto findByNombreAndIdNot(String nameIglesia, Long id);
     String updateFoto(Long id, MultipartFile file) throws IOException;
     void deleteFoto(Long id);
+    void updateOrden(List<Long> ids);
 }

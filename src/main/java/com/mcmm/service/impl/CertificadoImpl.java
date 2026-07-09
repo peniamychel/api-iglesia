@@ -109,7 +109,6 @@ public class CertificadoImpl implements ICertificado {
         Certificado certificado = certificadoDao.findById(certificadoDto.getId())
                 .orElseThrow(() -> new NotFoundExceptionResource("Certificado", "id", certificadoDto.getId()));
         certificado.setMotivoCertificado(certificadoDto.getMotivoCertificado());
-        certificado.setCodigoCertificado(certificadoDto.getCodigoCertificado());
         certificado.setEstado(certificadoDto.getEstado());
         if (certificadoDto.getEventoId() != null) {
             Evento evento = eventoDao.findById(certificadoDto.getEventoId()).orElse(null);

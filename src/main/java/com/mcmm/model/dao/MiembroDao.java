@@ -24,4 +24,18 @@ public interface MiembroDao extends JpaRepository<Miembro, Long> {
            "AND m.id NOT IN (SELECT mi.miembro.id FROM MiembroIglesia mi WHERE mi.estado = true) " +
            "AND m.id NOT IN (SELECT c.miembro.id FROM Cargo c WHERE c.estado = true AND UPPER(c.rolCargo.nombre) LIKE :patronPastor)")
     java.util.List<Miembro> findSinIglesiaParaAsignacion(@Param("patronPastor") String patronPastor);
+    @Query("SELECT m FROM Miembro m LEFT JOIN MiembroIglesia mi ON mi.miembro.id = m.id AND mi.estado = true WHERE " +
+           "(:searchText IS NULL OR :searchText = '' OR " +
+           "LOWER(m.nombre) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+           "LOWER(m.apellido) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+           "LOWER(m.ci) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+           "LOWER(m.celular) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+           "LOWER(m.direccion) LIKE LOWER(CONCAT('%', :searchText, '%'))) " +
+           "AND (:estado IS NULL OR m.estado = :estado) " +
+           "AND (:iglesiaNombre IS NULL OR :iglesiaNombre = 'all' OR mi.iglesia.nombre = :iglesiaNombre)")
+    org.springframework.data.domain.Page<Miembro> searchMiembros(
+            @Param("searchText") String searchText, 
+            @Param("estado") Boolean estado, 
+            @Param("iglesiaNombre") String iglesiaNombre, 
+            org.springframework.data.domain.Pageable pageable);
 }

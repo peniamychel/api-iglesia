@@ -53,6 +53,8 @@ public class Iglesia implements java.io.Serializable {
     private Double latitud;
     private Double longitud;
 
+    private Integer orden;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

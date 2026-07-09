@@ -30,6 +30,10 @@ public class ActivoDto implements java.io.Serializable {
 
     private Date fechaAdquisicion;
 
+    private String codigo;
+
+    private String uriFoto;
+
     @NotNull(message = "La iglesia es obligatoria.")
     private Long iglesiaId;
 

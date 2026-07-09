@@ -7,7 +7,7 @@ import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.entity.Cargo;
 import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.RolCargo;
-import com.mcmm.model.entity.Privilegio;
+import com.mcmm.model.entity.Accion;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.security.jwt.JwtUtils;
 import jakarta.servlet.FilterChain;
@@ -136,10 +136,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                         if (rc.getNombreRol() != null) {
                             authorities.add(new SimpleGrantedAuthority("ROLE_" + rc.getNombreRol()));
                         }
-                        if (rc.getPrivilegios() != null) {
-                            for (Privilegio p : rc.getPrivilegios()) {
-                                if (p.getNombre() != null) {
-                                    authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                        if (rc.getAcciones() != null) {
+                            for (Accion a : rc.getAcciones()) {
+                                if (a.getAuthorityCode() != null) {
+                                    authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                                 }
                             }
                         }
@@ -164,10 +164,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 httpResponse.put("refreshToken", refreshToken);
                 httpResponse.put("message", "Autenticaion Exitosa");
                 httpResponse.put("username", user.getUsername());
-                List<Map<String, String>> uniqueRolesAsObjects = uniqueAuthorities.stream()
-                        .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
-                        .collect(Collectors.toList());
-                httpResponse.put("roles", uniqueRolesAsObjects);
 
                 response.setStatus(HttpStatus.OK.value());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -187,18 +183,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String refreshToken = jwtUtils.gerarRefreshToken(user.getUsername());
         response.addHeader("Authorization", "Bearer " + token);
 
-        // El frontend espera roles como lista de objetos {authority: string}
-        List<Map<String, String>> rolesAsObjects = user.getAuthorities().stream()
-                .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
-                .collect(Collectors.toList());
-
         Map<String, Object> httpResponse = new HashMap<>();
         httpResponse.put("success", true);
         httpResponse.put("token", token);
         httpResponse.put("refreshToken", refreshToken);
         httpResponse.put("message", "Autenticacion Exitosa");
         httpResponse.put("username", user.getUsername());
-        httpResponse.put("roles", rolesAsObjects);
 
         response.setStatus(HttpStatus.OK.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

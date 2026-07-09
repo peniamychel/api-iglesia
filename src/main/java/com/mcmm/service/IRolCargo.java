@@ -19,7 +19,7 @@ public interface IRolCargo {
 
     void estado(Long id);
 
-    RolCargoDto addPrivilegio(Long rolCargoId, Long privilegioId);
+    RolCargoDto addAccion(Long rolCargoId, Long accionId);
 
-    RolCargoDto removePrivilegio(Long rolCargoId, Long privilegioId);
+    RolCargoDto removeAccion(Long rolCargoId, Long accionId);
 }

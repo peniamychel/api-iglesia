@@ -36,4 +36,5 @@ public class IglesiaDto implements java.io.Serializable {
     private String uriFoto;
     private Double latitud;
     private Double longitud;
+    private Integer orden;
 }

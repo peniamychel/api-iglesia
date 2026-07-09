@@ -1,6 +1,5 @@
 package com.mcmm.model.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,18 +10,15 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class RolCargoDto {
-
+public class ServicioDto implements java.io.Serializable {
     private Long id;
-
-    private String tipo;
-
-    @NotBlank(message = "El nombre es obligatorio.")
+    private String codigo;
     private String nombre;
-
-    private String nombreRol;
-
-    private Boolean estado;
+    private String descripcion;
+    private String icono;
+    private String ruta;
+    private Integer orden;
+    private Boolean activo;
     private Set<AccionDto> acciones;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

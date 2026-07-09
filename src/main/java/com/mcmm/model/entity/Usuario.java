@@ -46,12 +46,6 @@ public class Usuario {
     @JoinColumn(name = "miembro_id", nullable = true)
     private Miembro miembro;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_privilegio",
-        joinColumns = @JoinColumn(name = "usuario_id"),
-        inverseJoinColumns = @JoinColumn(name = "privilegio_id"))
-    private Set<Privilegio> privilegios;
-
     @NotBlank
     @Size(min = 3, max = 100)
     private String password;

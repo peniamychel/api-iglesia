@@ -11,6 +11,12 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.mcmm.model.dao.ResponsableEventoDao;
+import com.mcmm.model.dao.UsuarioDao;
+import com.mcmm.model.entity.ResponsableEvento;
+import com.mcmm.model.entity.Usuario;
+import com.mcmm.model.entity.Cargo;
+import java.util.Optional;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -24,12 +30,17 @@ public class EventoImpl implements IEvento {
     private final EventoDao eventoDao;
     private final TipoEventoDao tipoEventoDao;
     private final IglesiaDao iglesiaDao;
+    private final ResponsableEventoDao responsableEventoDao;
+    private final UsuarioDao usuarioDao;
     private final ModelMapper modelMapper = new ModelMapper();
 
-    public EventoImpl(EventoDao eventoDao, TipoEventoDao tipoEventoDao, IglesiaDao iglesiaDao) {
+    public EventoImpl(EventoDao eventoDao, TipoEventoDao tipoEventoDao, IglesiaDao iglesiaDao,
+                      ResponsableEventoDao responsableEventoDao, UsuarioDao usuarioDao) {
         this.eventoDao = eventoDao;
         this.tipoEventoDao = tipoEventoDao;
         this.iglesiaDao = iglesiaDao;
+        this.responsableEventoDao = responsableEventoDao;
+        this.usuarioDao = usuarioDao;
     }
 
     private Long getCurrentIglesiaId() {
@@ -99,6 +110,57 @@ public class EventoImpl implements IEvento {
         }
 
         Evento savedEvento = eventoDao.save(evento);
+
+        // Asignación automática de responsable de evento para roles locales (no ADMIN)
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                boolean isAdmin = auth.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                if (!isAdmin) {
+                    String username = auth.getName();
+                    Optional<Usuario> optUser = usuarioDao.findByUsername(username);
+                    if (optUser.isPresent() && optUser.get().getMiembro() != null) {
+                        Usuario user = optUser.get();
+                        Cargo activeCargo = null;
+                        
+                        // Buscar primero cargo activo de esta iglesia
+                        if (iglesiaId != null && user.getMiembro().getCargos() != null) {
+                            for (Cargo cargo : user.getMiembro().getCargos()) {
+                                if (cargo.getEstado() != null && cargo.getEstado() && 
+                                    cargo.getIglesia() != null && cargo.getIglesia().getId().equals(iglesiaId)) {
+                                    activeCargo = cargo;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Si no se encontró, buscar cualquier cargo activo
+                        if (activeCargo == null && user.getMiembro().getCargos() != null) {
+                            for (Cargo cargo : user.getMiembro().getCargos()) {
+                                if (cargo.getEstado() != null && cargo.getEstado()) {
+                                    activeCargo = cargo;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (activeCargo != null) {
+                            ResponsableEvento responsable = new ResponsableEvento();
+                            responsable.setEvento(savedEvento);
+                            responsable.setCargo(activeCargo);
+                            responsable.setEstado(true);
+                            responsable.setCreatedAt(java.time.LocalDateTime.now());
+                            responsable.setUpdatedAt(java.time.LocalDateTime.now());
+                            responsableEventoDao.save(responsable);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al asignar responsable automático: " + e.getMessage());
+        }
+
         EventoDto dto = modelMapper.map(savedEvento, EventoDto.class);
         if (savedEvento.getTipoEvento() != null) {
             dto.setTipoEventoId(savedEvento.getTipoEvento().getId());

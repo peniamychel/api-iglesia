@@ -34,9 +34,6 @@ public class Certificado {
     @Column(name = "motivo_certificado", length = 254)
     private String motivoCertificado;
 
-    @Column(name = "codigo_certificado", length = 254)
-    private String codigoCertificado;
-
     @Column(name = "uri_foto")
     private String uriFoto;
 

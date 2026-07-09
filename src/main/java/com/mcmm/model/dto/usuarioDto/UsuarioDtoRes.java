@@ -1,6 +1,7 @@
 package com.mcmm.model.dto.usuarioDto;
 
 import com.mcmm.model.dto.RolCargoDto;
+import com.mcmm.model.dto.AccionDto;
 import lombok.*;
 
 import java.util.Set;
@@ -21,5 +22,5 @@ public class UsuarioDtoRes {
     private Long miembroId;
     private String iglesiaNombre;
     private Set<RolCargoDto> roles;
-    private Set<com.mcmm.model.dto.PrivilegioDto> privilegios;
+    private Set<AccionDto> acciones;
 }

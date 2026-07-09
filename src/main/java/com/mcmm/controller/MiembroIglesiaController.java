@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/miembroiglesia/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR', 'TESORERO') OR hasAuthority('MIEMBROS:VER')")
 @RequiredArgsConstructor
 public class MiembroIglesiaController {
 
@@ -47,7 +47,7 @@ public class MiembroIglesiaController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> create(@RequestBody @Valid MiembroIglesiaDto miembroDto) {
         MiembroIglesiaDto miembroIglesiaSave = miembroIglesiaService.save(miembroDto);
         return new ResponseEntity<>(
@@ -61,7 +61,7 @@ public class MiembroIglesiaController {
 
     @PostMapping("/created")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> created(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         boolean result = miembroIglesiaService.findByIdMiembro(miembroIglesiaDto.getMiembroId());
         if (!result) {
@@ -79,7 +79,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> findAll() {
         List<MiembroIglesiaDto> miembroIglesiaDtos = miembroIglesiaService.findAll();
         return ResponseEntity.ok(
@@ -92,7 +92,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> findById(@PathVariable("id") Long id) {
         MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.findById(id);
         return ResponseEntity.ok(
@@ -105,7 +105,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> update(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.update(miembroIglesiaDto);
         return ResponseEntity.ok(
@@ -118,7 +118,7 @@ public class MiembroIglesiaController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         miembroIglesiaService.delete(id);
         return ResponseEntity.ok(
@@ -131,7 +131,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> estado(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaDto = miembroIglesiaService.estado(id);
         return ResponseEntity.ok(
@@ -144,7 +144,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> solicitarTraspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.solicitarTraspaso(miembroIglesiaDto);
         registrarLog("SOLICITAR_TRASPASO", "Solicitó traspaso para el miembro ID: " + miembroIglesiaActualizado.getMiembroId() + " a la iglesia ID: " + miembroIglesiaActualizado.getIglesiaId());
@@ -158,7 +158,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso/{id}/aceptar")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> aceptarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.aceptarTraspaso(id);
         registrarLog("ACEPTAR_TRASPASO", "Aceptó solicitud de traspaso ID: " + id);
@@ -172,7 +172,7 @@ public class MiembroIglesiaController {
 
     @PutMapping("/traspaso/{id}/rechazar")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> rechazarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.rechazarTraspaso(id);
         registrarLog("RECHAZAR_TRASPASO", "Rechazó solicitud de traspaso ID: " + id);
@@ -186,7 +186,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/traspaso/pendientes/{iglesiaId}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> getSolicitudesPendientes(@PathVariable Long iglesiaId) {
         List<MiembroIglesiaDto> solicitudes = miembroIglesiaService.getSolicitudesPendientes(iglesiaId);
         return ResponseEntity.ok(
@@ -199,7 +199,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/historial/{miembroId}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> obtenerHistorialMiembro(@PathVariable Long miembroId) {
         List<MiembroIglesiaDto> historial = miembroIglesiaService.obtenerHistorialMiembro(miembroId);
         return ResponseEntity.ok(
@@ -212,7 +212,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/listmiembrosiglesia/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MiembroDto>>> findMiembrosIglesia(@PathVariable("id") Long id) {
         List<MiembroDto> miembroDtos = miembroIglesiaService.findMiembrosIglesia(id);
         return ResponseEntity.ok(
@@ -225,13 +225,14 @@ public class MiembroIglesiaController {
 
     @GetMapping("/mis-miembros")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('PASTOR', 'ENCARGADO_IGLESIA', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MiembroDto>>> findMisMiembros() {
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof UsernamePasswordAuthenticationToken)) {
             throw new BadRequestException("Usuario no autenticado correctamente.");
         }
         UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) authentication;
+        @SuppressWarnings("unchecked")
         java.util.Map<String, Object> details = (java.util.Map<String, Object>) authToken.getDetails();
         if (details == null) {
             throw new BadRequestException("No se encontraron detalles de autenticación.");
@@ -257,7 +258,7 @@ public class MiembroIglesiaController {
 
     @GetMapping("/graficomiembrosiglesia/{cant}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<GraficoDataDto>>> graficoMiembrosIglesia(@PathVariable("cant") Long cant) {
         List<GraficoDataDto> miembroIglesia = miembroIglesiaService.graficoMiembrosIglesia(cant);
         return ResponseEntity.ok(
@@ -269,7 +270,7 @@ public class MiembroIglesiaController {
     }
 
     @PostMapping("/{id}/carta-traspaso")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir MiembroIglesia')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadCartaTraspaso(
             @PathVariable Long id,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {

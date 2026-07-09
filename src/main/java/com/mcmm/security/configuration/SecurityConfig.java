@@ -59,11 +59,8 @@ public class SecurityConfig {
                             "/custom-css/**",
                             "/swagger-ui.html").permitAll();
                     auth.requestMatchers("/auth/**").permitAll();
-                    // auth.requestMatchers("/helloseguro").authenticated();
-                    // auth.requestMatchers("/main/v1/**").authenticated();
-                    // auth.requestMatchers("/**").permitAll();
-                    auth.requestMatchers("/uploads/**").permitAll(); // permiso para esta carpeta sea accesible sin
-                                                                     // autenticacion
+                    auth.requestMatchers("/uploads/**").permitAll();
+                    auth.requestMatchers("/verificar-certificado/**").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> {

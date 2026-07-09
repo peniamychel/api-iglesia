@@ -2,8 +2,7 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.DataAccessResourceException;
 import com.mcmm.model.dao.UsuarioDao;
-import com.mcmm.model.dao.PrivilegioDao;
-import com.mcmm.model.entity.Cargo;
+import com.mcmm.model.dao.AccionDao;
 import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,35 +27,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UsuarioDao usuarioDao;
 
     @Autowired
-    private PrivilegioDao privilegioDao;
+    private AccionDao accionDao;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessResourceException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException, DataAccessResourceException {
         Usuario usuario = usuarioDao
                 .findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("El usuario "+username+" no existe"));
+                .orElseThrow(() -> new UsernameNotFoundException("El usuario " + username + " no existe"));
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // Privilegios directos asignados al usuario
-        if (usuario.getPrivilegios() != null) {
-            usuario.getPrivilegios().forEach(p -> {
-                if (p.getNombre() != null) {
-                    authorities.add(new SimpleGrantedAuthority(p.getNombre()));
-                }
-            });
-        }
-
         if (usuario.getMiembro() == null) {
-            // Super-administrador global
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            privilegioDao.findAll().forEach(p -> {
-                if (p.getNombre() != null) {
-                    authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+            accionDao.findAll().forEach(a -> {
+                if (a.getAuthorityCode() != null) {
+                    authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                 }
             });
         } else {
-            // Miembro con cargos
             Date now = new Date();
             if (usuario.getMiembro().getCargos() != null) {
                 usuario.getMiembro().getCargos().forEach(cargo -> {
@@ -67,10 +56,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                             if (rc.getNombreRol() != null) {
                                 authorities.add(new SimpleGrantedAuthority("ROLE_" + rc.getNombreRol()));
                             }
-                            if (rc.getPrivilegios() != null) {
-                                rc.getPrivilegios().forEach(p -> {
-                                    if (p.getNombre() != null) {
-                                        authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                            if (rc.getAcciones() != null) {
+                                rc.getAcciones().forEach(a -> {
+                                    if (a.getAuthorityCode() != null) {
+                                        authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                                     }
                                 });
                             }

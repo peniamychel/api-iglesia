@@ -10,4 +10,6 @@ public interface IActivo {
     ActivoDto save(ActivoDto activoDto);
     ActivoDto update(ActivoDto activoDto);
     void delete(Long id);
+    String uploadPhoto(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
+    void deletePhoto(Long id);
 }

@@ -44,7 +44,7 @@ public class CertificadoController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CertificadoDto>> create(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto saved = certificadoService.create(certificadoDto);
         registrarLog("CREAR", "Creó el certificado ID: " + saved.getId() + " para el evento ID: " + saved.getEventoId());
@@ -56,7 +56,7 @@ public class CertificadoController {
     }
 
     @GetMapping("/findall")
-    @PreAuthorize("hasAuthority('Ver Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<CertificadoDto>>> findAll() {
         List<CertificadoDto> certificados = certificadoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<CertificadoDto>>builder()
@@ -67,7 +67,7 @@ public class CertificadoController {
     }
 
     @GetMapping("/showbyid/{id}")
-    @PreAuthorize("hasAuthority('Ver Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CertificadoDto>> showById(@PathVariable Long id) {
         CertificadoDto certificado = certificadoService.findById(id);
         return ResponseEntity.ok(ApiResponse.<CertificadoDto>builder()
@@ -78,7 +78,7 @@ public class CertificadoController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CertificadoDto>> update(@Valid @RequestBody CertificadoDto certificadoDto) {
         CertificadoDto updated = certificadoService.update(certificadoDto);
         registrarLog("MODIFICAR", "Actualizó el certificado ID: " + updated.getId());
@@ -90,7 +90,7 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         certificadoService.delete(id);
         registrarLog("ELIMINAR", "Eliminó el certificado ID: " + id);
@@ -102,7 +102,7 @@ public class CertificadoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         certificadoService.estado(id);
         registrarLog("MODIFICAR_ESTADO", "Modificó el estado del certificado ID: " + id);
@@ -114,7 +114,7 @@ public class CertificadoController {
     }
 
     @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
@@ -133,7 +133,7 @@ public class CertificadoController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         certificadoService.deleteProfilePhoto(id);
         registrarLog("ELIMINAR_FOTO", "Eliminó la foto/carta del certificado ID: " + id);

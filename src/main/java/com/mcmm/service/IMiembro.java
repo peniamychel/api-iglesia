@@ -8,6 +8,11 @@ import java.util.List;
 public interface IMiembro {
 
     public Iterable<MiembroDto> findAll();
+    public org.springframework.data.domain.Page<MiembroDto> findAllPaged(
+            String searchText, 
+            Boolean estado, 
+            String iglesiaNombre, 
+            org.springframework.data.domain.Pageable pageable);
     public MiembroDto findById(Long id);
     public MiembroDto create(MiembroDto miembroDto);
     public void delete(Long id);

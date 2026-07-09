@@ -2,10 +2,11 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.RolCargoDao;
-import com.mcmm.model.dao.PrivilegioDao;
+import com.mcmm.model.dao.AccionDao;
+import com.mcmm.model.dto.AccionDto;
 import com.mcmm.model.dto.RolCargoDto;
 import com.mcmm.model.entity.RolCargo;
-import com.mcmm.model.entity.Privilegio;
+import com.mcmm.model.entity.Accion;
 import com.mcmm.service.IRolCargo;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -19,19 +20,19 @@ import java.util.stream.Collectors;
 public class RolCargoImpl implements IRolCargo {
 
     private final RolCargoDao rolCargoDao;
-    private final PrivilegioDao privilegioDao;
+    private final AccionDao accionDao;
     private final ModelMapper modelMapper = new ModelMapper();
 
-    public RolCargoImpl(RolCargoDao rolCargoDao, PrivilegioDao privilegioDao) {
+    public RolCargoImpl(RolCargoDao rolCargoDao, AccionDao accionDao) {
         this.rolCargoDao = rolCargoDao;
-        this.privilegioDao = privilegioDao;
+        this.accionDao = accionDao;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<RolCargoDto> findAll() {
         return rolCargoDao.findAll().stream()
-                .map(rc -> modelMapper.map(rc, RolCargoDto.class))
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
@@ -39,7 +40,7 @@ public class RolCargoImpl implements IRolCargo {
     @Transactional(readOnly = true)
     public List<RolCargoDto> findAllCargo() {
         return rolCargoDao.findByEstadoTrueAndNombreRolNot("ADMIN").stream()
-                .map(rc -> modelMapper.map(rc, RolCargoDto.class))
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
@@ -48,14 +49,14 @@ public class RolCargoImpl implements IRolCargo {
     public RolCargoDto findById(Long id) {
         RolCargo rc = rolCargoDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", id));
-        return modelMapper.map(rc, RolCargoDto.class);
+        return mapToDto(rc);
     }
 
     @Override
     public RolCargoDto create(RolCargoDto rolCargoDto) {
         RolCargo rc = modelMapper.map(rolCargoDto, RolCargo.class);
         RolCargo saved = rolCargoDao.save(rc);
-        return modelMapper.map(saved, RolCargoDto.class);
+        return mapToDto(saved);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class RolCargoImpl implements IRolCargo {
         }
 
         RolCargo updated = rolCargoDao.save(rc);
-        return modelMapper.map(updated, RolCargoDto.class);
+        return mapToDto(updated);
     }
 
     @Override
@@ -87,26 +88,42 @@ public class RolCargoImpl implements IRolCargo {
     }
 
     @Override
-    public RolCargoDto addPrivilegio(Long rolCargoId, Long privilegioId) {
+    public RolCargoDto addAccion(Long rolCargoId, Long accionId) {
         RolCargo rc = rolCargoDao.findById(rolCargoId)
                 .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", rolCargoId));
-        Privilegio p = privilegioDao.findById(privilegioId)
-                .orElseThrow(() -> new NotFoundExceptionResource("Privilegio", "id", privilegioId));
+        Accion a = accionDao.findById(accionId)
+                .orElseThrow(() -> new NotFoundExceptionResource("Accion", "id", accionId));
         
-        rc.getPrivilegios().add(p);
+        rc.getAcciones().add(a);
         RolCargo saved = rolCargoDao.save(rc);
-        return modelMapper.map(saved, RolCargoDto.class);
+        return mapToDto(saved);
     }
 
     @Override
-    public RolCargoDto removePrivilegio(Long rolCargoId, Long privilegioId) {
+    public RolCargoDto removeAccion(Long rolCargoId, Long accionId) {
         RolCargo rc = rolCargoDao.findById(rolCargoId)
                 .orElseThrow(() -> new NotFoundExceptionResource("RolCargo", "id", rolCargoId));
-        Privilegio p = privilegioDao.findById(privilegioId)
-                .orElseThrow(() -> new NotFoundExceptionResource("Privilegio", "id", privilegioId));
+        Accion a = accionDao.findById(accionId)
+                .orElseThrow(() -> new NotFoundExceptionResource("Accion", "id", accionId));
         
-        rc.getPrivilegios().remove(p);
+        rc.getAcciones().remove(a);
         RolCargo saved = rolCargoDao.save(rc);
-        return modelMapper.map(saved, RolCargoDto.class);
+        return mapToDto(saved);
+    }
+
+    private RolCargoDto mapToDto(RolCargo rc) {
+        RolCargoDto dto = modelMapper.map(rc, RolCargoDto.class);
+        if (rc.getAcciones() != null) {
+            dto.setAcciones(rc.getAcciones().stream().map(a -> {
+                AccionDto aDto = modelMapper.map(a, AccionDto.class);
+                aDto.setAuthorityCode(a.getAuthorityCode());
+                if (a.getServicio() != null) {
+                    aDto.setServicioId(a.getServicio().getId());
+                    aDto.setServicioCodigo(a.getServicio().getCodigo());
+                }
+                return aDto;
+            }).collect(Collectors.toSet()));
+        }
+        return dto;
     }
 }

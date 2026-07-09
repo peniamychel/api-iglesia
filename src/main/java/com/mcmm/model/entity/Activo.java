@@ -37,6 +37,12 @@ public class Activo implements java.io.Serializable {
     @Column(name = "fecha_adquisicion")
     private Date fechaAdquisicion;
 
+    @Column(name = "codigo", length = 100)
+    private String codigo;
+
+    @Column(name = "uri_foto", length = 255)
+    private String uriFoto;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "iglesia_id", nullable = false)
     private Iglesia iglesia;

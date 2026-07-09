@@ -115,6 +115,10 @@ public class OfrendaImpl implements IOfrenda {
             ofrenda.setIglesia(iglesiaDao.findById(ofrendaDto.getIglesiaId()).orElseThrow(() -> new RuntimeException("Iglesia no encontrada")));
         }
 
+        if (ofrenda.getIglesia() == null) {
+            throw new IllegalArgumentException("La iglesia es obligatoria");
+        }
+
         if (usuarioId != null) {
             Usuario usuario = usuarioDao.findById(usuarioId).orElse(null);
             ofrenda.setUsuarioTesorero(usuario);

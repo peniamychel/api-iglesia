@@ -61,9 +61,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            log.error("Error en autenticacion JWT", e);
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error de autenticacion");
+
+            // Si el cliente canceló la conexión (ClientAbortException / IOException) o la respuesta ya fue enviada
+            if (response.isCommitted() || e.getClass().getName().contains("ClientAbortException")) {
+                log.debug("Conexión finalizada o respuesta ya enviada: {}", e.getMessage());
+            } else {
+                log.error("Error en autenticacion JWT: {}", e.getMessage());
+                try {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error de autenticacion");
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 }

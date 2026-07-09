@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rol-cargo/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR', 'TESORERO') OR hasAuthority('USUARIOS:VER') OR hasAuthority('OBREROS:VER')")
 @RequiredArgsConstructor
 public class RolCargoController {
 
@@ -22,7 +22,7 @@ public class RolCargoController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('Ver Privilegios')")
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasAuthority('OBREROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<RolCargoDto>>> findAll() {
         List<RolCargoDto> list = rolCargoService.findAll();
         return ResponseEntity.ok(
@@ -36,6 +36,7 @@ public class RolCargoController {
 
     @GetMapping("/findall-cargo")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasAuthority('OBREROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<RolCargoDto>>> findAllCargo() {
         List<RolCargoDto> list = rolCargoService.findAllCargo();
         return ResponseEntity.ok(
@@ -49,7 +50,7 @@ public class RolCargoController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('Ver Privilegios')")
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasAuthority('OBREROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RolCargoDto>> findById(@PathVariable Long id) {
         RolCargoDto dto = rolCargoService.findById(id);
         return ResponseEntity.ok(
@@ -63,7 +64,7 @@ public class RolCargoController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasAuthority('OBREROS:DESIGNAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RolCargoDto>> create(@RequestBody @Valid RolCargoDto rolCargoDto) {
         RolCargoDto created = rolCargoService.create(rolCargoDto);
         return new ResponseEntity<>(
@@ -78,7 +79,7 @@ public class RolCargoController {
 
     @PutMapping("/update/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasAuthority('OBREROS:DESIGNAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RolCargoDto>> update(@PathVariable Long id, @RequestBody @Valid RolCargoDto rolCargoDto) {
         rolCargoDto.setId(id);
         RolCargoDto updated = rolCargoService.update(rolCargoDto);
@@ -93,7 +94,7 @@ public class RolCargoController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasAuthority('OBREROS:DESVINCULAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         rolCargoService.delete(id);
         return new ResponseEntity<>(
@@ -107,7 +108,7 @@ public class RolCargoController {
 
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasAuthority('OBREROS:DESIGNAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         rolCargoService.estado(id);
         return ResponseEntity.ok(

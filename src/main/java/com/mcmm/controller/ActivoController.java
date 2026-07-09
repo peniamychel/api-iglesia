@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/activo/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'PASTOR', 'ENCARGADO_IGLESIA')")
+@PreAuthorize("hasAnyRole('ADMIN', 'PASTOR', 'ENCARGADO_IGLESIA', 'DIACONO')")
 @RequiredArgsConstructor
 public class ActivoController {
 
@@ -99,6 +99,34 @@ public class ActivoController {
         registrarLog("ELIMINAR", "Eliminó el activo ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Activo eliminado con éxito.")
+                .datos(null)
+                .nombreModelo("Activo")
+                .build());
+    }
+
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<ApiResponse<String>> uploadPhoto(
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String fileUrl = activoService.uploadPhoto(id, file);
+            registrarLog("SUBIR_FOTO", "Actualizó foto del activo ID: " + id);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .message("Foto del activo actualizada con éxito.")
+                    .datos(fileUrl)
+                    .nombreModelo("Activo")
+                    .build());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Error al subir la foto: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/foto")
+    public ResponseEntity<ApiResponse<Void>> deletePhoto(@PathVariable Long id) {
+        activoService.deletePhoto(id);
+        registrarLog("ELIMINAR_FOTO", "Eliminó foto del activo ID: " + id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Foto del activo eliminada con éxito.")
                 .datos(null)
                 .nombreModelo("Activo")
                 .build());

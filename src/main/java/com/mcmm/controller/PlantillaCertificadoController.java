@@ -27,7 +27,7 @@ public class PlantillaCertificadoController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('Ver Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<PlantillaCertificadoDto>>> findAll() {
         List<PlantillaCertificado> plantillas = plantillaCertificadoService.findAll();
         List<PlantillaCertificadoDto> dtos = plantillas.stream()
@@ -41,7 +41,7 @@ public class PlantillaCertificadoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('Ver Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PlantillaCertificadoDto>> findById(@PathVariable Long id) {
         PlantillaCertificado plantilla = plantillaCertificadoService.findById(id);
         PlantillaCertificadoDto dto = modelMapper.map(plantilla, PlantillaCertificadoDto.class);
@@ -53,7 +53,7 @@ public class PlantillaCertificadoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PlantillaCertificadoDto>> create(@Valid @RequestBody PlantillaCertificadoDto plantillaCertificadoDto) {
         PlantillaCertificado plantilla = plantillaCertificadoService.save(plantillaCertificadoDto);
         PlantillaCertificadoDto dto = modelMapper.map(plantilla, PlantillaCertificadoDto.class);
@@ -65,7 +65,7 @@ public class PlantillaCertificadoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PlantillaCertificadoDto>> update(@Valid @RequestBody PlantillaCertificadoDto plantillaCertificadoDto, @PathVariable Long id) {
         PlantillaCertificado plantilla = plantillaCertificadoService.update(plantillaCertificadoDto, id);
         PlantillaCertificadoDto dto = modelMapper.map(plantilla, PlantillaCertificadoDto.class);
@@ -77,7 +77,7 @@ public class PlantillaCertificadoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         plantillaCertificadoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -88,7 +88,7 @@ public class PlantillaCertificadoController {
     }
 
     @PutMapping("/estado/{id}")
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PlantillaCertificadoDto>> changeState(@PathVariable Long id) {
         PlantillaCertificado plantilla = plantillaCertificadoService.changeState(id);
         PlantillaCertificadoDto dto = modelMapper.map(plantilla, PlantillaCertificadoDto.class);
@@ -100,7 +100,7 @@ public class PlantillaCertificadoController {
     }
 
     @PostMapping(value = "/{id}/logo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadLogo(
             @PathVariable Long id,
             @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
@@ -117,7 +117,7 @@ public class PlantillaCertificadoController {
     }
 
     @PostMapping(value = "/{id}/marca-agua", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadMarcaAgua(
             @PathVariable Long id,
             @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
@@ -134,7 +134,7 @@ public class PlantillaCertificadoController {
     }
 
     @PostMapping(value = "/{id}/firma", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Escribir Certificados')")
+    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadFirma(
             @PathVariable Long id,
             @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {

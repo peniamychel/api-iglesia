@@ -9,21 +9,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 /**
  * Controlador REST para la gestión de Miembros de la iglesia.
- * Proporciona endpoints para creación, consulta, actualización, desactivación y eliminación de miembros.
+ * Proporciona endpoints para creación, consulta, actualización, desactivación y
+ * eliminación de miembros.
  * 
  * @author Antigravity
  * @since 1.0.0
  */
 @RestController
 @RequestMapping("/api/miembro/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR', 'TESORERO') OR hasAuthority('MIEMBROS:VER')")
 @RequiredArgsConstructor
 public class MiembroController {
 
@@ -35,7 +35,8 @@ public class MiembroController {
 
     private void registrarLog(String accion, String descripcion) {
         try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
             String username = authentication != null ? authentication.getName() : "Sistema";
             String clientIp = request.getHeader("X-Forwarded-For");
             if (clientIp == null || clientIp.isEmpty()) {
@@ -49,27 +50,27 @@ public class MiembroController {
         }
     }
 
-
     /**
      * Crea un nuevo miembro en el sistema.
      * 
-     * @param miembroDto DTO con la información básica y la persona asociada a registrar.
+     * @param miembroDto DTO con la información básica y la persona asociada a
+     *                   registrar.
      * @return ResponseEntity conteniendo el miembro registrado.
      */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> create(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroSave = miembroService.create(miembroDto);
-        registrarLog("CREAR", "Registró al miembro con CI: " + miembroSave.getCi() + " - " + miembroSave.getNombre() + " " + miembroSave.getApellido());
+        registrarLog("CREAR", "Registró al miembro con CI: " + miembroSave.getCi() + " - " + miembroSave.getNombre()
+                + " " + miembroSave.getApellido());
         return new ResponseEntity<>(
                 ApiResponse.<MiembroDto>builder()
                         .message("Miembro guardado exitosamente.")
                         .datos(miembroSave)
                         .nombreModelo("Miembro")
                         .build(),
-                HttpStatus.CREATED
-            );
+                HttpStatus.CREATED);
     }
 
     /**
@@ -79,7 +80,7 @@ public class MiembroController {
      */
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Iterable<MiembroDto>>> findAll() {
         Iterable<MiembroDto> miembroDtos = miembroService.findAll();
         return ResponseEntity.ok(
@@ -87,13 +88,30 @@ public class MiembroController {
                         .message("Listado de Miembros")
                         .datos(miembroDtos)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
+    }
+
+    @GetMapping("/findall/paged")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<MiembroDto>>> findAllPaged(
+            @RequestParam(value = "searchText", required = false) String searchText,
+            @RequestParam(value = "estado", required = false) Boolean estado,
+            @RequestParam(value = "iglesiaNombre", required = false) String iglesiaNombre,
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<MiembroDto> miembroDtos = miembroService.findAllPaged(searchText, estado,
+                iglesiaNombre, pageable);
+        return ResponseEntity.ok(
+                ApiResponse.<org.springframework.data.domain.Page<MiembroDto>>builder()
+                        .message("Listado paginado de Miembros")
+                        .datos(miembroDtos)
+                        .nombreModelo("Miembro")
+                        .build());
     }
 
     @GetMapping("/sin-iglesia")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<java.util.List<MiembroDto>>> findSinIglesia() {
         java.util.List<MiembroDto> miembroDtos = miembroService.findSinIglesia();
         return ResponseEntity.ok(
@@ -101,8 +119,7 @@ public class MiembroController {
                         .message("Listado de Miembros sin Iglesia")
                         .datos(miembroDtos)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -112,7 +129,7 @@ public class MiembroController {
      */
     @GetMapping("/sin-iglesia-asignacion")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<java.util.List<MiembroDto>>> findSinIglesiaParaAsignacion() {
         java.util.List<MiembroDto> miembroDtos = miembroService.findSinIglesiaParaAsignacion();
         return ResponseEntity.ok(
@@ -120,8 +137,7 @@ public class MiembroController {
                         .message("Listado de Miembros disponibles para asignar a iglesia")
                         .datos(miembroDtos)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -132,7 +148,7 @@ public class MiembroController {
      */
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> findById(@PathVariable("id") Long id) {
         MiembroDto miembroDto = miembroService.findById(id);
         return ResponseEntity.ok(
@@ -140,8 +156,7 @@ public class MiembroController {
                         .message("Miembro encontrado.")
                         .datos(miembroDto)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -152,17 +167,17 @@ public class MiembroController {
      */
     @PutMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> update(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroActualizado = miembroService.update(miembroDto);
-        registrarLog("MODIFICAR", "Actualizó al miembro ID: " + miembroActualizado.getId() + " - " + miembroActualizado.getNombre() + " " + miembroActualizado.getApellido());
+        registrarLog("MODIFICAR", "Actualizó al miembro ID: " + miembroActualizado.getId() + " - "
+                + miembroActualizado.getNombre() + " " + miembroActualizado.getApellido());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroDto>builder()
                         .message("Miembro actualizado exitosamente.")
                         .datos(miembroActualizado)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -173,7 +188,7 @@ public class MiembroController {
      */
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         miembroService.delete(id);
         registrarLog("ELIMINAR", "Eliminó al miembro con ID: " + id);
@@ -182,34 +197,35 @@ public class MiembroController {
                         .message("Miembro eliminado exitosamente.")
                         .datos(null)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     /**
-     * Alterna el estado (activo/inactivo) de un miembro por su identificador único ID.
+     * Alterna el estado (activo/inactivo) de un miembro por su identificador único
+     * ID.
      * 
      * @param id Identificador único del miembro.
-     * @return ResponseEntity conteniendo la información actualizada con el nuevo estado del miembro.
+     * @return ResponseEntity conteniendo la información actualizada con el nuevo
+     *         estado del miembro.
      */
     @PutMapping("/estado/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> estado(@PathVariable Long id) {
         MiembroDto miembroActualizado = miembroService.estado(id);
-        registrarLog("MODIFICAR_ESTADO", "Modificó el estado del miembro ID: " + id + " a " + miembroActualizado.getEstado());
+        registrarLog("MODIFICAR_ESTADO",
+                "Modificó el estado del miembro ID: " + id + " a " + miembroActualizado.getEstado());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroDto>builder()
                         .message("Se cambió el estado del miembro exitosamente a: " + miembroActualizado.getEstado())
                         .datos(miembroActualizado)
                         .nombreModelo("Miembro")
-                        .build()
-        );
+                        .build());
     }
 
     @GetMapping("/buscarci/{ci}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> buscarCi(@PathVariable("ci") String ci) {
         MiembroDto miembroDto = miembroService.buscarCi(ci);
         if (miembroDto == null) {
@@ -230,7 +246,7 @@ public class MiembroController {
     }
 
     @PostMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:SUBIR_FOTO') OR hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -249,7 +265,7 @@ public class MiembroController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         miembroService.deleteProfilePhoto(id);
         registrarLog("ELIMINAR_FOTO", "Eliminó foto de perfil del miembro ID: " + id);
@@ -262,7 +278,8 @@ public class MiembroController {
     }
 
     private Long getCurrentIglesiaId() {
-        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (authentication != null && authentication.getDetails() instanceof java.util.Map) {
             java.util.Map<?, ?> details = (java.util.Map<?, ?>) authentication.getDetails();
             Object iglesiaIdObj = details.get("iglesiaId");
@@ -276,16 +293,16 @@ public class MiembroController {
     }
 
     @PostMapping("/importar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'PASTOR') AND hasAuthority('Escribir Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Integer>> importExcel(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "iglesiaId", required = false) Long paramIglesiaId) {
-        
+
         Long iglesiaId = getCurrentIglesiaId();
         if (iglesiaId == null) {
             iglesiaId = paramIglesiaId;
         }
-        
+
         if (iglesiaId == null) {
             return ResponseEntity.badRequest().body(ApiResponse.<Integer>builder()
                     .message("Debe especificar la iglesia de destino para los miembros.")
@@ -296,7 +313,8 @@ public class MiembroController {
 
         try {
             int imported = miembroService.importFromExcel(file, iglesiaId);
-            registrarLog("IMPORTACION", "Importación masiva exitosa: " + imported + " miembros cargados desde archivo Excel.");
+            registrarLog("IMPORTACION",
+                    "Importación masiva exitosa: " + imported + " miembros cargados desde archivo Excel.");
             return ResponseEntity.ok(ApiResponse.<Integer>builder()
                     .message("Importación masiva completada con éxito. Total importados: " + imported)
                     .datos(imported)
@@ -308,17 +326,18 @@ public class MiembroController {
     }
 
     @GetMapping("/plantilla")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'PASTOR') AND hasAuthority('Ver Miembros')")
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadTemplate() {
         try {
             byte[] data = miembroService.generateExcelTemplate();
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            headers.setContentDisposition(org.springframework.http.ContentDisposition.builder("attachment").filename("Plantilla_Miembros.xlsx").build());
+            headers.setContentType(org.springframework.http.MediaType
+                    .parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDisposition(org.springframework.http.ContentDisposition.builder("attachment")
+                    .filename("Plantilla_Miembros.xlsx").build());
             return new ResponseEntity<>(data, headers, HttpStatus.OK);
         } catch (IOException e) {
             throw new RuntimeException("Error al generar la plantilla Excel: " + e.getMessage());
         }
     }
 }
-

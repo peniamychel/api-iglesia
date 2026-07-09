@@ -22,6 +22,10 @@ public class ActivoImpl implements IActivo {
     private final ActivoDao activoDao;
     private final IglesiaDao iglesiaDao;
     private final ModelMapper modelMapper;
+    private final com.mcmm.service.FileStorageService fileStorageService;
+
+    @org.springframework.beans.factory.annotation.Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Override
     @Transactional(readOnly = true)
@@ -74,6 +78,8 @@ public class ActivoImpl implements IActivo {
         exist.setEstadoConservacion(activoDto.getEstadoConservacion());
         exist.setValorEstimado(activoDto.getValorEstimado());
         exist.setFechaAdquisicion(activoDto.getFechaAdquisicion());
+        exist.setCodigo(activoDto.getCodigo());
+        exist.setUriFoto(activoDto.getUriFoto());
         exist.setIglesia(iglesia);
 
         Activo updated = activoDao.save(exist);
@@ -94,6 +100,64 @@ public class ActivoImpl implements IActivo {
             dto.setIglesiaId(activo.getIglesia().getId());
             dto.setIglesiaNombre(activo.getIglesia().getNombre());
         }
+        if (activo.getUriFoto() != null && !activo.getUriFoto().isBlank()) {
+            try {
+                String fileUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                        .fromCurrentContextPath()
+                        .path(uploadDir)
+                        .path("/")
+                        .path(activo.getUriFoto())
+                        .toUriString();
+                dto.setUriFoto(fileUrl);
+            } catch (Exception e) {
+                // Dejar ruta relativa si no hay contexto de request
+            }
+        }
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public String uploadPhoto(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        Activo exist = activoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Activo", "id", id));
+        
+        if (exist.getUriFoto() != null) {
+            try {
+                fileStorageService.deleteFile(exist.getUriFoto());
+            } catch (Exception e) {
+                // Ignorar error al borrar si no existía el archivo físico
+            }
+        }
+
+        String fileName = fileStorageService.storeFile(file, "activo", "activos");
+        String uriFoto = "activos/" + fileName;
+        exist.setUriFoto(uriFoto);
+        activoDao.save(exist);
+
+        String fileUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(uploadDir)
+                .path("/")
+                .path(uriFoto)
+                .toUriString();
+        return fileUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deletePhoto(Long id) {
+        Activo exist = activoDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("Activo", "id", id));
+        
+        if (exist.getUriFoto() != null) {
+            try {
+                fileStorageService.deleteFile(exist.getUriFoto());
+            } catch (Exception e) {
+                // Ignorar error al borrar si no existía el archivo físico
+            }
+            exist.setUriFoto(null);
+            activoDao.save(exist);
+        }
     }
 }

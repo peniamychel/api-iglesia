@@ -21,9 +21,31 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
     @Query("UPDATE ParticipacionEvento p SET p.certificado = null, p.updatedAt = CURRENT_TIMESTAMP WHERE p.certificado.id = :certificadoId")
     void detachCertificado(@Param("certificadoId") Long certificadoId);
 
-    @Query("SELECT p FROM ParticipacionEvento p WHERE p.evento.iglesia.id = :iglesiaId")
-    java.util.List<ParticipacionEvento> findByEventoIglesiaId(@Param("iglesiaId") Long iglesiaId);
+    @Query("SELECT p FROM ParticipacionEvento p " +
+           "LEFT JOIN FETCH p.certificado " +
+           "JOIN FETCH p.miembro " +
+           "JOIN FETCH p.evento " +
+           "LEFT JOIN FETCH p.entregadoPor " +
+           "WHERE p.evento.iglesia.id = :iglesiaId")
+    java.util.List<ParticipacionEvento> findByEventoIglesiaIdWithRelations(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT p FROM ParticipacionEvento p " +
+           "LEFT JOIN FETCH p.certificado " +
+           "JOIN FETCH p.miembro " +
+           "JOIN FETCH p.evento " +
+           "LEFT JOIN FETCH p.entregadoPor")
+    java.util.List<ParticipacionEvento> findAllWithRelations();
 
     @Query("SELECT COUNT(p) > 0 FROM ParticipacionEvento p WHERE p.evento.id = :eventoId AND p.miembro.id = :miembroId")
     boolean existsByEventoIdAndMiembroId(@Param("eventoId") Long eventoId, @Param("miembroId") Long miembroId);
+
+    @Query("SELECT p FROM ParticipacionEvento p " +
+           "LEFT JOIN FETCH p.certificado c " +
+           "LEFT JOIN FETCH c.tipoCertificado " +
+           "JOIN FETCH p.miembro " +
+           "JOIN FETCH p.evento e " +
+           "JOIN FETCH e.iglesia " +
+           "LEFT JOIN FETCH p.entregadoPor " +
+           "WHERE p.codigoUnico = :codigoUnico")
+    java.util.Optional<ParticipacionEvento> findByCodigoUnicoWithRelations(@Param("codigoUnico") String codigoUnico);
 }

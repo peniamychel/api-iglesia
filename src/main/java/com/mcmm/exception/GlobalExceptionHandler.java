@@ -121,6 +121,15 @@ public class GlobalExceptionHandler {
         return errorCode;
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponseException> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException exception, WebRequest webRequest) {
+        ApiResponseException apiResponse = ApiResponseException.builder()
+                .message("Acceso denegado: No cuenta con los privilegios necesarios para esta operación.")
+                .url(webRequest.getDescription(false))
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseException> handlerException(Exception exception,
                                                                  WebRequest webRequest) {

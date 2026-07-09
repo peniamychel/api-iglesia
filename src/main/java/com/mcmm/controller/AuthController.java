@@ -5,7 +5,7 @@ import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.auth.RefreshTokenRequest;
 import com.mcmm.model.entity.Cargo;
 import com.mcmm.model.entity.Iglesia;
-import com.mcmm.model.entity.Privilegio;
+import com.mcmm.model.entity.Accion;
 import com.mcmm.model.entity.RolCargo;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.security.jwt.JwtUtils;
@@ -173,10 +173,10 @@ public class AuthController {
                 if (rc.getNombreRol() != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + rc.getNombreRol()));
                 }
-                if (rc.getPrivilegios() != null) {
-                    for (Privilegio p : rc.getPrivilegios()) {
-                        if (p.getNombre() != null) {
-                            authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                if (rc.getAcciones() != null) {
+                    for (Accion a : rc.getAcciones()) {
+                        if (a.getAuthorityCode() != null) {
+                            authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                         }
                     }
                 }
@@ -204,10 +204,6 @@ public class AuthController {
         response.put("token", token);
         response.put("refreshToken", refreshToken);
         response.put("username", username);
-        List<Map<String, String>> uniqueRolesAsObjects = uniqueAuthorities.stream()
-                .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
-                .collect(Collectors.toList());
-        response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
 
         registrarLog(username, "Acceso", "Seleccionó cargo e iglesia activa: " + (iglesia != null ? iglesia.getNombre() : "Iglesia " + request.getIglesiaId()) + " como " + cargoNombre);
@@ -295,10 +291,10 @@ public class AuthController {
                 if (rc.getNombreRol() != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + rc.getNombreRol()));
                 }
-                if (rc.getPrivilegios() != null) {
-                    for (Privilegio p : rc.getPrivilegios()) {
-                        if (p.getNombre() != null) {
-                            authorities.add(new SimpleGrantedAuthority(p.getNombre()));
+                if (rc.getAcciones() != null) {
+                    for (Accion a : rc.getAcciones()) {
+                        if (a.getAuthorityCode() != null) {
+                            authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                         }
                     }
                 }
@@ -326,10 +322,6 @@ public class AuthController {
         response.put("token", token);
         response.put("refreshToken", refreshToken);
         response.put("username", username);
-        List<Map<String, String>> uniqueRolesAsObjects = uniqueAuthorities.stream()
-                .map(a -> { Map<String, String> m = new HashMap<>(); m.put("authority", a.getAuthority()); return m; })
-                .collect(Collectors.toList());
-        response.put("roles", uniqueRolesAsObjects);
         response.put("iglesias", getUserIglesias(usuario));
 
         registrarLog(username, "Acceso", "Cambió de iglesia activa a: " + (iglesia != null ? iglesia.getNombre() : "Iglesia " + iglesiaId) + " como " + cargoNombre);

@@ -64,6 +64,21 @@ public class MiembroImpl implements IMiembro {
 
     @Override
     @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<MiembroDto> findAllPaged(
+            String searchText, 
+            Boolean estado, 
+            String iglesiaNombre, 
+            org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<Miembro> miembros = miembroDao.searchMiembros(
+                searchText, 
+                estado, 
+                iglesiaNombre, 
+                pageable);
+        return miembros.map(this::buildDtoWithPhotoUrl);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public MiembroDto findById(Long id) {
         Miembro miembro = miembroDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Miembro", "id", id));
