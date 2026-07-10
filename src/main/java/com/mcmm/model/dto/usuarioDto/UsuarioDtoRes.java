@@ -18,7 +18,6 @@ public class UsuarioDtoRes {
     private String apellidos;
     private String uriFoto;
     private Boolean estado;
-    private String password;
     private Long miembroId;
     private String iglesiaNombre;
     private Set<RolCargoDto> roles;

@@ -10,6 +10,7 @@ public class UsuarioChangePasswordDto {
     @NotNull
     private Long id;
 
+    @NotBlank(message = "Current password is required")
     private String currentPassword;
 
     @NotBlank(message = "New password is required")

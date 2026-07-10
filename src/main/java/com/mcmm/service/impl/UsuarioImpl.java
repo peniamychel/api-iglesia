@@ -195,7 +195,7 @@ public class UsuarioImpl implements IUsuario {
             throw new BadRequestException("La contraseña actual es incorrecta");
         }
 
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuario.setPassword(passwordEncoder.encode(usuarioChangePasswordDto.getNewPassword()));
         usuarioDao.save(usuario);
     }
 

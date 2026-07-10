@@ -57,7 +57,7 @@ public interface IglesiaDao extends JpaRepository<Iglesia, Long> {
      * 
      * @return Lista de iglesias activas con todos sus datos.
      */
-    @EntityGraph(attributePaths = { "cargos", "cargos.tipoCargo", "cargos.miembro", "cargos.miembro.persona" })
+    @EntityGraph(attributePaths = { "cargos", "cargos.rolCargo", "cargos.miembro" })
     List<Iglesia> findByEstadoTrue();
 
 }
