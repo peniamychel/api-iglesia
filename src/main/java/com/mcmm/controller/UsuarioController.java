@@ -29,31 +29,12 @@ public class UsuarioController {
     private final IUsuario usuarioService;
     private final com.mcmm.service.IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "USUARIO", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
         UsuarioDtoRes usuarioCreado = usuarioService.create(usuarioDto);
-        registrarLog("CREAR", "Creó un nuevo usuario: " + usuarioCreado.getUsername() + " (Nombre: " + usuarioCreado.getName() + " " + usuarioCreado.getApellidos() + ")");
+        bitacoraService.registrarAccion("USUARIO", "CREAR", "Creó un nuevo usuario: " + usuarioCreado.getUsername() + " (Nombre: " + usuarioCreado.getName() + " " + usuarioCreado.getApellidos() + ")");
         return new ResponseEntity<>(
                 ApiResponse.<UsuarioDtoRes>builder()
                         .message("Nuevo usuario guardado con éxito")
@@ -81,7 +62,7 @@ public class UsuarioController {
     @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         usuarioService.delete(id);
-        registrarLog("ELIMINAR", "Eliminó al usuario con ID: " + id);
+        bitacoraService.registrarAccion("USUARIO", "ELIMINAR", "Eliminó al usuario con ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Usuario eliminado exitosamente.")
@@ -107,7 +88,7 @@ public class UsuarioController {
     @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
         UsuarioDtoRes usuarioActualizado = usuarioService.updateUser(usuarioUpdateDto);
-        registrarLog("MODIFICAR", "Actualizó el usuario: " + usuarioActualizado.getUsername() + " (ID: " + usuarioActualizado.getId() + ")");
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "Actualizó el usuario: " + usuarioActualizado.getUsername() + " (ID: " + usuarioActualizado.getId() + ")");
         return ResponseEntity.ok(
                 ApiResponse.<UsuarioDtoRes>builder()
                         .message("Usuario actualizado exitosamente.")
@@ -123,7 +104,7 @@ public class UsuarioController {
         String currentUsername = authentication.getName();
 
         usuarioService.changePassword(usuarioChangePasswordDto, currentUsername);
-        registrarLog("MODIFICAR", "El usuario " + currentUsername + " cambió su propia contraseña");
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "El usuario " + currentUsername + " cambió su propia contraseña");
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
@@ -137,7 +118,7 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody @Valid UsuarioResetPasswordDto usuarioResetPasswordDto) {
         usuarioService.resetPassword(usuarioResetPasswordDto);
-        registrarLog("MODIFICAR", "Se restableció la contraseña del usuario ID: " + usuarioResetPasswordDto.getId());
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "Se restableció la contraseña del usuario ID: " + usuarioResetPasswordDto.getId());
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()

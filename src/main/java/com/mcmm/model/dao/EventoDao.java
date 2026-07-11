@@ -16,6 +16,9 @@ public interface EventoDao extends JpaRepository<Evento, Long> {
 
     List<Evento> findByIglesiaId(Long iglesiaId);
 
+    @Query(value = "SELECT * FROM evento e WHERE e.iglesia_id = :iglesiaId OR e.alcance = 'GENERAL' OR FIND_IN_SET(:iglesiaId, e.iglesias_invitadas) > 0", nativeQuery = true)
+    List<Evento> findEventosParaIglesia(@Param("iglesiaId") Long iglesiaId);
+
     List<Evento> findByFechaInicioBetween(Date start, Date end);
 
     @Modifying

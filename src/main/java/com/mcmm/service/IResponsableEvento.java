@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface IResponsableEvento {
     List<ResponsableEventoDto> findAll();
+    List<ResponsableEventoDto> findByEventoId(Long eventoId);
     ResponsableEventoDto findById(Long id);
     ResponsableEventoDto create(ResponsableEventoDto responsableEventoDto);
     ResponsableEventoDto update(ResponsableEventoDto responsableEventoDto);

@@ -87,4 +87,15 @@ public class ResponsableEventoController {
                 .nombreModelo("ResponsableEvento")
                 .build());
     }
+
+    @GetMapping("/evento/{eventoId}")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<ResponsableEventoDto>>> findByEventoId(@PathVariable Long eventoId) {
+        List<ResponsableEventoDto> responsables = responsableEventoService.findByEventoId(eventoId);
+        return ResponseEntity.ok(ApiResponse.<List<ResponsableEventoDto>>builder()
+                .message("Listado de responsables del evento")
+                .datos(responsables)
+                .nombreModelo("ResponsableEvento")
+                .build());
+    }
 }

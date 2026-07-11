@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "activo")
 public class Activo implements java.io.Serializable {
 

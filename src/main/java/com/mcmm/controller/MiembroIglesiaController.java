@@ -26,25 +26,6 @@ public class MiembroIglesiaController {
     private final IMiembroIglesia miembroIglesiaService;
     private final com.mcmm.service.IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "TRASPASO", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
@@ -147,7 +128,7 @@ public class MiembroIglesiaController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> solicitarTraspaso(@RequestBody @Valid MiembroIglesiaDto miembroIglesiaDto) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.solicitarTraspaso(miembroIglesiaDto);
-        registrarLog("SOLICITAR_TRASPASO", "Solicitó traspaso para el miembro ID: " + miembroIglesiaActualizado.getMiembroId() + " a la iglesia ID: " + miembroIglesiaActualizado.getIglesiaId());
+        bitacoraService.registrarAccion("TRASPASO", "SOLICITAR_TRASPASO", "Solicitó traspaso para el miembro ID: " + miembroIglesiaActualizado.getMiembroId() + " a la iglesia ID: " + miembroIglesiaActualizado.getIglesiaId());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Solicitud de traspaso registrada exitosamente.")
@@ -161,7 +142,7 @@ public class MiembroIglesiaController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> aceptarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.aceptarTraspaso(id);
-        registrarLog("ACEPTAR_TRASPASO", "Aceptó solicitud de traspaso ID: " + id);
+        bitacoraService.registrarAccion("TRASPASO", "ACEPTAR_TRASPASO", "Aceptó solicitud de traspaso ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Traspaso aceptado exitosamente.")
@@ -175,7 +156,7 @@ public class MiembroIglesiaController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroIglesiaDto>> rechazarTraspaso(@PathVariable Long id) {
         MiembroIglesiaDto miembroIglesiaActualizado = miembroIglesiaService.rechazarTraspaso(id);
-        registrarLog("RECHAZAR_TRASPASO", "Rechazó solicitud de traspaso ID: " + id);
+        bitacoraService.registrarAccion("TRASPASO", "RECHAZAR_TRASPASO", "Rechazó solicitud de traspaso ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<MiembroIglesiaDto>builder()
                         .message("Traspaso rechazado exitosamente.")
@@ -276,7 +257,7 @@ public class MiembroIglesiaController {
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             String fileUrl = miembroIglesiaService.subirCartaTraspaso(id, file);
-            registrarLog("SUBIR_FOTO", "Subió carta de traspaso firmada para solicitud ID: " + id);
+            bitacoraService.registrarAccion("TRASPASO", "SUBIR_FOTO", "Subió carta de traspaso firmada para solicitud ID: " + id);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .message("Carta de traspaso subida exitosamente.")

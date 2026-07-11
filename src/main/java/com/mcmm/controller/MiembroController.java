@@ -30,26 +30,6 @@ public class MiembroController {
     private final IMiembro miembroService;
     private final IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
-                    .getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "MIEMBRO", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     /**
      * Crea un nuevo miembro en el sistema.
      * 
@@ -62,7 +42,7 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> create(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroSave = miembroService.create(miembroDto);
-        registrarLog("CREAR", "Registró al miembro con CI: " + miembroSave.getCi() + " - " + miembroSave.getNombre()
+        bitacoraService.registrarAccion("MIEMBRO", "CREAR", "Registró al miembro con CI: " + miembroSave.getCi() + " - " + miembroSave.getNombre()
                 + " " + miembroSave.getApellido());
         return new ResponseEntity<>(
                 ApiResponse.<MiembroDto>builder()
@@ -170,7 +150,7 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> update(@RequestBody @Valid MiembroDto miembroDto) {
         MiembroDto miembroActualizado = miembroService.update(miembroDto);
-        registrarLog("MODIFICAR", "Actualizó al miembro ID: " + miembroActualizado.getId() + " - "
+        bitacoraService.registrarAccion("MIEMBRO", "MODIFICAR", "Actualizó al miembro ID: " + miembroActualizado.getId() + " - "
                 + miembroActualizado.getNombre() + " " + miembroActualizado.getApellido());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroDto>builder()
@@ -191,7 +171,7 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         miembroService.delete(id);
-        registrarLog("ELIMINAR", "Eliminó al miembro con ID: " + id);
+        bitacoraService.registrarAccion("MIEMBRO", "ELIMINAR", "Eliminó al miembro con ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Miembro eliminado exitosamente.")
@@ -213,7 +193,7 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MiembroDto>> estado(@PathVariable Long id) {
         MiembroDto miembroActualizado = miembroService.estado(id);
-        registrarLog("MODIFICAR_ESTADO",
+        bitacoraService.registrarAccion("MIEMBRO", "MODIFICAR_ESTADO",
                 "Modificó el estado del miembro ID: " + id + " a " + miembroActualizado.getEstado());
         return ResponseEntity.ok(
                 ApiResponse.<MiembroDto>builder()
@@ -252,7 +232,7 @@ public class MiembroController {
             @RequestParam("file") MultipartFile file) {
         try {
             String fileUrl = miembroService.updateProfilePhoto(id, file);
-            registrarLog("SUBIR_FOTO", "Actualizó foto de perfil del miembro ID: " + id);
+            bitacoraService.registrarAccion("MIEMBRO", "SUBIR_FOTO", "Actualizó foto de perfil del miembro ID: " + id);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .message("Foto de perfil actualizada exitosamente.")
@@ -268,7 +248,7 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         miembroService.deleteProfilePhoto(id);
-        registrarLog("ELIMINAR_FOTO", "Eliminó foto de perfil del miembro ID: " + id);
+        bitacoraService.registrarAccion("MIEMBRO", "ELIMINAR_FOTO", "Eliminó foto de perfil del miembro ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Foto de perfil eliminada exitosamente.")
@@ -313,7 +293,7 @@ public class MiembroController {
 
         try {
             int imported = miembroService.importFromExcel(file, iglesiaId);
-            registrarLog("IMPORTACION",
+            bitacoraService.registrarAccion("MIEMBRO", "IMPORTACION",
                     "Importación masiva exitosa: " + imported + " miembros cargados desde archivo Excel.");
             return ResponseEntity.ok(ApiResponse.<Integer>builder()
                     .message("Importación masiva completada con éxito. Total importados: " + imported)

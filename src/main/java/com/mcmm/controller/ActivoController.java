@@ -21,30 +21,11 @@ public class ActivoController {
     private final IActivo activoService;
     private final com.mcmm.service.IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "ACTIVO", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<ActivoDto>> create(@RequestBody @Valid ActivoDto dto) {
         ActivoDto saved = activoService.save(dto);
-        registrarLog("CREAR", "Registró un nuevo activo: " + saved.getNombre() + " (ID: " + saved.getId() + ")");
+        bitacoraService.registrarAccion("ACTIVO", "CREAR", "Registró un nuevo activo: " + saved.getNombre() + " (ID: " + saved.getId() + ")");
         return new ResponseEntity<>(ApiResponse.<ActivoDto>builder()
                 .message("Activo de iglesia registrado con éxito.")
                 .datos(saved)
@@ -85,7 +66,7 @@ public class ActivoController {
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<ActivoDto>> update(@RequestBody @Valid ActivoDto dto) {
         ActivoDto updated = activoService.update(dto);
-        registrarLog("MODIFICAR", "Actualizó el activo ID: " + updated.getId() + " - " + updated.getNombre());
+        bitacoraService.registrarAccion("ACTIVO", "MODIFICAR", "Actualizó el activo ID: " + updated.getId() + " - " + updated.getNombre());
         return ResponseEntity.ok(ApiResponse.<ActivoDto>builder()
                 .message("Activo actualizado con éxito.")
                 .datos(updated)
@@ -96,7 +77,7 @@ public class ActivoController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         activoService.delete(id);
-        registrarLog("ELIMINAR", "Eliminó el activo ID: " + id);
+        bitacoraService.registrarAccion("ACTIVO", "ELIMINAR", "Eliminó el activo ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Activo eliminado con éxito.")
                 .datos(null)
@@ -110,7 +91,7 @@ public class ActivoController {
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             String fileUrl = activoService.uploadPhoto(id, file);
-            registrarLog("SUBIR_FOTO", "Actualizó foto del activo ID: " + id);
+            bitacoraService.registrarAccion("ACTIVO", "SUBIR_FOTO", "Actualizó foto del activo ID: " + id);
             return ResponseEntity.ok(ApiResponse.<String>builder()
                     .message("Foto del activo actualizada con éxito.")
                     .datos(fileUrl)
@@ -124,7 +105,7 @@ public class ActivoController {
     @DeleteMapping("/{id}/foto")
     public ResponseEntity<ApiResponse<Void>> deletePhoto(@PathVariable Long id) {
         activoService.deletePhoto(id);
-        registrarLog("ELIMINAR_FOTO", "Eliminó foto del activo ID: " + id);
+        bitacoraService.registrarAccion("ACTIVO", "ELIMINAR_FOTO", "Eliminó foto del activo ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Foto del activo eliminada con éxito.")
                 .datos(null)

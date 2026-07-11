@@ -5,12 +5,14 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "plantilla_certificado")
 public class PlantillaCertificado {
 

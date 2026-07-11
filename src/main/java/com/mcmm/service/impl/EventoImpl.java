@@ -11,6 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.mcmm.model.dao.ResponsableEventoDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.entity.ResponsableEvento;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EventoImpl implements IEvento {
 
     private final EventoDao eventoDao;
@@ -58,11 +60,12 @@ public class EventoImpl implements IEvento {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventoDto> findAll() {
         Long iglesiaId = getCurrentIglesiaId();
         List<Evento> eventos;
         if (iglesiaId != null) {
-            eventos = eventoDao.findByIglesiaId(iglesiaId);
+            eventos = eventoDao.findEventosParaIglesia(iglesiaId);
         } else {
             eventos = eventoDao.findAll();
         }
@@ -81,6 +84,7 @@ public class EventoImpl implements IEvento {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventoDto findById(Long id) {
         Evento evento = eventoDao.findById(id).orElse(null);
         if (evento == null) return null;

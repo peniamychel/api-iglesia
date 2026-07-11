@@ -6,12 +6,14 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "evento")
 public class Evento {
 
@@ -53,6 +55,12 @@ public class Evento {
 
     @Column(name = "mostrar_en_calendario")
     private Boolean mostrarEnCalendario;
+
+    @Column(name = "habilitar_inscripciones")
+    private Boolean habilitarInscripciones = false;
+
+    @Column(name = "iglesias_invitadas", length = 500)
+    private String iglesiasInvitadas;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

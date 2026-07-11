@@ -6,12 +6,14 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "miembros_iglesia")
 public class MiembroIglesia implements java.io.Serializable{
 

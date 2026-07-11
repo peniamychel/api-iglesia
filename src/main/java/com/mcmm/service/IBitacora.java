@@ -7,5 +7,8 @@ public interface IBitacora {
     List<BitacoraDto> findAll();
     List<BitacoraDto> findByModulo(String modulo);
     List<BitacoraDto> findByUser(String username);
+
     void registrar(Long usuarioId, String username, String accion, String modulo, String descripcion, String ipAddress);
+
+    void registrarAccion(String modulo, String accion, String descripcion);
 }

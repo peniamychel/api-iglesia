@@ -6,11 +6,13 @@ import com.mcmm.model.dao.TipoCertificadoDao;
 import com.mcmm.service.ITipoCertificado;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class TipoCertificadoImpl implements ITipoCertificado {
 
     private final TipoCertificadoDao tipoCertificadoDao;
@@ -21,6 +23,7 @@ public class TipoCertificadoImpl implements ITipoCertificado {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TipoCertificadoDto> findAll() {
         return tipoCertificadoDao.findAll().stream()
                 .map(tipoCertificado -> modelMapper.map(tipoCertificado, TipoCertificadoDto.class))
@@ -28,6 +31,7 @@ public class TipoCertificadoImpl implements ITipoCertificado {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TipoCertificadoDto findById(Long id) {
         TipoCertificado tipoCertificado = tipoCertificadoDao.findById(id).orElse(null);
         if (tipoCertificado == null) return null;

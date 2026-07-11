@@ -12,6 +12,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class OfrendaImpl implements IOfrenda {
 
     private final OfrendaDao ofrendaDao;
@@ -61,6 +63,7 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OfrendaDto> findAll() {
         Long iglesiaId = getCurrentIglesiaId();
         List<Ofrenda> ofrendas;
@@ -73,6 +76,7 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OfrendaDto> findByIglesia(Long iglesiaId) {
         return ofrendaDao.findByIglesiaId(iglesiaId).stream()
                 .map(this::convertToDto)
@@ -80,6 +84,7 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OfrendaDto> findByIglesiaAndPeriod(Long iglesiaId, Date start, Date end) {
         return ofrendaDao.findByIglesiaIdAndFechaRecaudacionBetween(iglesiaId, start, end).stream()
                 .map(this::convertToDto)
@@ -87,6 +92,7 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OfrendaDto> findByPeriod(Date start, Date end) {
         Long iglesiaId = getCurrentIglesiaId();
         List<Ofrenda> ofrendas;
@@ -99,6 +105,7 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OfrendaDto findById(Long id) {
         Ofrenda ofrenda = ofrendaDao.findById(id).orElse(null);
         return convertToDto(ofrenda);
@@ -153,11 +160,13 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Double getSumByIglesiaAndTipoAndPeriod(Long iglesiaId, String tipo, Date start, Date end) {
         return ofrendaDao.sumMontoByIglesiaAndTipoAndPeriod(iglesiaId, tipo, start, end);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Double getSumByTipoAndPeriod(String tipo, Date start, Date end) {
         Long iglesiaId = getCurrentIglesiaId();
         if (iglesiaId != null) {

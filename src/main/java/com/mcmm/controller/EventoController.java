@@ -22,30 +22,11 @@ public class EventoController {
     private final IEvento eventoService;
     private final com.mcmm.service.IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "EVENTO", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('EVENTOS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> create(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto saved = eventoService.create(eventoDto);
-        registrarLog("CREAR", "Creó el evento: " + saved.getNombre() + " (Fecha: " + saved.getFechaInicio() + ")");
+        bitacoraService.registrarAccion("EVENTO", "CREAR", "Creó el evento: " + saved.getNombre() + " (Fecha: " + saved.getFechaInicio() + ")");
         return new ResponseEntity<>(ApiResponse.<EventoDto>builder()
                 .message("Evento creado exitosamente.")
                 .datos(saved)
@@ -80,7 +61,7 @@ public class EventoController {
     @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> update(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto updated = eventoService.update(eventoDto);
-        registrarLog("MODIFICAR", "Actualizó el evento ID: " + updated.getId() + " - " + updated.getNombre());
+        bitacoraService.registrarAccion("EVENTO", "MODIFICAR", "Actualizó el evento ID: " + updated.getId() + " - " + updated.getNombre());
         return ResponseEntity.ok(ApiResponse.<EventoDto>builder()
                 .message("Evento actualizado exitosamente.")
                 .datos(updated)
@@ -92,7 +73,7 @@ public class EventoController {
     @PreAuthorize("hasAuthority('EVENTOS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         eventoService.delete(id);
-        registrarLog("ELIMINAR", "Eliminó el evento ID: " + id);
+        bitacoraService.registrarAccion("EVENTO", "ELIMINAR", "Eliminó el evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Evento eliminado exitosamente.")
                 .datos(null)
@@ -104,7 +85,7 @@ public class EventoController {
     @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         eventoService.estado(id);
-        registrarLog("MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);
+        bitacoraService.registrarAccion("EVENTO", "MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del evento actualizado exitosamente.")
                 .datos(null)
@@ -118,7 +99,7 @@ public class EventoController {
             @RequestParam("from") int fromYear,
             @RequestParam("to") int toYear) {
         eventoService.cloneYearEvents(fromYear, toYear);
-        registrarLog("CLONAR", "Clonó los eventos anuales de la gestión " + fromYear + " a la gestión " + toYear);
+        bitacoraService.registrarAccion("EVENTO", "CLONAR", "Clonó los eventos anuales de la gestión " + fromYear + " a la gestión " + toYear);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Eventos clonados exitosamente de la gestión " + fromYear + " a " + toYear)
                 .datos(null)

@@ -26,7 +26,8 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
            "JOIN FETCH p.miembro " +
            "JOIN FETCH p.evento " +
            "LEFT JOIN FETCH p.entregadoPor " +
-           "WHERE p.evento.iglesia.id = :iglesiaId")
+           "WHERE p.evento.iglesia.id = :iglesiaId " +
+           "OR EXISTS (SELECT 1 FROM MiembroIglesia mi WHERE mi.miembro.id = p.miembro.id AND mi.iglesia.id = :iglesiaId AND mi.estado = true)")
     java.util.List<ParticipacionEvento> findByEventoIglesiaIdWithRelations(@Param("iglesiaId") Long iglesiaId);
 
     @Query("SELECT p FROM ParticipacionEvento p " +

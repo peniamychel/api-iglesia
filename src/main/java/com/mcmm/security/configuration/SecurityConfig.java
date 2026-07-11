@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -33,53 +33,46 @@ public class SecurityConfig {
     private JwtAuthorizationFilter jwtAuthorizationFilter;
 
     @Autowired
+    private com.mcmm.security.filters.LoginRateLimitFilter loginRateLimitFilter;
+
+    @Autowired
     private com.mcmm.model.dao.UsuarioDao usuarioDao;
 
     @Autowired
     private com.mcmm.service.IBitacora bitacoraService;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager autohenticationManager)
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager authenticationManager)
             throws Exception {
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils, usuarioDao, bitacoraService);
-        jwtAuthenticationFilter.setAuthenticationManager(autohenticationManager);
+        jwtAuthenticationFilter.setAuthenticationManager(authenticationManager);
         jwtAuthenticationFilter.setFilterProcessesUrl("/login");
 
         return httpSecurity
-                .cors() // Habilitar CORS
-                .and()
-                .csrf(config -> config.disable())
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/login").permitAll();
-                    auth.requestMatchers(
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**",
-                            "/swagger-resources/**",
-                            "/webjars/**",
-                            "/custom-css/**",
-                            "/swagger-ui.html").permitAll();
-                    auth.requestMatchers("/auth/**").permitAll();
-                    auth.requestMatchers("/uploads/**").permitAll();
-                    auth.requestMatchers("/verificar-certificado/**").permitAll();
-                    auth.anyRequest().authenticated();
-                })
-                .sessionManagement(session -> {
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-                })
+                .cors(cors -> {})
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/custom-css/**",
+                                "/swagger-ui.html").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/verificar-certificado/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilter(jwtAuthenticationFilter)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
-    // @Bean
-    // UserDetailsService userDetailsService() {
-    // InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-    // manager.createUser(User.withUsername("juancho")
-    // .password("12345")
-    // .roles()
-    // .build());
-    // return manager;
-    // }
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -94,24 +87,4 @@ public class SecurityConfig {
                 .passwordEncoder(passwordEncoder)
                 .and().build();
     }
-
-//     para encriptara una contraseña
-//     public static void main(String[] args) {
-//     System.out.println(new BCryptPasswordEncoder().encode("12345"));
-//     }
-
-    // Para los cors si no tubiera la clase CorsConfiguration
-    // @Bean
-    // public WebMvcConfigurer corsConfigurer() {
-    // return new WebMvcConfigurer() {
-    // @Override
-    // public void addCorsMappings(CorsRegistry registry) {
-    // registry.addMapping("/**")
-    // .allowedOrigins("http://localhost:4200")
-    // .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-    // .allowedHeaders("*")
-    // .allowCredentials(true);
-    // }
-    // };
-    // }
 }

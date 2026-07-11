@@ -31,25 +31,6 @@ public class OfrendaController {
     private final UsuarioDao usuarioDao;
     private final com.mcmm.service.IBitacora bitacoraService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
-
-    private void registrarLog(String accion, String descripcion) {
-        try {
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "Sistema";
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isEmpty()) {
-                clientIp = request.getRemoteAddr();
-            } else {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-            bitacoraService.registrar(null, username, accion, "OFRENDA", descripcion, clientIp);
-        } catch (Exception e) {
-            // Ignorar
-        }
-    }
-
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
@@ -66,7 +47,7 @@ public class OfrendaController {
     public ResponseEntity<ApiResponse<OfrendaDto>> create(@Valid @RequestBody OfrendaDto ofrendaDto) {
         Long usuarioId = getCurrentUserId();
         OfrendaDto saved = ofrendaService.create(ofrendaDto, usuarioId);
-        registrarLog("CREAR", "Registró una ofrenda (" + saved.getTipoMovimiento() + ") por el monto de: " + saved.getMonto() + " - Concepto: " + saved.getConceptoDetalle());
+        bitacoraService.registrarAccion("OFRENDA", "CREAR", "Registró una ofrenda (" + saved.getTipoMovimiento() + ") por el monto de: " + saved.getMonto() + " - Concepto: " + saved.getConceptoDetalle());
         return new ResponseEntity<>(ApiResponse.<OfrendaDto>builder()
                 .message("Registro de ofrenda creado exitosamente.")
                 .datos(saved)
@@ -99,7 +80,7 @@ public class OfrendaController {
     @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<OfrendaDto>> update(@Valid @RequestBody OfrendaDto ofrendaDto) {
         OfrendaDto updated = ofrendaService.update(ofrendaDto);
-        registrarLog("MODIFICAR", "Actualizó la ofrenda ID: " + updated.getId() + " (" + updated.getTipoMovimiento() + ") - Nuevo Monto: " + updated.getMonto());
+        bitacoraService.registrarAccion("OFRENDA", "MODIFICAR", "Actualizó la ofrenda ID: " + updated.getId() + " (" + updated.getTipoMovimiento() + ") - Nuevo Monto: " + updated.getMonto());
         return ResponseEntity.ok(ApiResponse.<OfrendaDto>builder()
                 .message("Ofrenda actualizada exitosamente.")
                 .datos(updated)
@@ -111,7 +92,7 @@ public class OfrendaController {
     @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         ofrendaService.delete(id);
-        registrarLog("ELIMINAR", "Eliminó el registro de ofrenda ID: " + id);
+        bitacoraService.registrarAccion("OFRENDA", "ELIMINAR", "Eliminó el registro de ofrenda ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Ofrenda eliminada exitosamente.")
                 .datos(null)

@@ -11,6 +11,8 @@ import com.mcmm.model.entity.Usuario;
 import com.mcmm.security.jwt.JwtUtils;
 import com.mcmm.service.impl.UserDetailsServiceImpl;
 import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,12 +66,14 @@ public class AuthController {
 
     @Data
     public static class SelectCargoRequest {
+        @NotBlank(message = "El preAuthToken es obligatorio")
         private String preAuthToken;
+        @NotNull(message = "El iglesiaId es obligatorio")
         private Long iglesiaId;
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtUtils.isRefreshTokenValid(refreshToken)) {
@@ -96,7 +101,7 @@ public class AuthController {
     }
 
     @PostMapping("/select-cargo")
-    public ResponseEntity<?> selectCargo(@RequestBody SelectCargoRequest request) {
+    public ResponseEntity<?> selectCargo(@Valid @RequestBody SelectCargoRequest request) {
         String preAuthToken = request.getPreAuthToken();
 
         if (!jwtUtils.isPreAuthTokenValid(preAuthToken)) {

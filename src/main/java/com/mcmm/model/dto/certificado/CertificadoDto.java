@@ -1,6 +1,7 @@
 package com.mcmm.model.dto.certificado;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,12 +17,15 @@ import java.time.LocalDateTime;
 public class CertificadoDto {
     private Long id;
 
-    private Long eventoId; // FK to Evento
-    private Long tipoCertificadoId; // FK to TipoCertificado
-    private Long plantillaCertificadoId; // FK to PlantillaCertificado
+    @NotNull(message = "El evento es obligatorio")
+    private Long eventoId;
+    @NotNull(message = "El tipo de certificado es obligatorio")
+    private Long tipoCertificadoId;
+    @NotNull(message = "La plantilla de certificado es obligatoria")
+    private Long plantillaCertificadoId;
 
-    @NotBlank
-    @Size(max = 254)
+    @NotBlank(message = "El motivo del certificado es obligatorio")
+    @Size(max = 254, message = "El motivo no debe exceder 254 caracteres")
     private String motivoCertificado;
 
     private String uriFoto;

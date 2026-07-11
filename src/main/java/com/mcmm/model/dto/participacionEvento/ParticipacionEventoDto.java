@@ -30,4 +30,6 @@ public class ParticipacionEventoDto {
     private String codigoUnico;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private com.mcmm.model.dto.MiembroDto.MiembroDto miembroDto;
 }

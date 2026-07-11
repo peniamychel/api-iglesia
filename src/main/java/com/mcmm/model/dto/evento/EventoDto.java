@@ -1,6 +1,7 @@
 package com.mcmm.model.dto.evento;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,12 +18,14 @@ import java.util.Date;
 public class EventoDto {
     private Long id;
 
-    private Long tipoEventoId; // FK to TipoEvento
+    @NotNull(message = "El tipo de evento es obligatorio")
+    private Long tipoEventoId;
 
-    private Long iglesiaId; // FK to Iglesia
+    @NotNull(message = "La iglesia es obligatoria")
+    private Long iglesiaId;
 
-    @NotBlank
-    @Size(max = 254)
+    @NotBlank(message = "El nombre del evento es obligatorio")
+    @Size(max = 254, message = "El nombre no debe exceder 254 caracteres")
     private String nombre;
 
     @Size(max = 254)
@@ -40,6 +43,8 @@ public class EventoDto {
     private Boolean estado;
     private String alcance;
     private Boolean mostrarEnCalendario;
+    private Boolean habilitarInscripciones;
+    private String iglesiasInvitadas;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

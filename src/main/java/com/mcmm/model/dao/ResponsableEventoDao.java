@@ -18,4 +18,11 @@ public interface ResponsableEventoDao extends JpaRepository<ResponsableEvento, L
 
     @Query("SELECT r FROM ResponsableEvento r WHERE r.evento.iglesia.id = :iglesiaId")
     java.util.List<ResponsableEvento> findByEventoIglesiaId(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT r FROM ResponsableEvento r " +
+           "JOIN FETCH r.cargo c " +
+           "JOIN FETCH c.miembro m " +
+           "JOIN FETCH c.rolCargo rc " +
+           "WHERE r.evento.id = :eventoId")
+    java.util.List<ResponsableEvento> findByEventoIdWithRelations(@Param("eventoId") Long eventoId);
 }

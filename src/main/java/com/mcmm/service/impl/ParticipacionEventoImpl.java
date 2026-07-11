@@ -199,6 +199,7 @@ public class ParticipacionEventoImpl implements IParticipacionEvento {
         }
         if (participacion.getMiembro() != null) {
             dto.setMiembroId(participacion.getMiembro().getId());
+            dto.setMiembroDto(modelMapper.map(participacion.getMiembro(), com.mcmm.model.dto.MiembroDto.MiembroDto.class));
         }
         if (participacion.getEvento() != null) {
             dto.setEventoId(participacion.getEvento().getId());

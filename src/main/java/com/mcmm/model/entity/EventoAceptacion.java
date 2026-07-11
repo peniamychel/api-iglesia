@@ -2,36 +2,34 @@ package com.mcmm.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@ToString
 @Builder
 @Entity
-@Table(name = "tipo_certificado")
-public class TipoCertificado {
-
+@Table(name = "evento_aceptacion")
+public class EventoAceptacion {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre", length = 254)
-    private String nombre;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "evento_id", nullable = false)
+    private Evento evento;
 
-    @Column(name = "fecha")
-    private Date fecha;
+    @Column(name = "iglesia_id", nullable = false)
+    private Long iglesiaId;
 
-    private Boolean estado;
+    @Column(name = "estado", length = 20, nullable = false)
+    private String estado; // ACEPTADO, ARCHIVADO
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -39,9 +37,6 @@ public class TipoCertificado {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (estado == null) {
-            estado = true; // Establecer estado en true si no se ha asignado
-        }
     }
 
     @PreUpdate

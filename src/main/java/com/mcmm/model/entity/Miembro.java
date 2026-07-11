@@ -9,12 +9,14 @@ import java.util.Date;
 import java.util.List;
 
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "miembro")
 public class Miembro {
 
