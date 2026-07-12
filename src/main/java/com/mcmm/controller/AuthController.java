@@ -85,6 +85,14 @@ public class AuthController {
 
         String username = jwtUtils.getUsernameFronToken(refreshToken);
 
+        Usuario usuarioRefresh = usuarioDao.findByUsername(username).orElse(null);
+        if (usuarioRefresh == null || !Boolean.TRUE.equals(usuarioRefresh.getEstado())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "La cuenta de usuario no esta activa");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
@@ -121,6 +129,13 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
 
+        if (!Boolean.TRUE.equals(usuario.getEstado())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "La cuenta de usuario no esta activa");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         List<Cargo> activeCargos = new ArrayList<>();
         if (usuario.getMiembro() != null && usuario.getMiembro().getCargos() != null) {
             Date now = new Date();
@@ -140,7 +155,7 @@ public class AuthController {
         }
 
         if (churchCargos.isEmpty()) {
-            boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+            boolean isAdmin = usuario != null && Boolean.TRUE.equals(usuario.getEsAdmin());
             if (!isAdmin) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("success", false);
@@ -239,6 +254,13 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
 
+        if (!Boolean.TRUE.equals(usuario.getEstado())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "La cuenta de usuario no esta activa");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         List<Cargo> activeCargos = new ArrayList<>();
         if (usuario.getMiembro() != null && usuario.getMiembro().getCargos() != null) {
             Date now = new Date();
@@ -258,7 +280,7 @@ public class AuthController {
         }
 
         if (churchCargos.isEmpty()) {
-            boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+            boolean isAdmin = usuario != null && Boolean.TRUE.equals(usuario.getEsAdmin());
             if (!isAdmin) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("success", false);
@@ -337,7 +359,7 @@ public class AuthController {
     private List<Map<String, Object>> getUserIglesias(Usuario usuario) {
         List<Map<String, Object>> iglesiasInfo = new ArrayList<>();
         
-        boolean isAdmin = usuario != null && usuario.getMiembro() == null;
+        boolean isAdmin = usuario != null && Boolean.TRUE.equals(usuario.getEsAdmin());
 
         if (isAdmin) {
             for (Iglesia iglesia : iglesiaDao.findAll()) {

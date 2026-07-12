@@ -55,6 +55,11 @@ public class RolCargoImpl implements IRolCargo {
     @Override
     public RolCargoDto create(RolCargoDto rolCargoDto) {
         RolCargo rc = modelMapper.map(rolCargoDto, RolCargo.class);
+        // Las acciones no se asignan en la creacion: se gestionan solo via
+        // addAccion/removeAccion sobre entidades Accion ya persistidas. Esto evita
+        // que un payload con acciones cree/modifique filas del catalogo Accion.
+        rc.setId(null);
+        rc.setAcciones(new java.util.HashSet<>());
         RolCargo saved = rolCargoDao.save(rc);
         return mapToDto(saved);
     }

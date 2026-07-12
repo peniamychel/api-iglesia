@@ -96,7 +96,16 @@ public class UsuarioImpl implements IUsuario {
             throw new BadRequestException("Este miembro ya cuenta con una cuenta de usuario activa.");
         }
 
+        // El rol de Administrador Global es una marca explicita (esAdmin), no se
+        // infiere de la ausencia de miembro. Solo un ADMIN puede otorgarla.
+        boolean solicitaAdmin = Boolean.TRUE.equals(usuarioDto.getEsAdmin());
+        if (solicitaAdmin && !currentUserIsAdmin()) {
+            throw new AccessDeniedException("Solo un administrador puede crear cuentas de administrador global.");
+        }
+
         Usuario usuario = modelMapper.map(usuarioDto, Usuario.class);
+        // Fuente unica de verdad: nunca confiar en el valor mapeado sin autorizar.
+        usuario.setEsAdmin(solicitaAdmin);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         
         if (usuarioDto.getMiembroId() != null) {
@@ -175,6 +184,14 @@ public class UsuarioImpl implements IUsuario {
 
         if (usuarioUpdateDto.getEstado() != null) {
             usuario.setEstado(usuarioUpdateDto.getEstado());
+        }
+
+        // Otorgar o revocar el rol de Administrador Global (marca explicita).
+        if (usuarioUpdateDto.getEsAdmin() != null) {
+            if (Boolean.TRUE.equals(usuarioUpdateDto.getEsAdmin()) && !currentUserIsAdmin()) {
+                throw new AccessDeniedException("Solo un administrador puede otorgar el rol de administrador global.");
+            }
+            usuario.setEsAdmin(usuarioUpdateDto.getEsAdmin());
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -262,11 +279,40 @@ public class UsuarioImpl implements IUsuario {
         usuarioDao.save(usuario);
     }
 
+    private boolean currentUserIsAdmin() {
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
     private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
         UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
         Set<AccionDto> accionDtos = new HashSet<>();
         
-        if (usuario.getMiembro() != null) {
+        if (Boolean.TRUE.equals(usuario.getEsAdmin())) {
+            dto.setUriFoto(null);
+            dto.setIglesiaNombre("Administración Central");
+            com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
+                    .nombre("Administrador Global")
+                    .nombreRol("ADMIN")
+                    .estado(true)
+                    .build();
+            dto.setRoles(Collections.singleton(adminDto));
+
+            accionDao.findAll().forEach(a -> {
+                AccionDto aDto = modelMapper.map(a, AccionDto.class);
+                aDto.setAuthorityCode(a.getAuthorityCode());
+                if (a.getServicio() != null) {
+                    aDto.setServicioId(a.getServicio().getId());
+                    aDto.setServicioCodigo(a.getServicio().getCodigo());
+                }
+                accionDtos.add(aDto);
+            });
+        } else if (usuario.getMiembro() != null) {
             dto.setMiembroId(usuario.getMiembro().getId());
             dto.setName(usuario.getMiembro().getNombre());
             dto.setApellidos(usuario.getMiembro().getApellido());
@@ -317,24 +363,10 @@ public class UsuarioImpl implements IUsuario {
                 dto.setRoles(rolesDtos);
             }
         } else {
+            // Usuario sin miembro y sin marca de admin: cuenta sin roles ni privilegios.
             dto.setUriFoto(null);
-            dto.setIglesiaNombre("Administración Central");
-            com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
-                    .nombre("Administrador Global")
-                    .nombreRol("ADMIN")
-                    .estado(true)
-                    .build();
-            dto.setRoles(Collections.singleton(adminDto));
-
-            accionDao.findAll().forEach(a -> {
-                AccionDto aDto = modelMapper.map(a, AccionDto.class);
-                aDto.setAuthorityCode(a.getAuthorityCode());
-                if (a.getServicio() != null) {
-                    aDto.setServicioId(a.getServicio().getId());
-                    aDto.setServicioCodigo(a.getServicio().getCodigo());
-                }
-                accionDtos.add(aDto);
-            });
+            dto.setIglesiaNombre(null);
+            dto.setRoles(Collections.emptySet());
         }
 
         dto.setAcciones(accionDtos);

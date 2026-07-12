@@ -30,6 +30,7 @@ public class UsuarioDto {
     private String apellidos;
     private String uriFoto;
     private Boolean estado;
+    private Boolean esAdmin;
     private Long miembroId;
     @NotBlank(message = "El password es obligatorio")
     @Size(min = 6, max = 40, message = "El password debe tener entre 6 y 40 caracteres")

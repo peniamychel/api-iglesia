@@ -17,6 +17,7 @@ import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.entity.ResponsableEvento;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.model.entity.Cargo;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 import java.util.Calendar;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
 public class EventoImpl implements IEvento {
 
     private final EventoDao eventoDao;
@@ -162,7 +164,7 @@ public class EventoImpl implements IEvento {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error al asignar responsable automático: " + e.getMessage());
+            log.warn("Error al asignar responsable automatico: {}", e.getMessage());
         }
 
         EventoDto dto = modelMapper.map(savedEvento, EventoDto.class);

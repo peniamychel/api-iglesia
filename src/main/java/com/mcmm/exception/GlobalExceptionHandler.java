@@ -1,6 +1,7 @@
 package com.mcmm.exception;
 
 import com.mcmm.model.payload.ApiResponseException;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @Autowired
@@ -127,7 +129,7 @@ public class GlobalExceptionHandler {
                 usuario = usuarioDao.findByUsername(username).orElse(null);
             }
         } catch (Exception e) {
-            System.err.println("Error al recuperar usuario para bitacora: " + e.getMessage());
+            log.warn("Error al recuperar usuario para bitacora: {}", e.getMessage());
         }
 
         String ip = "";
@@ -138,7 +140,7 @@ public class GlobalExceptionHandler {
                 ip = servletRequest.getRemoteAddr();
             }
         } catch (Exception e) {
-            System.err.println("Error al recuperar IP para bitacora: " + e.getMessage());
+            log.warn("Error al recuperar IP para bitacora: {}", e.getMessage());
         }
 
         String fullErrorMessage = exception.getMessage();
@@ -157,7 +159,7 @@ public class GlobalExceptionHandler {
             stackTrace
         );
 
-        com.mcmm.model.entity.Bitacora log = com.mcmm.model.entity.Bitacora.builder()
+        com.mcmm.model.entity.Bitacora bitacoraEntry = com.mcmm.model.entity.Bitacora.builder()
                 .usuario(usuario)
                 .username(username)
                 .accion("ERROR_SISTEMA")
@@ -168,9 +170,9 @@ public class GlobalExceptionHandler {
                 .build();
 
         try {
-            bitacoraDao.save(log);
+            bitacoraDao.save(bitacoraEntry);
         } catch (Exception ex) {
-            System.err.println("Error al persistir bitacora de error: " + ex.getMessage());
+            log.warn("Error al persistir bitacora de error: {}", ex.getMessage());
         }
 
         return errorCode;

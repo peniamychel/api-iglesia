@@ -1,6 +1,5 @@
 package com.mcmm.service.impl;
 
-//import com.example.demo.service.FileStorageService;
 import com.mcmm.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -58,8 +57,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
         String fileNameNative = nameModel + "-" + UUID.randomUUID() + fileExtension;
-        // Build directory path safely
-        Path directory = this.fileStorageLocation.resolve(nameDir).normalize();
+        // Build directory path safely, asegurando que no escape del directorio raiz
+        Path directory = resolveSafely(nameDir);
         // Ensure directory exists (it should have been created, but guard just in case)
         Files.createDirectories(directory);
         Path targetLocation = directory.resolve(fileNameNative);
@@ -69,12 +68,27 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public void deleteFile(String fileName) throws IOException {
-        Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+        Path filePath = resolveSafely(fileName);
         Files.deleteIfExists(filePath);
     }
 
     @Override
     public Path getFilePath(String fileName) {
-        return this.fileStorageLocation.resolve(fileName).normalize();
+        return resolveSafely(fileName);
+    }
+
+    /**
+     * Resuelve una ruta relativa contra el directorio raiz y verifica que el
+     * resultado siga contenido dentro de el. Evita path traversal ("../..").
+     */
+    private Path resolveSafely(String relativePath) {
+        if (relativePath == null) {
+            throw new IllegalArgumentException("La ruta de archivo no puede ser nula");
+        }
+        Path resolved = this.fileStorageLocation.resolve(relativePath).normalize();
+        if (!resolved.startsWith(this.fileStorageLocation)) {
+            throw new IllegalArgumentException("Ruta de archivo no permitida: " + relativePath);
+        }
+        return resolved;
     }
 }

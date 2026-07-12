@@ -13,6 +13,7 @@ import com.mcmm.model.dao.ParticipacionEventoDao;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.ICertificado;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CertificadoImpl implements ICertificado {
 
     private static final String CERTIFICADOS_DIR = "certificados/";
@@ -161,7 +163,7 @@ public class CertificadoImpl implements ICertificado {
                     fileStorageService.deleteFile("plantillas/" + plantilla.getUriFirma());
                 }
             } catch (Exception e) {
-                System.err.println("Error al eliminar imágenes de plantilla: " + e.getMessage());
+                log.warn("Error al eliminar imagenes de plantilla: {}", e.getMessage());
             }
             plantillaCertificadoDao.delete(plantilla);
         }

@@ -38,14 +38,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        if (usuario.getMiembro() == null) {
+        if (Boolean.TRUE.equals(usuario.getEsAdmin())) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
             accionDao.findAll().forEach(a -> {
                 if (a.getAuthorityCode() != null) {
                     authorities.add(new SimpleGrantedAuthority(a.getAuthorityCode()));
                 }
             });
-        } else {
+        } else if (usuario.getMiembro() != null) {
             Date now = new Date();
             if (usuario.getMiembro().getCargos() != null) {
                 usuario.getMiembro().getCargos().forEach(cargo -> {
@@ -69,10 +69,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             }
         }
 
+        boolean enabled = Boolean.TRUE.equals(usuario.getEstado());
+
         return new User(
                 usuario.getUsername(),
                 usuario.getPassword(),
-                true,
+                enabled,
                 true,
                 true,
                 true,

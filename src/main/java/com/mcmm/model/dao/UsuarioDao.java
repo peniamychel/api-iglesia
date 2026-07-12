@@ -6,10 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UsuarioDao extends JpaRepository<Usuario, Long> {
+
+    // Usuarios cuyo flag esAdmin aun no fue inicializado (backfill de migracion).
+    List<Usuario> findByEsAdminIsNull();
 
     @Query("SELECT u FROM Usuario u " +
            "LEFT JOIN FETCH u.miembro m " +

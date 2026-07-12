@@ -48,6 +48,11 @@ public class Usuario {
 
     private Boolean estado;
 
+    // Marca explicita de Administrador Global. El privilegio NO debe inferirse de
+    // la ausencia de miembro vinculado (eso era una fragilidad de seguridad).
+    @Column(name = "es_admin")
+    private Boolean esAdmin;
+
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "miembro_id", nullable = true)
     private Miembro miembro;
@@ -61,11 +66,8 @@ public class Usuario {
         if (estado == null) {
             estado = true;
         }
+        if (esAdmin == null) {
+            esAdmin = false;
+        }
     }
 }
-
-// @ManyToMany(fetch = FetchType.EAGER)
-// @JoinTable(name = "usuario_rol",
-// joinColumns = @JoinColumn(name = "usuario_id"),
-// inverseJoinColumns = @JoinColumn(name = "rol_id"))
-// private Set<Rol> roles;
