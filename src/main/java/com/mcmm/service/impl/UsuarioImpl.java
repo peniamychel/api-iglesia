@@ -60,8 +60,14 @@ public class UsuarioImpl implements IUsuario {
     @Override
     @Transactional(readOnly = true)
     public List<UsuarioDtoRes> findAll() {
-        return StreamSupport.stream(usuarioDao.findAll().spliterator(), false)
-                .map(this::buildDtoWithPhotoUrl)
+        List<Usuario> usuarios = StreamSupport.stream(usuarioDao.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+        // El catalogo de acciones es el mismo para todos los admins: se carga UNA sola
+        // vez (si hace falta) en lugar de una vez por cada usuario admin del listado.
+        boolean hayAdmin = usuarios.stream().anyMatch(u -> Boolean.TRUE.equals(u.getEsAdmin()));
+        List<AccionDto> catalogoAcciones = hayAdmin ? mapCatalogoAcciones() : Collections.emptyList();
+        return usuarios.stream()
+                .map(u -> buildDtoWithPhotoUrl(u, catalogoAcciones))
                 .collect(Collectors.toList());
     }
 
@@ -290,9 +296,18 @@ public class UsuarioImpl implements IUsuario {
     }
 
     private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
+        return buildDtoWithPhotoUrl(usuario, null);
+    }
+
+    /**
+     * @param catalogoAccionesPrecargado catalogo de acciones ya mapeado para reusar entre
+     *                                    varios usuarios (ver findAll). Si es null, se carga
+     *                                    bajo demanda (uso puntual: findById/findByUsername).
+     */
+    private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario, List<AccionDto> catalogoAccionesPrecargado) {
         UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
         Set<AccionDto> accionDtos = new HashSet<>();
-        
+
         if (Boolean.TRUE.equals(usuario.getEsAdmin())) {
             dto.setUriFoto(null);
             dto.setIglesiaNombre("Administración Central");
@@ -303,15 +318,7 @@ public class UsuarioImpl implements IUsuario {
                     .build();
             dto.setRoles(Collections.singleton(adminDto));
 
-            accionDao.findAll().forEach(a -> {
-                AccionDto aDto = modelMapper.map(a, AccionDto.class);
-                aDto.setAuthorityCode(a.getAuthorityCode());
-                if (a.getServicio() != null) {
-                    aDto.setServicioId(a.getServicio().getId());
-                    aDto.setServicioCodigo(a.getServicio().getCodigo());
-                }
-                accionDtos.add(aDto);
-            });
+            accionDtos.addAll(catalogoAccionesPrecargado != null ? catalogoAccionesPrecargado : mapCatalogoAcciones());
         } else if (usuario.getMiembro() != null) {
             dto.setMiembroId(usuario.getMiembro().getId());
             dto.setName(usuario.getMiembro().getNombre());
@@ -371,5 +378,19 @@ public class UsuarioImpl implements IUsuario {
 
         dto.setAcciones(accionDtos);
         return dto;
+    }
+
+    private List<AccionDto> mapCatalogoAcciones() {
+        List<AccionDto> result = new ArrayList<>();
+        accionDao.findAll().forEach(a -> {
+            AccionDto aDto = modelMapper.map(a, AccionDto.class);
+            aDto.setAuthorityCode(a.getAuthorityCode());
+            if (a.getServicio() != null) {
+                aDto.setServicioId(a.getServicio().getId());
+                aDto.setServicioCodigo(a.getServicio().getCodigo());
+            }
+            result.add(aDto);
+        });
+        return result;
     }
 }

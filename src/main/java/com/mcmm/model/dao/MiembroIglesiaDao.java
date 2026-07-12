@@ -40,4 +40,10 @@ public interface MiembroIglesiaDao extends JpaRepository<MiembroIglesia, Long> {
 
     @Query("SELECT COUNT(mi) > 0 FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estadoTraspaso = 'PENDIENTE'")
     boolean existsByMiembroIdAndEstadoTraspasoPending(@Param("miembroId") Long miembroId);
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi WHERE (mi.iglesia.id = :iglesiaId OR mi.iglesiaDestino.id = :iglesiaId) AND mi.estadoTraspaso = 'PENDIENTE'")
+    long countPendingTransfersForChurch(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi WHERE mi.estadoTraspaso = 'PENDIENTE'")
+    long countAllPendingTransfers();
 }

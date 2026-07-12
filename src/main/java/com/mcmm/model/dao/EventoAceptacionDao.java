@@ -2,6 +2,7 @@ package com.mcmm.model.dao;
 
 import com.mcmm.model.entity.EventoAceptacion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
@@ -10,4 +11,8 @@ import java.util.Optional;
 public interface EventoAceptacionDao extends JpaRepository<EventoAceptacion, Long> {
     Optional<EventoAceptacion> findByEventoIdAndIglesiaId(Long eventoId, Long iglesiaId);
     List<EventoAceptacion> findByIglesiaId(Long iglesiaId);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT ea.evento.id FROM EventoAceptacion ea WHERE ea.iglesiaId = :iglesiaId AND ea.evento.id IN :eventoIds")
+    List<Long> findEventoIdsDecididos(@Param("iglesiaId") Long iglesiaId, @Param("eventoIds") List<Long> eventoIds);
 }

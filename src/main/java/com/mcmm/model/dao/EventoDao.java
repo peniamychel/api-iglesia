@@ -25,4 +25,9 @@ public interface EventoDao extends JpaRepository<Evento, Long> {
     @Transactional
     @Query("UPDATE Evento e SET e.estado = NOT e.estado, e.updatedAt = CURRENT_TIMESTAMP WHERE e.id = :id")
     void toggleEstado(@Param("id") Long id);
+
+    // Solo los IDs de eventos con inscripciones habilitadas e invitacion a la iglesia dada.
+    // Liviano a proposito: se usa para contar notificaciones pendientes, no para listar.
+    @Query(value = "SELECT e.id FROM evento e WHERE e.habilitar_inscripciones = true AND FIND_IN_SET(:iglesiaId, e.iglesias_invitadas) > 0", nativeQuery = true)
+    List<Long> findIdsEventosHabilitadosParaIglesia(@Param("iglesiaId") Long iglesiaId);
 }
