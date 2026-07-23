@@ -62,6 +62,9 @@ public class Evento {
     @Column(name = "iglesias_invitadas", length = 500)
     private String iglesiasInvitadas;
 
+    @Column(name = "archivado")
+    private Boolean archivado;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
@@ -73,6 +76,9 @@ public class Evento {
         updatedAt = LocalDateTime.now();
         if (estado == null) {
             estado = true; // Establecer estado en true si no se ha asignado
+        }
+        if (archivado == null) {
+            archivado = false;
         }
     }
 

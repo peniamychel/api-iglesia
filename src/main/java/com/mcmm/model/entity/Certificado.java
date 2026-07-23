@@ -29,10 +29,6 @@ public class Certificado {
     @JoinColumn(name = "plantilla_certificado_id")
     private PlantillaCertificado plantillaCertificado;
 
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = TipoCertificado.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "tipo_certificado_id")
-    private TipoCertificado tipoCertificado;
-
     @Column(name = "motivo_certificado", length = 254)
     private String motivoCertificado;
 

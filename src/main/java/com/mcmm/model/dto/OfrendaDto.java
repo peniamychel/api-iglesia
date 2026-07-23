@@ -1,8 +1,9 @@
 package com.mcmm.model.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -21,11 +22,11 @@ public class OfrendaDto {
     private String iglesiaNombre;
 
     @NotBlank(message = "El tipo de movimiento es obligatorio.")
-    @Size(max = 50, message = "El tipo de movimiento no debe exceder 50 caracteres.")
+    @Pattern(regexp = "INGRESO|EGRESO", message = "El tipo de movimiento debe ser INGRESO o EGRESO.")
     private String tipoMovimiento;
 
     @NotNull(message = "Requiere el monto.")
-    @Min(value = 0, message = "El monto no puede ser negativo.")
+    @DecimalMin(value = "0.01", message = "El monto debe ser mayor que cero.")
     private Double monto;
 
     @NotNull(message = "Requiere la fecha de recaudación.")
@@ -38,4 +39,9 @@ public class OfrendaDto {
     private String usuarioTesoreroUsername;
 
     private LocalDateTime fechaRegistro;
+
+    // Campos de solo respuesta (auditoria / estado)
+    private Boolean estado;
+    private LocalDateTime updatedAt;
+    private String usuarioModificacionUsername;
 }

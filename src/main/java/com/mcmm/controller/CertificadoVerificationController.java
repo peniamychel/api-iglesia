@@ -44,13 +44,10 @@ public class CertificadoVerificationController {
             String iglesiaNombre = part.getEvento() != null && part.getEvento().getIglesia() != null 
                     ? part.getEvento().getIglesia().getNombre() 
                     : "N/A";
-            String eventoNombre = part.getEvento() != null 
-                    ? part.getEvento().getNombre() 
+            String eventoNombre = part.getEvento() != null
+                    ? part.getEvento().getNombre()
                     : "N/A";
-            String tipoCertificado = part.getCertificado() != null && part.getCertificado().getTipoCertificado() != null 
-                    ? part.getCertificado().getTipoCertificado().getNombre() 
-                    : "Certificado de Participación";
-            String motivo = part.getCertificado() != null 
+            String motivo = part.getCertificado() != null
                     ? part.getCertificado().getMotivoCertificado() 
                     : (part.getEvento() != null ? "Participación en el evento: " + part.getEvento().getNombre() : "N/A");
 
@@ -76,10 +73,6 @@ public class CertificadoVerificationController {
                     "<div class=\"detail-row\">" +
                     "    <span class=\"detail-label\">Evento</span>" +
                     "    <span class=\"detail-value\">" + eventoNombre + "</span>" +
-                    "</div>" +
-                    "<div class=\"detail-row\">" +
-                    "    <span class=\"detail-label\">Tipo de Certificación</span>" +
-                    "    <span class=\"detail-value\">" + tipoCertificado + "</span>" +
                     "</div>" +
                     "<div class=\"detail-row\">" +
                     "    <span class=\"detail-label\">Detalle / Motivo</span>" +

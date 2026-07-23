@@ -4,7 +4,6 @@ import com.mcmm.model.dao.IglesiaDao;
 import com.mcmm.model.dao.OfrendaDao;
 import com.mcmm.model.dao.UsuarioDao;
 import com.mcmm.model.dto.OfrendaDto;
-import com.mcmm.model.entity.Iglesia;
 import com.mcmm.model.entity.Ofrenda;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.IOfrenda;
@@ -59,6 +58,9 @@ public class OfrendaImpl implements IOfrenda {
             dto.setUsuarioTesoreroId(ofrenda.getUsuarioTesorero().getId());
             dto.setUsuarioTesoreroUsername(ofrenda.getUsuarioTesorero().getUsername());
         }
+        if (ofrenda.getUsuarioModificacion() != null) {
+            dto.setUsuarioModificacionUsername(ofrenda.getUsuarioModificacion().getUsername());
+        }
         return dto;
     }
 
@@ -70,7 +72,7 @@ public class OfrendaImpl implements IOfrenda {
         if (iglesiaId != null) {
             ofrendas = ofrendaDao.findByIglesiaId(iglesiaId);
         } else {
-            ofrendas = ofrendaDao.findAll();
+            ofrendas = ofrendaDao.findAllActive();
         }
         return ofrendas.stream().map(this::convertToDto).collect(Collectors.toList());
     }
@@ -136,18 +138,22 @@ public class OfrendaImpl implements IOfrenda {
     }
 
     @Override
-    public OfrendaDto update(OfrendaDto ofrendaDto) {
+    public OfrendaDto update(OfrendaDto ofrendaDto, Long usuarioId) {
         Ofrenda existing = ofrendaDao.findById(ofrendaDto.getId())
                 .orElseThrow(() -> new RuntimeException("Ofrenda no encontrada"));
-        
+
+        // Solo se editan monto, fecha y concepto. La iglesia y el tipo de movimiento
+        // son inmutables tras el registro (no se toman del DTO del cliente).
         existing.setMonto(ofrendaDto.getMonto());
-        existing.setTipoMovimiento(ofrendaDto.getTipoMovimiento());
         existing.setFechaRecaudacion(ofrendaDto.getFechaRecaudacion());
         existing.setConceptoDetalle(ofrendaDto.getConceptoDetalle());
 
-        if (ofrendaDto.getIglesiaId() != null) {
-            Iglesia iglesia = iglesiaDao.findById(ofrendaDto.getIglesiaId()).orElse(null);
-            existing.setIglesia(iglesia);
+        // Auditoria: quien y cuando se realizo la edicion. Se fija explicitamente
+        // (ademas de @PreUpdate) para que la respuesta inmediata ya lo refleje,
+        // en vez de esperar al flush/commit de la transaccion.
+        existing.setUpdatedAt(java.time.LocalDateTime.now());
+        if (usuarioId != null) {
+            existing.setUsuarioModificacion(usuarioDao.findById(usuarioId).orElse(null));
         }
 
         Ofrenda saved = ofrendaDao.save(existing);
@@ -156,7 +162,11 @@ public class OfrendaImpl implements IOfrenda {
 
     @Override
     public void delete(Long id) {
-        ofrendaDao.deleteById(id);
+        // Borrado logico: se conserva el registro con estado=false.
+        Ofrenda existing = ofrendaDao.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ofrenda no encontrada"));
+        existing.setEstado(false);
+        ofrendaDao.save(existing);
     }
 
     @Override

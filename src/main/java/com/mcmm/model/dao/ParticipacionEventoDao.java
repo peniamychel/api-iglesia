@@ -40,9 +40,11 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
     @Query("SELECT COUNT(p) > 0 FROM ParticipacionEvento p WHERE p.evento.id = :eventoId AND p.miembro.id = :miembroId")
     boolean existsByEventoIdAndMiembroId(@Param("eventoId") Long eventoId, @Param("miembroId") Long miembroId);
 
+    /** True si el evento tiene al menos un participante/miembro registrado (guard de borrado). */
+    boolean existsByEventoId(Long eventoId);
+
     @Query("SELECT p FROM ParticipacionEvento p " +
            "LEFT JOIN FETCH p.certificado c " +
-           "LEFT JOIN FETCH c.tipoCertificado " +
            "JOIN FETCH p.miembro " +
            "JOIN FETCH p.evento e " +
            "JOIN FETCH e.iglesia " +

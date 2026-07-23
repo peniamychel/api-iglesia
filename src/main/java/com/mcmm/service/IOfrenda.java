@@ -12,7 +12,7 @@ public interface IOfrenda {
     List<OfrendaDto> findByPeriod(Date start, Date end);
     OfrendaDto findById(Long id);
     OfrendaDto create(OfrendaDto ofrendaDto, Long usuarioId);
-    OfrendaDto update(OfrendaDto ofrendaDto);
+    OfrendaDto update(OfrendaDto ofrendaDto, Long usuarioId);
     void delete(Long id);
     Double getSumByIglesiaAndTipoAndPeriod(Long iglesiaId, String tipo, Date start, Date end);
     Double getSumByTipoAndPeriod(String tipo, Date start, Date end);

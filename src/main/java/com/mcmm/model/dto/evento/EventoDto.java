@@ -47,4 +47,11 @@ public class EventoDto {
     private String iglesiasInvitadas;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /** Entrada: si es true, al crear/editar el evento se genera automáticamente su certificado. */
+    private Boolean generaCertificado;
+    /** Solo respuesta: estado de archivado del evento. */
+    private Boolean archivado;
+    /** Solo respuesta: indica si el evento ya tiene un certificado asociado. */
+    private Boolean tieneCertificado;
 }

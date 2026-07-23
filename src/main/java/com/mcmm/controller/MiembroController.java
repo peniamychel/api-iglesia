@@ -1,6 +1,7 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.dto.MiembroDto.MiembroImportResultDto;
 import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IMiembro;
 import com.mcmm.service.IBitacora;
@@ -272,32 +273,55 @@ public class MiembroController {
         return null;
     }
 
+    /** True si el usuario autenticado tiene el rol ADMIN (gestiona todas las iglesias). */
+    private boolean isCurrentUserAdmin() {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
     @PostMapping("/importar")
     @PreAuthorize("hasAuthority('MIEMBROS:CREAR') OR hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Integer>> importExcel(
+    public ResponseEntity<ApiResponse<MiembroImportResultDto>> importExcel(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "iglesiaId", required = false) Long paramIglesiaId) {
 
-        Long iglesiaId = getCurrentIglesiaId();
-        if (iglesiaId == null) {
-            iglesiaId = paramIglesiaId;
-        }
-
-        if (iglesiaId == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Integer>builder()
-                    .message("Debe especificar la iglesia de destino para los miembros.")
-                    .datos(0)
-                    .nombreModelo("MiembroImport")
-                    .build());
-        }
-
         try {
-            int imported = miembroService.importFromExcel(file, iglesiaId);
+            MiembroImportResultDto result;
+
+            if (isCurrentUserAdmin()) {
+                // Admin: la iglesia de cada miembro viene por la columna "Iglesia" de la plantilla.
+                result = miembroService.importFromExcelPorNombreIglesia(file);
+            } else {
+                // Pastor/obrero: todos los miembros van a su iglesia (tomada del token).
+                Long iglesiaId = getCurrentIglesiaId();
+                if (iglesiaId == null) {
+                    iglesiaId = paramIglesiaId;
+                }
+                if (iglesiaId == null) {
+                    return ResponseEntity.badRequest().body(ApiResponse.<MiembroImportResultDto>builder()
+                            .message("Debe especificar la iglesia de destino para los miembros.")
+                            .datos(null)
+                            .nombreModelo("MiembroImport")
+                            .build());
+                }
+                result = miembroService.importFromExcel(file, iglesiaId);
+            }
+
+            String message = "Importación completada. Importados: " + result.getImported();
+            if (result.getOmitidos() > 0) {
+                message += " · No importados: " + result.getOmitidos();
+            }
+
             bitacoraService.registrarAccion("MIEMBRO", "IMPORTACION",
-                    "Importación masiva exitosa: " + imported + " miembros cargados desde archivo Excel.");
-            return ResponseEntity.ok(ApiResponse.<Integer>builder()
-                    .message("Importación masiva completada con éxito. Total importados: " + imported)
-                    .datos(imported)
+                    "Importación masiva: " + result.getImported() + " miembros cargados"
+                            + (result.getOmitidos() > 0 ? ", " + result.getOmitidos() + " omitidos" : "")
+                            + " desde archivo Excel.");
+            return ResponseEntity.ok(ApiResponse.<MiembroImportResultDto>builder()
+                    .message(message)
+                    .datos(result)
                     .nombreModelo("MiembroImport")
                     .build());
         } catch (IOException e) {
@@ -309,7 +333,9 @@ public class MiembroController {
     @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadTemplate() {
         try {
-            byte[] data = miembroService.generateExcelTemplate();
+            // El admin recibe una plantilla con columna "Iglesia" (una fila puede ir a
+            // cualquier iglesia); pastor/obrero recibe la plantilla base (iglesia del token).
+            byte[] data = miembroService.generateExcelTemplate(isCurrentUserAdmin());
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType
                     .parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));

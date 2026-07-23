@@ -45,6 +45,17 @@ public class EventoController {
                 .build());
     }
 
+    @GetMapping("/archivados")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<EventoDto>>> findArchivados() {
+        List<EventoDto> eventos = eventoService.findArchivados();
+        return ResponseEntity.ok(ApiResponse.<List<EventoDto>>builder()
+                .message("Listado de eventos archivados")
+                .datos(eventos)
+                .nombreModelo("Evento")
+                .build());
+    }
+
     @GetMapping("/showbyid/{id}")
     @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> showById(@PathVariable Long id) {
@@ -88,6 +99,30 @@ public class EventoController {
         bitacoraService.registrarAccion("EVENTO", "MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del evento actualizado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PutMapping("/archivar/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> archivar(@PathVariable Long id) {
+        eventoService.archivar(id);
+        bitacoraService.registrarAccion("EVENTO", "ARCHIVAR", "Archivó el evento ID: " + id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Evento archivado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PutMapping("/desarchivar/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> desarchivar(@PathVariable Long id) {
+        eventoService.desarchivar(id);
+        bitacoraService.registrarAccion("EVENTO", "DESARCHIVAR", "Desarchivó el evento ID: " + id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Evento desarchivado exitosamente.")
                 .datos(null)
                 .nombreModelo("Evento")
                 .build());

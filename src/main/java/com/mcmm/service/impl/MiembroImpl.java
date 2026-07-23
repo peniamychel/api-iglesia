@@ -3,6 +3,8 @@ package com.mcmm.service.impl;
 import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dao.MiembroDao;
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.dto.MiembroDto.MiembroImportResultDto;
+import com.mcmm.model.dto.MiembroDto.MiembroImportDetalleDto;
 import com.mcmm.model.entity.Miembro;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IMiembro;
@@ -32,6 +34,9 @@ import java.util.List;
 public class MiembroImpl implements IMiembro {
 
     private static final String MIEMBROS_DIR = "miembros/";
+
+    /** Formatos de fecha aceptados al importar celdas de texto en la plantilla. */
+    private static final String[] FORMATOS_FECHA = { "yyyy-MM-dd", "dd/MM/yyyy" };
 
     private final ModelMapper modelMapper;
     private final MiembroDao miembroDao;
@@ -266,10 +271,12 @@ public class MiembroImpl implements IMiembro {
 
     @Override
     @Transactional
-    public int importFromExcel(MultipartFile file, Long iglesiaId) throws IOException {
-        int count = 0;
+    public MiembroImportResultDto importFromExcel(MultipartFile file, Long iglesiaId) throws IOException {
         Iglesia iglesia = iglesiaDao.findById(iglesiaId)
                 .orElseThrow(() -> new NotFoundExceptionResource("Iglesia", "id", iglesiaId));
+
+        List<MiembroImportDetalleDto> importados = new ArrayList<>();
+        List<MiembroImportDetalleDto> errores = new ArrayList<>();
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -278,119 +285,298 @@ public class MiembroImpl implements IMiembro {
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue;
 
-                String ci = formatter.formatCellValue(row.getCell(0)).trim();
-                if (ci.isEmpty()) continue;
+                FilaParse fp = parseFila(row, formatter);
+                if (fp.vacia) continue;
 
-                if (miembroDao.findByCi(ci) != null) {
+                int fila = row.getRowNum() + 1;
+                if (fp.motivo != null) {
+                    errores.add(detalle(fila, fp, iglesia.getNombre(), fp.motivo));
                     continue;
                 }
 
-                String nombre = formatter.formatCellValue(row.getCell(1)).trim();
-                String apellido = formatter.formatCellValue(row.getCell(2)).trim();
-                if (nombre.isEmpty() || apellido.isEmpty()) continue;
-
-                Miembro miembro = new Miembro();
-                miembro.setCi(ci);
-                miembro.setNombre(nombre);
-                miembro.setApellido(apellido);
-                
-                try {
-                    Cell cellNac = row.getCell(3);
-                    if (cellNac != null) {
-                        if (cellNac.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellNac)) {
-                            miembro.setFechaNac(cellNac.getDateCellValue());
-                        } else {
-                            String cellVal = formatter.formatCellValue(cellNac).trim();
-                            if (!cellVal.isEmpty()) {
-                                miembro.setFechaNac(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(cellVal));
-                            }
-                        }
-                    }
-                } catch (Exception e) {}
-
-                miembro.setCelular(formatter.formatCellValue(row.getCell(4)).trim());
-                miembro.setSexo(formatter.formatCellValue(row.getCell(5)).trim());
-                miembro.setDireccion(formatter.formatCellValue(row.getCell(6)).trim());
-
-                try {
-                    Cell cellConv = row.getCell(7);
-                    if (cellConv != null) {
-                        if (cellConv.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellConv)) {
-                            miembro.setFechaConvercion(cellConv.getDateCellValue());
-                        } else {
-                            String cellVal = formatter.formatCellValue(cellConv).trim();
-                            if (!cellVal.isEmpty()) {
-                                miembro.setFechaConvercion(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(cellVal));
-                            }
-                        }
-                    }
-                } catch (Exception e) {}
-
-                miembro.setLugarConvercion(formatter.formatCellValue(row.getCell(8)).trim());
-                miembro.setInterventores(formatter.formatCellValue(row.getCell(9)).trim());
-                miembro.setDetalles(formatter.formatCellValue(row.getCell(10)).trim());
-                miembro.setEstado(true);
-
-                Miembro savedMiembro = miembroDao.save(miembro);
-
-                MiembroIglesia mi = new MiembroIglesia();
-                mi.setMiembro(savedMiembro);
-                mi.setIglesia(iglesia);
-                mi.setFecha(new Date());
-                mi.setEstado(true);
-                miembroIglesiaDao.save(mi);
-
-                count++;
+                Miembro savedMiembro = miembroDao.save(fp.miembro);
+                vincularMiembroIglesia(savedMiembro, iglesia);
+                importados.add(detalle(fila, fp, iglesia.getNombre(), null));
             }
         }
-        return count;
+        return construirResultado(importados, errores);
+    }
+
+    /**
+     * Carga masiva del administrador: cada fila indica su iglesia por nombre en la
+     * columna "Iglesia" (última columna de la plantilla del admin). Las filas cuya
+     * iglesia esté vacía o no coincida con una iglesia activa se rechazan y se detallan.
+     */
+    @Override
+    @Transactional
+    public MiembroImportResultDto importFromExcelPorNombreIglesia(MultipartFile file) throws IOException {
+        // Índice de iglesias activas por nombre normalizado (trim + minúsculas) para
+        // una coincidencia case-insensitive sin ejecutar N consultas.
+        java.util.Map<String, Iglesia> iglesiasPorNombre = new java.util.HashMap<>();
+        for (Iglesia ig : iglesiaDao.findByEstadoTrue()) {
+            if (ig.getNombre() != null) {
+                iglesiasPorNombre.put(ig.getNombre().trim().toLowerCase(), ig);
+            }
+        }
+
+        List<MiembroImportDetalleDto> importados = new ArrayList<>();
+        List<MiembroImportDetalleDto> errores = new ArrayList<>();
+
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue;
+
+                // La columna Iglesia es la 11 (tras las 11 columnas base 0-10).
+                String nombreIglesia = formatter.formatCellValue(row.getCell(11)).trim();
+                FilaParse fp = parseFila(row, formatter);
+
+                // Fila totalmente vacía (sin datos de miembro ni iglesia): se ignora.
+                if (fp.vacia && nombreIglesia.isEmpty()) continue;
+
+                int fila = row.getRowNum() + 1;
+                if (fp.vacia) {
+                    errores.add(detalle(fila, fp, nombreIglesia, "Faltan datos del miembro"));
+                    continue;
+                }
+                if (fp.motivo != null) {
+                    errores.add(detalle(fila, fp, nombreIglesia, fp.motivo));
+                    continue;
+                }
+
+                Iglesia iglesia = nombreIglesia.isEmpty() ? null
+                        : iglesiasPorNombre.get(nombreIglesia.toLowerCase());
+                if (iglesia == null) {
+                    errores.add(detalle(fila, fp, nombreIglesia, "Iglesia inválida o faltante"));
+                    continue;
+                }
+
+                Miembro savedMiembro = miembroDao.save(fp.miembro);
+                vincularMiembroIglesia(savedMiembro, iglesia);
+                importados.add(detalle(fila, fp, iglesia.getNombre(), null));
+            }
+        }
+        return construirResultado(importados, errores);
+    }
+
+    private MiembroImportResultDto construirResultado(List<MiembroImportDetalleDto> importados,
+                                                      List<MiembroImportDetalleDto> errores) {
+        return MiembroImportResultDto.builder()
+                .imported(importados.size())
+                .omitidos(errores.size())
+                .importados(importados)
+                .errores(errores)
+                .build();
+    }
+
+    private MiembroImportDetalleDto detalle(int fila, FilaParse fp, String iglesia, String motivo) {
+        return MiembroImportDetalleDto.builder()
+                .fila(fila)
+                .ci(fp.ci)
+                .nombre(fp.nombre)
+                .apellido(fp.apellido)
+                .iglesia(iglesia)
+                .motivo(motivo)
+                .build();
+    }
+
+    /**
+     * Resultado de intentar parsear una fila de la plantilla (columnas 0-10):
+     * fila vacía, error con motivo, o un Miembro válido. Datos del CI/nombre se
+     * conservan para poder identificar la fila en el informe.
+     */
+    private static final class FilaParse {
+        final Miembro miembro;   // no nulo solo en éxito
+        final String motivo;     // no nulo solo en error
+        final boolean vacia;
+        final String ci;
+        final String nombre;
+        final String apellido;
+
+        private FilaParse(Miembro miembro, String motivo, boolean vacia,
+                          String ci, String nombre, String apellido) {
+            this.miembro = miembro;
+            this.motivo = motivo;
+            this.vacia = vacia;
+            this.ci = ci;
+            this.nombre = nombre;
+            this.apellido = apellido;
+        }
+
+        static FilaParse ok(Miembro m, String ci, String nombre, String apellido) {
+            return new FilaParse(m, null, false, ci, nombre, apellido);
+        }
+        static FilaParse error(String motivo, String ci, String nombre, String apellido) {
+            return new FilaParse(null, motivo, false, ci, nombre, apellido);
+        }
+        static FilaParse vacia() {
+            return new FilaParse(null, null, true, "", "", "");
+        }
+    }
+
+    /**
+     * Valida y construye un Miembro a partir de una fila (columnas 0-10), compartido
+     * por ambas rutas de importación. Distingue fila vacía, error con motivo, o éxito.
+     */
+    private FilaParse parseFila(Row row, DataFormatter formatter) {
+        String ci = formatter.formatCellValue(row.getCell(0)).trim();
+        String nombre = formatter.formatCellValue(row.getCell(1)).trim();
+        String apellido = formatter.formatCellValue(row.getCell(2)).trim();
+
+        if (ci.isEmpty() && nombre.isEmpty() && apellido.isEmpty()) {
+            return FilaParse.vacia();
+        }
+        if (ci.isEmpty()) {
+            return FilaParse.error("Falta el CI", ci, nombre, apellido);
+        }
+        if (miembroDao.findByCi(ci) != null) {
+            return FilaParse.error("CI ya registrado", ci, nombre, apellido);
+        }
+        if (nombre.isEmpty() || apellido.isEmpty()) {
+            return FilaParse.error("Falta nombre o apellido", ci, nombre, apellido);
+        }
+
+        Miembro miembro = new Miembro();
+        miembro.setCi(ci);
+        miembro.setNombre(nombre);
+        miembro.setApellido(apellido);
+        miembro.setFechaNac(parseFechaCelda(row.getCell(3), formatter));
+        miembro.setCelular(formatter.formatCellValue(row.getCell(4)).trim());
+        miembro.setSexo(normalizarSexo(formatter.formatCellValue(row.getCell(5))));
+        miembro.setDireccion(formatter.formatCellValue(row.getCell(6)).trim());
+        miembro.setFechaConvercion(parseFechaCelda(row.getCell(7), formatter));
+        miembro.setLugarConvercion(formatter.formatCellValue(row.getCell(8)).trim());
+        miembro.setInterventores(formatter.formatCellValue(row.getCell(9)).trim());
+        miembro.setDetalles(formatter.formatCellValue(row.getCell(10)).trim());
+        miembro.setEstado(true);
+        return FilaParse.ok(miembro, ci, nombre, apellido);
+    }
+
+    /**
+     * Lee una fecha de una celda de la plantilla, tolerante al formato:
+     *  1) Si Excel la guardó como fecha real (numérica con formato de fecha) —el caso
+     *     típico al escribir "1995-04-25" y que Excel la convierta a "25/04/1995"—
+     *     se lee su valor verdadero con getDateCellValue(), sin importar cómo se muestre.
+     *  2) Si quedó como texto, se intentan los formatos aceptados (AAAA-MM-DD y DD/MM/AAAA).
+     * Devuelve {@code null} si la celda está vacía o no coincide con ningún formato,
+     * de modo que una fecha inválida no aborta la importación del miembro.
+     */
+    private Date parseFechaCelda(Cell cell, DataFormatter formatter) {
+        if (cell == null) return null;
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getDateCellValue();
+        }
+        String val = formatter.formatCellValue(cell).trim();
+        if (val.isEmpty()) return null;
+        for (String patron : FORMATOS_FECHA) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(patron);
+                sdf.setLenient(false);
+                return sdf.parse(val);
+            } catch (java.text.ParseException ignored) { }
+        }
+        return null;
+    }
+
+    /**
+     * Normaliza el sexo al estándar que usa el resto del sistema y la BD:
+     * "Hombre" / "Mujer". Acepta abreviaturas (M/F, H) y palabras completas en
+     * distintas capitalizaciones. Si el valor no se reconoce, se conserva tal cual
+     * para no perder el dato.
+     */
+    private String normalizarSexo(String raw) {
+        if (raw == null) return null;
+        String v = raw.trim();
+        if (v.isEmpty()) return v;
+        switch (v.toLowerCase()) {
+            case "m":
+            case "h":
+            case "masculino":
+            case "hombre":
+            case "varon":
+            case "varón":
+                return "Hombre";
+            case "f":
+            case "femenino":
+            case "mujer":
+                return "Mujer";
+            default:
+                return v;
+        }
+    }
+
+    /** Vincula un miembro a una iglesia mediante un registro activo en MiembroIglesia. */
+    private void vincularMiembroIglesia(Miembro miembro, Iglesia iglesia) {
+        MiembroIglesia mi = new MiembroIglesia();
+        mi.setMiembro(miembro);
+        mi.setIglesia(iglesia);
+        mi.setFecha(new Date());
+        mi.setEstado(true);
+        miembroIglesiaDao.save(mi);
     }
 
     @Override
-    public byte[] generateExcelTemplate() throws IOException {
+    public byte[] generateExcelTemplate(boolean includeIglesia) throws IOException {
         try (Workbook workbook = new XSSFWorkbook(); java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Plantilla Miembros");
-            
+
             // Header font and style
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             CellStyle headerStyle = workbook.createCellStyle();
             headerStyle.setFont(headerFont);
-            
-            // Headers
-            Row headerRow = sheet.createRow(0);
-            String[] headers = {
-                "CI", "Nombre", "Apellido", "Fecha Nacimiento (AAAA-MM-DD)", 
-                "Celular", "Sexo (M/F)", "Direccion", 
-                "Fecha Conversion (AAAA-MM-DD)", "Lugar Conversion", 
+
+            // Headers base (columnas 0-10)
+            java.util.List<String> headerList = new java.util.ArrayList<>(java.util.Arrays.asList(
+                "CI", "Nombre", "Apellido", "Fecha Nacimiento (DD/MM/AAAA)",
+                "Celular", "Sexo (M/F)", "Direccion",
+                "Fecha Conversion (DD/MM/AAAA)", "Lugar Conversion",
                 "Interventores", "Detalles"
-            };
-            
+            ));
+            // Columna Iglesia solo para el admin (índice 11): cada miembro se asigna
+            // a su iglesia por nombre exacto.
+            if (includeIglesia) {
+                headerList.add("Iglesia (nombre exacto)");
+            }
+            String[] headers = headerList.toArray(new String[0]);
+
+            Row headerRow = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(headerStyle);
             }
-            
+
             // Sample data row
             Row sampleRow = sheet.createRow(1);
             sampleRow.createCell(0).setCellValue("12345678");
             sampleRow.createCell(1).setCellValue("Juan");
             sampleRow.createCell(2).setCellValue("Pérez");
-            sampleRow.createCell(3).setCellValue("1995-04-25");
+            sampleRow.createCell(3).setCellValue("25/04/1995");
             sampleRow.createCell(4).setCellValue("78945612");
             sampleRow.createCell(5).setCellValue("M");
             sampleRow.createCell(6).setCellValue("Av. Principal #123");
-            sampleRow.createCell(7).setCellValue("2018-09-12");
+            sampleRow.createCell(7).setCellValue("12/09/2018");
             sampleRow.createCell(8).setCellValue("Templo Central");
             sampleRow.createCell(9).setCellValue("Pastor Carlos Gomez");
             sampleRow.createCell(10).setCellValue("Ejemplo de registro");
-            
+            if (includeIglesia) {
+                // Usa el nombre de una iglesia activa real como ejemplo, si existe.
+                String ejemplo = iglesiaDao.findByEstadoTrue().stream()
+                        .map(Iglesia::getNombre)
+                        .filter(java.util.Objects::nonNull)
+                        .findFirst()
+                        .orElse("Nombre exacto de la iglesia");
+                sampleRow.createCell(11).setCellValue(ejemplo);
+            }
+
             // Auto size columns
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
-            
+
             workbook.write(out);
             return out.toByteArray();
         }

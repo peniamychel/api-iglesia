@@ -19,8 +19,6 @@ public class CertificadoDto {
 
     @NotNull(message = "El evento es obligatorio")
     private Long eventoId;
-    @NotNull(message = "El tipo de certificado es obligatorio")
-    private Long tipoCertificadoId;
     @NotNull(message = "La plantilla de certificado es obligatoria")
     private Long plantillaCertificadoId;
 

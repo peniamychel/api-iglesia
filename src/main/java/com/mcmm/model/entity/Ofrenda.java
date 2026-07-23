@@ -40,6 +40,12 @@ public class Ofrenda implements java.io.Serializable {
     @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaRegistro;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "estado")
+    private Boolean estado;
+
     @Column(name = "concepto_detalle", length = 500)
     private String conceptoDetalle;
 
@@ -47,8 +53,21 @@ public class Ofrenda implements java.io.Serializable {
     @JoinColumn(name = "usuario_id")
     private Usuario usuarioTesorero;
 
+    // Quien realizo la ultima edicion (auditoria).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_modificacion_id")
+    private Usuario usuarioModificacion;
+
     @PrePersist
     protected void onCreate() {
         fechaRegistro = LocalDateTime.now();
+        if (estado == null) {
+            estado = true;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

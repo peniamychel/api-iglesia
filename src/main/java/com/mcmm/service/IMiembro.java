@@ -1,6 +1,7 @@
 package com.mcmm.service;
 
 import com.mcmm.model.dto.MiembroDto.MiembroDto;
+import com.mcmm.model.dto.MiembroDto.MiembroImportResultDto;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
@@ -24,7 +25,11 @@ public interface IMiembro {
     void deleteProfilePhoto(Long id);
     List<MiembroDto> findSinIglesia();
     List<MiembroDto> findSinIglesiaParaAsignacion();
-    int importFromExcel(MultipartFile file, Long iglesiaId) throws IOException;
-    byte[] generateExcelTemplate() throws IOException;
+    /** Carga masiva con iglesia fija (pastor/obrero: todos los miembros a su iglesia). */
+    MiembroImportResultDto importFromExcel(MultipartFile file, Long iglesiaId) throws IOException;
+    /** Carga masiva del admin: la iglesia de cada miembro se lee por nombre desde la columna "Iglesia". */
+    MiembroImportResultDto importFromExcelPorNombreIglesia(MultipartFile file) throws IOException;
+    /** Genera la plantilla; si {@code includeIglesia} es true agrega la columna "Iglesia" (uso del admin). */
+    byte[] generateExcelTemplate(boolean includeIglesia) throws IOException;
 }
 

@@ -4,11 +4,9 @@ import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.model.dto.certificado.CertificadoDto;
 import com.mcmm.model.entity.Certificado;
 import com.mcmm.model.entity.Evento;
-import com.mcmm.model.entity.TipoCertificado;
 import com.mcmm.model.dao.CertificadoDao;
 import com.mcmm.model.dao.EventoDao;
 import com.mcmm.model.dao.PlantillaCertificadoRepository;
-import com.mcmm.model.dao.TipoCertificadoDao;
 import com.mcmm.model.dao.ParticipacionEventoDao;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.ICertificado;
@@ -38,7 +36,6 @@ public class CertificadoImpl implements ICertificado {
 
     private final CertificadoDao certificadoDao;
     private final EventoDao eventoDao;
-    private final TipoCertificadoDao tipoCertificadoDao;
     private final PlantillaCertificadoRepository plantillaCertificadoDao;
     private final ParticipacionEventoDao participacionEventoDao;
     private final ModelMapper modelMapper;
@@ -93,10 +90,6 @@ public class CertificadoImpl implements ICertificado {
             Evento evento = eventoDao.findById(certificadoDto.getEventoId()).orElse(null);
             certificado.setEvento(evento);
         }
-        if (certificadoDto.getTipoCertificadoId() != null) {
-            TipoCertificado tipoCertificado = tipoCertificadoDao.findById(certificadoDto.getTipoCertificadoId()).orElse(null);
-            certificado.setTipoCertificado(tipoCertificado);
-        }
         if (certificadoDto.getPlantillaCertificadoId() != null) {
             com.mcmm.model.entity.PlantillaCertificado plantilla = plantillaCertificadoDao.findById(certificadoDto.getPlantillaCertificadoId()).orElse(null);
             certificado.setPlantillaCertificado(plantilla);
@@ -115,10 +108,6 @@ public class CertificadoImpl implements ICertificado {
         if (certificadoDto.getEventoId() != null) {
             Evento evento = eventoDao.findById(certificadoDto.getEventoId()).orElse(null);
             certificado.setEvento(evento);
-        }
-        if (certificadoDto.getTipoCertificadoId() != null) {
-            TipoCertificado tipoCertificado = tipoCertificadoDao.findById(certificadoDto.getTipoCertificadoId()).orElse(null);
-            certificado.setTipoCertificado(tipoCertificado);
         }
         if (certificadoDto.getPlantillaCertificadoId() != null) {
             com.mcmm.model.entity.PlantillaCertificado plantilla = plantillaCertificadoDao.findById(certificadoDto.getPlantillaCertificadoId()).orElse(null);
@@ -220,9 +209,6 @@ public class CertificadoImpl implements ICertificado {
         CertificadoDto dto = modelMapper.map(certificado, CertificadoDto.class);
         if (certificado.getEvento() != null) {
             dto.setEventoId(certificado.getEvento().getId());
-        }
-        if (certificado.getTipoCertificado() != null) {
-            dto.setTipoCertificadoId(certificado.getTipoCertificado().getId());
         }
         if (certificado.getPlantillaCertificado() != null) {
             dto.setPlantillaCertificadoId(certificado.getPlantillaCertificado().getId());

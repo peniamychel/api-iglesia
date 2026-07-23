@@ -79,7 +79,8 @@ public class OfrendaController {
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('TESORERO', 'PASTOR', 'ENCARGADO_IGLESIA')")
     public ResponseEntity<ApiResponse<OfrendaDto>> update(@Valid @RequestBody OfrendaDto ofrendaDto) {
-        OfrendaDto updated = ofrendaService.update(ofrendaDto);
+        Long usuarioId = getCurrentUserId();
+        OfrendaDto updated = ofrendaService.update(ofrendaDto, usuarioId);
         bitacoraService.registrarAccion("OFRENDA", "MODIFICAR", "Actualizó la ofrenda ID: " + updated.getId() + " (" + updated.getTipoMovimiento() + ") - Nuevo Monto: " + updated.getMonto());
         return ResponseEntity.ok(ApiResponse.<OfrendaDto>builder()
                 .message("Ofrenda actualizada exitosamente.")
