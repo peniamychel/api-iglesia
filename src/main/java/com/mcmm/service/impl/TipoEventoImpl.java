@@ -6,11 +6,13 @@ import com.mcmm.model.dao.TipoEventoDao;
 import com.mcmm.service.ITipoEvento;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class TipoEventoImpl implements ITipoEvento {
 
     private final TipoEventoDao tipoEventoDao;
@@ -21,6 +23,7 @@ public class TipoEventoImpl implements ITipoEvento {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TipoEventoDto> findAll() {
         return tipoEventoDao.findAll().stream()
                 .map(tipoEvento -> modelMapper.map(tipoEvento, TipoEventoDto.class))
@@ -28,6 +31,7 @@ public class TipoEventoImpl implements ITipoEvento {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TipoEventoDto findById(Long id) {
         TipoEvento tipoEvento = tipoEventoDao.findById(id).orElse(null);
         if (tipoEvento == null) return null;

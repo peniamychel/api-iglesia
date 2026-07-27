@@ -6,14 +6,20 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
+@ToString
 @Builder
 @Entity
 @Table(name = "usuario")
@@ -42,24 +48,26 @@ public class Usuario {
 
     private Boolean estado;
 
+    // Marca explicita de Administrador Global. El privilegio NO debe inferirse de
+    // la ausencia de miembro vinculado (eso era una fragilidad de seguridad).
+    @Column(name = "es_admin")
+    private Boolean esAdmin;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "miembro_id", nullable = true)
+    private Miembro miembro;
+
     @NotBlank
     @Size(min = 3, max = 100)
     private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER, targetEntity = Rol.class, cascade = CascadeType.PERSIST)
-    @JoinTable(name = "usuario_rol", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "rol_id"))
-    private Set<Rol> roles;
 
     @PrePersist
     protected void onCreate() {
         if (estado == null) {
             estado = true;
         }
+        if (esAdmin == null) {
+            esAdmin = false;
+        }
     }
 }
-
-// @ManyToMany(fetch = FetchType.EAGER)
-// @JoinTable(name = "usuario_rol",
-// joinColumns = @JoinColumn(name = "usuario_id"),
-// inverseJoinColumns = @JoinColumn(name = "rol_id"))
-// private Set<Rol> roles;

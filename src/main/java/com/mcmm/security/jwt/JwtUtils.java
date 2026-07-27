@@ -29,12 +29,31 @@ public class JwtUtils {
     private String timeRefreshExpiration;
 
     public String gerarAccessToken(String username, Collection<? extends GrantedAuthority> authorities) {
+        return gerarAccessToken(username, authorities, null, null, null, null);
+    }
+
+    public String gerarAccessToken(String username, Collection<? extends GrantedAuthority> authorities, Long iglesiaId, Long cargoId, String iglesiaNombre, String cargoNombre) {
         List<String> authorityList = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        return Jwts.builder()
+        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .setSubject(username)
-                .claim("authorities", authorityList)
+                .claim("authorities", authorityList);
+        
+        if (iglesiaId != null) {
+            builder.claim("iglesiaId", iglesiaId);
+        }
+        if (cargoId != null) {
+            builder.claim("cargoId", cargoId);
+        }
+        if (iglesiaNombre != null) {
+            builder.claim("iglesiaNombre", iglesiaNombre);
+        }
+        if (cargoNombre != null) {
+            builder.claim("cargoNombre", cargoNombre);
+        }
+
+        return builder
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(timeExpiration)))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -61,6 +80,30 @@ public class JwtUtils {
             return "refresh".equals(claims.get("type"));
         } catch (Exception e) {
             log.error("Refresh token invalido: ".concat(e.getMessage()));
+            return false;
+        }
+    }
+
+    public String gerarPreAuthToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("type", "pre-auth")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 300000)) // 5 minutos de expiracion
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean isPreAuthTokenValid(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return "pre-auth".equals(claims.get("type"));
+        } catch (Exception e) {
+            log.error("Pre-auth token invalido: ".concat(e.getMessage()));
             return false;
         }
     }

@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/responsable-evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class ResponsableEventoController {
 
     private final IResponsableEvento responsableEventoService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('EVENTOS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> create(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto saved = responsableEventoService.create(responsableEventoDto);
         return new ResponseEntity<>(ApiResponse.<ResponsableEventoDto>builder()
@@ -32,6 +33,7 @@ public class ResponsableEventoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<ResponsableEventoDto>>> findAll() {
         List<ResponsableEventoDto> responsables = responsableEventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<ResponsableEventoDto>>builder()
@@ -42,6 +44,7 @@ public class ResponsableEventoController {
     }
 
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> showById(@PathVariable Long id) {
         ResponsableEventoDto responsable = responsableEventoService.findById(id);
         if (responsable == null) throw new NotFoundExceptionResource("ResponsableEvento", "id", id);
@@ -53,6 +56,7 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ResponsableEventoDto>> update(@Valid @RequestBody ResponsableEventoDto responsableEventoDto) {
         ResponsableEventoDto updated = responsableEventoService.update(responsableEventoDto);
         return ResponseEntity.ok(ApiResponse.<ResponsableEventoDto>builder()
@@ -63,6 +67,7 @@ public class ResponsableEventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         responsableEventoService.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -73,11 +78,23 @@ public class ResponsableEventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         responsableEventoService.estado(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del responsable de evento actualizado exitosamente.")
                 .datos(null)
+                .nombreModelo("ResponsableEvento")
+                .build());
+    }
+
+    @GetMapping("/evento/{eventoId}")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<ResponsableEventoDto>>> findByEventoId(@PathVariable Long eventoId) {
+        List<ResponsableEventoDto> responsables = responsableEventoService.findByEventoId(eventoId);
+        return ResponseEntity.ok(ApiResponse.<List<ResponsableEventoDto>>builder()
+                .message("Listado de responsables del evento")
+                .datos(responsables)
                 .nombreModelo("ResponsableEvento")
                 .build());
     }

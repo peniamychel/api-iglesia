@@ -10,11 +10,16 @@ import com.mcmm.model.dao.CargoDao;
 import com.mcmm.service.IResponsableEvento;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
+@Transactional
 public class ResponsableEventoImpl implements IResponsableEvento {
 
     private final ResponsableEventoDao responsableEventoDao;
@@ -28,9 +33,30 @@ public class ResponsableEventoImpl implements IResponsableEvento {
         this.cargoDao = cargoDao;
     }
 
+    private Long getCurrentIglesiaId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getDetails() instanceof Map) {
+            Map<?, ?> details = (Map<?, ?>) authentication.getDetails();
+            Object iglesiaIdObj = details.get("iglesiaId");
+            if (iglesiaIdObj instanceof Long) {
+                return (Long) iglesiaIdObj;
+            } else if (iglesiaIdObj instanceof Integer) {
+                return ((Integer) iglesiaIdObj).longValue();
+            }
+        }
+        return null;
+    }
+
     @Override
+    @Transactional(readOnly = true)
     public List<ResponsableEventoDto> findAll() {
-        List<ResponsableEvento> responsables = responsableEventoDao.findAll();
+        Long iglesiaId = getCurrentIglesiaId();
+        List<ResponsableEvento> responsables;
+        if (iglesiaId != null) {
+            responsables = responsableEventoDao.findByEventoIglesiaId(iglesiaId);
+        } else {
+            responsables = responsableEventoDao.findAll();
+        }
         return responsables.stream()
                 .map(responsable -> {
                     ResponsableEventoDto dto = modelMapper.map(responsable, ResponsableEventoDto.class);
@@ -46,6 +72,7 @@ public class ResponsableEventoImpl implements IResponsableEvento {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponsableEventoDto findById(Long id) {
         ResponsableEvento responsable = responsableEventoDao.findById(id).orElse(null);
         if (responsable == null) return null;
@@ -101,6 +128,30 @@ public class ResponsableEventoImpl implements IResponsableEvento {
             dto.setCargoId(updatedResponsable.getCargo().getId());
         }
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ResponsableEventoDto> findByEventoId(Long eventoId) {
+        List<ResponsableEvento> responsables = responsableEventoDao.findByEventoIdWithRelations(eventoId);
+        return responsables.stream()
+                .map(responsable -> {
+                    ResponsableEventoDto dto = modelMapper.map(responsable, ResponsableEventoDto.class);
+                    if (responsable.getEvento() != null) {
+                        dto.setEventoId(responsable.getEvento().getId());
+                    }
+                    if (responsable.getCargo() != null) {
+                        dto.setCargoId(responsable.getCargo().getId());
+                        if (responsable.getCargo().getMiembro() != null) {
+                            dto.setNombreCompleto(responsable.getCargo().getMiembro().getNombre() + " " + responsable.getCargo().getMiembro().getApellido());
+                        }
+                        if (responsable.getCargo().getRolCargo() != null) {
+                            dto.setNombreCargo(responsable.getCargo().getRolCargo().getNombre());
+                        }
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

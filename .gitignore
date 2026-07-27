@@ -35,5 +35,16 @@ build/
 ### Antigravity ###
 *~
 
+### Secrets / entorno local ###
+.env
+.env-local
+
+### Backups y artefactos del editor ###
+*.bak
+desktop.ini
+
 ### Archivos locales imagens, videos, etc. ###
 /uploads
+
+### Archivos reservados de Windows ###
+nul

@@ -42,14 +42,37 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             username, null, authorities);
+                    
+                    java.util.Map<String, Object> details = new java.util.HashMap<>();
+                    details.put("iglesiaId", jwtUtils.getClaim(token, claims -> {
+                        Object val = claims.get("iglesiaId");
+                        return val instanceof Number ? ((Number) val).longValue() : null;
+                    }));
+                    details.put("cargoId", jwtUtils.getClaim(token, claims -> {
+                        Object val = claims.get("cargoId");
+                        return val instanceof Number ? ((Number) val).longValue() : null;
+                    }));
+                    details.put("iglesiaNombre", jwtUtils.getClaim(token, claims -> claims.get("iglesiaNombre", String.class)));
+                    details.put("cargoNombre", jwtUtils.getClaim(token, claims -> claims.get("cargoNombre", String.class)));
+                    authenticationToken.setDetails(details);
+
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            log.error("Error en autenticacion JWT: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error de autenticacion");
+
+            // Si el cliente canceló la conexión (ClientAbortException / IOException) o la respuesta ya fue enviada
+            if (response.isCommitted() || e.getClass().getName().contains("ClientAbortException")) {
+                log.debug("Conexión finalizada o respuesta ya enviada: {}", e.getMessage());
+            } else {
+                log.error("Error en autenticacion JWT: {}", e.getMessage());
+                try {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error de autenticacion");
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 }

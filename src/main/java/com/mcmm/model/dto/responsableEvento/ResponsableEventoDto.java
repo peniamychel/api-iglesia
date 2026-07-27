@@ -23,4 +23,7 @@ public class ResponsableEventoDto {
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String nombreCompleto;
+    private String nombreCargo;
 }

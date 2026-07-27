@@ -12,36 +12,38 @@ import java.util.List;
 @Repository
 public interface MiembroIglesiaDao extends JpaRepository<MiembroIglesia, Long> {
 
-    // Iterable<MiembroIglesia> findMiembrosIglesia(@Param("id") Long id);
-
-    // @Query("SELECT m FROM Miembro m JOIN m.miembroIglesia mi JOIN mi.iglesia i
-    // WHERE i.id = :iglesiaId")
-    // Iterable<Miembro> findMiembrosByIglesiaId(@Param("iglesiaId") Long
-    // iglesiaId);
-
-    // @Query("SELECT m FROM Miembro m MiembroIglesia mi, Iglesia i WHERE m.id =
-    // mi.idIglesia ")
-    // Iterable<Miembro> findMiembrosIglesia(@Param("iglesiaId") Long iglesiaId);
-
-    // @Query("SELECT i FROM Iglesia i WHERE i.nombre = :nameIglesia")
-    // Iglesia buscarPorNombreIglesia(@Param("nameIglesia") String nameIglesia);
-
     @Query(value = "SELECT m.* FROM miembro m, miembros_iglesia mi, iglesia i WHERE m.id = mi.miembro AND i.id = mi.iglesia AND i.id = :iglesiaId", nativeQuery = true)
     Iterable<Miembro> findMiembrosIglesia2(@Param("iglesiaId") Long iglesiaId);
 
-    @Query(value = "SELECT m.* " +
-            "FROM miembro m " +
-            "JOIN miembros_iglesia mi ON m.id = mi.id_miembro " +
-            "JOIN iglesia i ON i.id = mi.id_iglesia " +
-            "WHERE i.id = :iglesiaId", nativeQuery = true)
-    Iterable<Miembro> findMiembrosIglesia(@Param("iglesiaId") Long iglesiaId);
+    @Query("SELECT mi.miembro FROM MiembroIglesia mi WHERE mi.iglesia.id = :iglesiaId AND mi.estado = true")
+    List<Miembro> findMiembrosIglesia(@Param("iglesiaId") Long iglesiaId);
 
     boolean findByMiembro(Long id);
 
-    // Iterable<MiembroIglesia> findByIdMiembro(Long id);
+    @Query("SELECT mi FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estado = true")
+    java.util.Optional<MiembroIglesia> findActiveByMiembroId(@Param("miembroId") Long miembroId);
 
-    // Método para llamar al procedimiento almacenado
+    @Query("SELECT mi FROM MiembroIglesia mi WHERE (mi.iglesia.id = :iglesiaId OR mi.iglesiaDestino.id = :iglesiaId) AND mi.estadoTraspaso = 'PENDIENTE'")
+    java.util.List<MiembroIglesia> findPendingTransfersForChurch(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT mi FROM MiembroIglesia mi WHERE mi.estadoTraspaso = 'PENDIENTE'")
+    java.util.List<MiembroIglesia> findAllPendingTransfers();
+
+    @Query("SELECT mi FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId ORDER BY mi.fecha DESC")
+    java.util.List<MiembroIglesia> findHistorialByMiembroId(@Param("miembroId") Long miembroId);
+
     @Query(value = "CALL obtener_iglesias_con_mas_miembros(:limite)", nativeQuery = true)
     List<Object[]> obtenerIglesiasConMasMiembros(@Param("limite") Long limite);
 
+    @Query("SELECT COUNT(mi) > 0 FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estado = true")
+    boolean existsByMiembroIdAndEstadoTrue(@Param("miembroId") Long miembroId);
+
+    @Query("SELECT COUNT(mi) > 0 FROM MiembroIglesia mi WHERE mi.miembro.id = :miembroId AND mi.estadoTraspaso = 'PENDIENTE'")
+    boolean existsByMiembroIdAndEstadoTraspasoPending(@Param("miembroId") Long miembroId);
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi WHERE (mi.iglesia.id = :iglesiaId OR mi.iglesiaDestino.id = :iglesiaId) AND mi.estadoTraspaso = 'PENDIENTE'")
+    long countPendingTransfersForChurch(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi WHERE mi.estadoTraspaso = 'PENDIENTE'")
+    long countAllPendingTransfers();
 }

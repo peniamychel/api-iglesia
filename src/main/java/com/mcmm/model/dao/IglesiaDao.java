@@ -49,12 +49,15 @@ public interface IglesiaDao extends JpaRepository<Iglesia, Long> {
      */
     List<Iglesia> findAllByOrderByCreatedAtDesc();
 
+    @Query("SELECT i FROM Iglesia i ORDER BY COALESCE(i.orden, 999999) ASC, i.createdAt DESC")
+    List<Iglesia> findAllOrderByOrdenAscAndCreatedAtDesc();
+
     /**
      * Busca todas las iglesias activas con todos sus datos.
      * 
      * @return Lista de iglesias activas con todos sus datos.
      */
-    @EntityGraph(attributePaths = { "cargos", "cargos.tipoCargo", "cargos.miembro", "cargos.miembro.persona" })
+    @EntityGraph(attributePaths = { "cargos", "cargos.rolCargo", "cargos.miembro" })
     List<Iglesia> findByEstadoTrue();
 
 }

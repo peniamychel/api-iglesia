@@ -7,13 +7,14 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
-// @Table(name = "iglesia")
+@Entity
 @Table(name = "iglesia", uniqueConstraints = @UniqueConstraint(columnNames = "nombre"))
 public class Iglesia implements java.io.Serializable {
 
@@ -46,6 +47,14 @@ public class Iglesia implements java.io.Serializable {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "uri_foto")
+    private String uriFoto;
+
+    private Double latitud;
+    private Double longitud;
+
+    private Integer orden;
 
     @PrePersist
     protected void onCreate() {

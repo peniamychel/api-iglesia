@@ -22,17 +22,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuario/v1")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR', 'TESORERO')")
 @RequiredArgsConstructor
 public class UsuarioController {
 
     private final IUsuario usuarioService;
+    private final com.mcmm.service.IBitacora bitacoraService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> createUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
         UsuarioDtoRes usuarioCreado = usuarioService.create(usuarioDto);
+        bitacoraService.registrarAccion("USUARIO", "CREAR", "Creó un nuevo usuario: " + usuarioCreado.getUsername() + " (Nombre: " + usuarioCreado.getName() + " " + usuarioCreado.getApellidos() + ")");
         return new ResponseEntity<>(
                 ApiResponse.<UsuarioDtoRes>builder()
                         .message("Nuevo usuario guardado con éxito")
@@ -44,6 +46,7 @@ public class UsuarioController {
 
     @GetMapping("/findall")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UsuarioDtoRes>>> findAll() {
         List<UsuarioDtoRes> usuarioDtosRes = usuarioService.findAll();
         return ResponseEntity.ok(
@@ -56,9 +59,10 @@ public class UsuarioController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         usuarioService.delete(id);
+        bitacoraService.registrarAccion("USUARIO", "ELIMINAR", "Eliminó al usuario con ID: " + id);
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .message("Usuario eliminado exitosamente.")
@@ -69,6 +73,7 @@ public class UsuarioController {
 
     @GetMapping("/showbyid/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('USUARIOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> showById(@PathVariable("id") Long id) {
         UsuarioDtoRes usuarioFiedById = usuarioService.findById(id);
         return ResponseEntity.ok(
@@ -80,24 +85,13 @@ public class UsuarioController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUser(@Valid @RequestBody UsuarioUpdateDto usuarioUpdateDto) {
         UsuarioDtoRes usuarioActualizado = usuarioService.updateUser(usuarioUpdateDto);
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "Actualizó el usuario: " + usuarioActualizado.getUsername() + " (ID: " + usuarioActualizado.getId() + ")");
         return ResponseEntity.ok(
                 ApiResponse.<UsuarioDtoRes>builder()
                         .message("Usuario actualizado exitosamente.")
-                        .datos(usuarioActualizado)
-                        .nombreModelo("Usuario")
-                        .build());
-    }
-
-    @PutMapping("/update-roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO') AND hasAuthority('Gestionar Usuarios')")
-    public ResponseEntity<ApiResponse<UsuarioDtoRes>> updateUserRoles(@RequestBody UsuarioDto usuarioDto) {
-        UsuarioDtoRes usuarioActualizado = usuarioService.updateUserRoles(usuarioDto);
-        return ResponseEntity.ok(
-                ApiResponse.<UsuarioDtoRes>builder()
-                        .message("Roles de usuario actualizados exitosamente.")
                         .datos(usuarioActualizado)
                         .nombreModelo("Usuario")
                         .build());
@@ -110,6 +104,7 @@ public class UsuarioController {
         String currentUsername = authentication.getName();
 
         usuarioService.changePassword(usuarioChangePasswordDto, currentUsername);
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "El usuario " + currentUsername + " cambió su propia contraseña");
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
@@ -123,6 +118,7 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody @Valid UsuarioResetPasswordDto usuarioResetPasswordDto) {
         usuarioService.resetPassword(usuarioResetPasswordDto);
+        bitacoraService.registrarAccion("USUARIO", "MODIFICAR", "Se restableció la contraseña del usuario ID: " + usuarioResetPasswordDto.getId());
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
@@ -133,7 +129,7 @@ public class UsuarioController {
     }
 
     @PostMapping(value = "/{id}/foto", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadProfilePhoto(
             @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
@@ -151,7 +147,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+    @PreAuthorize("hasAuthority('USUARIOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProfilePhoto(@PathVariable Long id) {
         usuarioService.deleteProfilePhoto(id);
         return ResponseEntity.ok(

@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.ToString;
 
 @Data
-//@AllArgsConstructor
-//@NoArgsConstructor
 @ToString
 @Builder
 public class MessageResponseLogin<T> {

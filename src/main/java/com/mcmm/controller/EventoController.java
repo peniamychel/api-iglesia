@@ -16,14 +16,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/evento/v1")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_IGLESIA', 'ENCARGADO_EVENTO', 'PASTOR')")
 public class EventoController {
 
     private final IEvento eventoService;
+    private final com.mcmm.service.IBitacora bitacoraService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('EVENTOS:CREAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> create(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto saved = eventoService.create(eventoDto);
+        bitacoraService.registrarAccion("EVENTO", "CREAR", "Creó el evento: " + saved.getNombre() + " (Fecha: " + saved.getFechaInicio() + ")");
         return new ResponseEntity<>(ApiResponse.<EventoDto>builder()
                 .message("Evento creado exitosamente.")
                 .datos(saved)
@@ -32,6 +35,7 @@ public class EventoController {
     }
 
     @GetMapping("/findall")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<EventoDto>>> findAll() {
         List<EventoDto> eventos = eventoService.findAll();
         return ResponseEntity.ok(ApiResponse.<List<EventoDto>>builder()
@@ -41,7 +45,19 @@ public class EventoController {
                 .build());
     }
 
+    @GetMapping("/archivados")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<EventoDto>>> findArchivados() {
+        List<EventoDto> eventos = eventoService.findArchivados();
+        return ResponseEntity.ok(ApiResponse.<List<EventoDto>>builder()
+                .message("Listado de eventos archivados")
+                .datos(eventos)
+                .nombreModelo("Evento")
+                .build());
+    }
+
     @GetMapping("/showbyid/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:VER') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> showById(@PathVariable Long id) {
         EventoDto evento = eventoService.findById(id);
         if (evento == null) throw new NotFoundExceptionResource("Evento", "id", id);
@@ -53,8 +69,10 @@ public class EventoController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EventoDto>> update(@Valid @RequestBody EventoDto eventoDto) {
         EventoDto updated = eventoService.update(eventoDto);
+        bitacoraService.registrarAccion("EVENTO", "MODIFICAR", "Actualizó el evento ID: " + updated.getId() + " - " + updated.getNombre());
         return ResponseEntity.ok(ApiResponse.<EventoDto>builder()
                 .message("Evento actualizado exitosamente.")
                 .datos(updated)
@@ -63,8 +81,10 @@ public class EventoController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:ELIMINAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         eventoService.delete(id);
+        bitacoraService.registrarAccion("EVENTO", "ELIMINAR", "Eliminó el evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Evento eliminado exitosamente.")
                 .datos(null)
@@ -73,10 +93,50 @@ public class EventoController {
     }
 
     @PutMapping("/estado/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> estado(@PathVariable Long id) {
         eventoService.estado(id);
+        bitacoraService.registrarAccion("EVENTO", "MODIFICAR_ESTADO", "Modificó el estado del evento ID: " + id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado del evento actualizado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PutMapping("/archivar/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> archivar(@PathVariable Long id) {
+        eventoService.archivar(id);
+        bitacoraService.registrarAccion("EVENTO", "ARCHIVAR", "Archivó el evento ID: " + id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Evento archivado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PutMapping("/desarchivar/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> desarchivar(@PathVariable Long id) {
+        eventoService.desarchivar(id);
+        bitacoraService.registrarAccion("EVENTO", "DESARCHIVAR", "Desarchivó el evento ID: " + id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Evento desarchivado exitosamente.")
+                .datos(null)
+                .nombreModelo("Evento")
+                .build());
+    }
+
+    @PostMapping("/clonar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> cloneYear(
+            @RequestParam("from") int fromYear,
+            @RequestParam("to") int toYear) {
+        eventoService.cloneYearEvents(fromYear, toYear);
+        bitacoraService.registrarAccion("EVENTO", "CLONAR", "Clonó los eventos anuales de la gestión " + fromYear + " a la gestión " + toYear);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Eventos clonados exitosamente de la gestión " + fromYear + " a " + toYear)
                 .datos(null)
                 .nombreModelo("Evento")
                 .build());

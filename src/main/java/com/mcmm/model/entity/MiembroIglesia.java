@@ -6,12 +6,14 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "miembros_iglesia")
 public class MiembroIglesia implements java.io.Serializable{
 
@@ -38,6 +40,13 @@ public class MiembroIglesia implements java.io.Serializable{
 
     @Column(name = "uri_carta_traspaso")
     private String uriCartaTraspaso;
+
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class)
+    @JoinColumn(name = "id_iglesia_destino")
+    private Iglesia iglesiaDestino;
+
+    @Column(name = "estado_traspaso")
+    private String estadoTraspaso;
 
     private Boolean estado;
 

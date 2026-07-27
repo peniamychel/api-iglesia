@@ -5,12 +5,14 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "certificado")
 public class Certificado {
 
@@ -23,15 +25,15 @@ public class Certificado {
     @JoinColumn(name = "evento_id")
     private Evento evento;
 
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = TipoCertificado.class, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "tipo_certificado_id")
-    private TipoCertificado tipoCertificado;
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = PlantillaCertificado.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "plantilla_certificado_id")
+    private PlantillaCertificado plantillaCertificado;
 
     @Column(name = "motivo_certificado", length = 254)
     private String motivoCertificado;
 
-    @Column(name = "codigo_certificado", length = 254)
-    private String codigoCertificado;
+    @Column(name = "uri_foto")
+    private String uriFoto;
 
     private Boolean estado;
 

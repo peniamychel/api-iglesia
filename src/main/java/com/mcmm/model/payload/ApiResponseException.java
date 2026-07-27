@@ -6,7 +6,6 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-//@NoArgsConstructor
 @Builder
 public class ApiResponseException {
     @Builder.Default

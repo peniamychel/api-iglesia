@@ -2,15 +2,17 @@ package com.mcmm.service.impl;
 
 import com.mcmm.exception.BadRequestException;
 import com.mcmm.exception.NotFoundExceptionResource;
-import com.mcmm.model.dao.RolDao;
+import com.mcmm.model.dao.MiembroDao;
+import com.mcmm.model.dao.AccionDao;
 import com.mcmm.model.dao.UsuarioDao;
+import com.mcmm.model.dto.AccionDto;
+import com.mcmm.model.dto.RolCargoDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioChangePasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioResetPasswordDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioUpdateDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDto;
 import com.mcmm.model.dto.usuarioDto.UsuarioDtoRes;
-import com.mcmm.model.entity.ERole;
-import com.mcmm.model.entity.Rol;
+import com.mcmm.model.entity.Miembro;
 import com.mcmm.model.entity.Usuario;
 import com.mcmm.service.FileStorageService;
 import com.mcmm.service.IUsuario;
@@ -36,27 +38,36 @@ public class UsuarioImpl implements IUsuario {
     private final ModelMapper modelMapper;
     private final UsuarioDao usuarioDao;
     private final PasswordEncoder passwordEncoder;
-    private final RolDao rolDao;
+    private final MiembroDao miembroDao;
     private final FileStorageService fileStorageService;
+    private final AccionDao accionDao;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     public UsuarioImpl(ModelMapper modelMapper, UsuarioDao usuarioDao,
-                       PasswordEncoder passwordEncoder, RolDao rolDao,
-                       FileStorageService fileStorageService) {
+                       PasswordEncoder passwordEncoder,
+                       MiembroDao miembroDao, FileStorageService fileStorageService,
+                       AccionDao accionDao) {
         this.modelMapper = modelMapper;
         this.usuarioDao = usuarioDao;
         this.passwordEncoder = passwordEncoder;
-        this.rolDao = rolDao;
+        this.miembroDao = miembroDao;
         this.fileStorageService = fileStorageService;
+        this.accionDao = accionDao;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UsuarioDtoRes> findAll() {
-        return StreamSupport.stream(usuarioDao.findAll().spliterator(), false)
-                .map(this::buildDtoWithPhotoUrl)
+        List<Usuario> usuarios = StreamSupport.stream(usuarioDao.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+        // El catalogo de acciones es el mismo para todos los admins: se carga UNA sola
+        // vez (si hace falta) en lugar de una vez por cada usuario admin del listado.
+        boolean hayAdmin = usuarios.stream().anyMatch(u -> Boolean.TRUE.equals(u.getEsAdmin()));
+        List<AccionDto> catalogoAcciones = hayAdmin ? mapCatalogoAcciones() : Collections.emptyList();
+        return usuarios.stream()
+                .map(u -> buildDtoWithPhotoUrl(u, catalogoAcciones))
                 .collect(Collectors.toList());
     }
 
@@ -87,9 +98,26 @@ public class UsuarioImpl implements IUsuario {
             throw new BadRequestException("El email ya existe");
         }
 
+        if (usuarioDto.getMiembroId() != null && usuarioDao.existsByMiembroIdAndEstadoTrue(usuarioDto.getMiembroId())) {
+            throw new BadRequestException("Este miembro ya cuenta con una cuenta de usuario activa.");
+        }
+
+        // El rol de Administrador Global es una marca explicita (esAdmin), no se
+        // infiere de la ausencia de miembro. Solo un ADMIN puede otorgarla.
+        boolean solicitaAdmin = Boolean.TRUE.equals(usuarioDto.getEsAdmin());
+        if (solicitaAdmin && !currentUserIsAdmin()) {
+            throw new AccessDeniedException("Solo un administrador puede crear cuentas de administrador global.");
+        }
+
         Usuario usuario = modelMapper.map(usuarioDto, Usuario.class);
+        // Fuente unica de verdad: nunca confiar en el valor mapeado sin autorizar.
+        usuario.setEsAdmin(solicitaAdmin);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-        usuario.setRoles(resolveRoles(usuarioDto.getRoles()));
+        
+        if (usuarioDto.getMiembroId() != null) {
+            Miembro miembro = miembroDao.findById(usuarioDto.getMiembroId()).orElse(null);
+            usuario.setMiembro(miembro);
+        }
 
         Usuario saved = usuarioDao.save(usuario);
         return buildDtoWithPhotoUrl(saved);
@@ -100,20 +128,22 @@ public class UsuarioImpl implements IUsuario {
     public void delete(Long id) {
         Usuario usuario = usuarioDao.findById(id)
                 .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", id));
+        
+        if (usuario.getUriFoto() != null && !usuario.getUriFoto().isBlank()) {
+            String uriFoto = usuario.getUriFoto();
+            if (!uriFoto.endsWith("/")) {
+                String fileNameOnly = uriFoto.substring(uriFoto.lastIndexOf("/") + 1);
+                if (!fileNameOnly.isBlank()) {
+                    try {
+                        fileStorageService.deleteFile(USUARIOS_DIR + fileNameOnly);
+                    } catch (IOException e) {
+                        // Logged or handled, continuing deletion process
+                    }
+                }
+            }
+        }
+        
         usuarioDao.delete(usuario);
-    }
-
-    @Override
-    @Transactional
-    public UsuarioDtoRes updateUserRoles(UsuarioDto usuarioDto) {
-        Usuario usuario = usuarioDao.findById(usuarioDto.getId())
-                .orElseThrow(() -> new NotFoundExceptionResource("Usuario", "id", usuarioDto.getId()));
-
-        usuario.getRoles().clear();
-        usuario.getRoles().addAll(resolveRoles(usuarioDto.getRoles()));
-
-        Usuario saved = usuarioDao.save(usuario);
-        return buildDtoWithPhotoUrl(saved);
     }
 
     @Override
@@ -140,21 +170,34 @@ public class UsuarioImpl implements IUsuario {
         if (usuarioUpdateDto.getEmail() != null) {
             usuario.setEmail(usuarioUpdateDto.getEmail());
         }
-        if (usuarioUpdateDto.getName() != null) {
-            usuario.setName(usuarioUpdateDto.getName());
-        }
-        if (usuarioUpdateDto.getApellidos() != null) {
-            usuario.setApellidos(usuarioUpdateDto.getApellidos());
-        }
-        if (usuarioUpdateDto.getUriFoto() != null) {
-            String photoUri = usuarioUpdateDto.getUriFoto();
-            if (photoUri.contains("/")) {
-                photoUri = photoUri.substring(photoUri.lastIndexOf("/") + 1);
+        
+        if (usuarioUpdateDto.getMiembroId() != null) {
+            Miembro miembro = miembroDao.findById(usuarioUpdateDto.getMiembroId()).orElse(null);
+            usuario.setMiembro(miembro);
+            if (miembro != null) {
+                usuario.setName(miembro.getNombre());
+                usuario.setApellidos(miembro.getApellido());
             }
-            usuario.setUriFoto(photoUri);
+        } else if (usuarioUpdateDto.getMiembroId() == null) {
+            usuario.setMiembro(null);
+            if (usuarioUpdateDto.getName() != null) {
+                usuario.setName(usuarioUpdateDto.getName());
+            }
+            if (usuarioUpdateDto.getApellidos() != null) {
+                usuario.setApellidos(usuarioUpdateDto.getApellidos());
+            }
         }
+
         if (usuarioUpdateDto.getEstado() != null) {
             usuario.setEstado(usuarioUpdateDto.getEstado());
+        }
+
+        // Otorgar o revocar el rol de Administrador Global (marca explicita).
+        if (usuarioUpdateDto.getEsAdmin() != null) {
+            if (Boolean.TRUE.equals(usuarioUpdateDto.getEsAdmin()) && !currentUserIsAdmin()) {
+                throw new AccessDeniedException("Solo un administrador puede otorgar el rol de administrador global.");
+            }
+            usuario.setEsAdmin(usuarioUpdateDto.getEsAdmin());
         }
 
         Usuario saved = usuarioDao.save(usuario);
@@ -242,38 +285,112 @@ public class UsuarioImpl implements IUsuario {
         usuarioDao.save(usuario);
     }
 
-    private Set<Rol> resolveRoles(Set<String> roleNames) {
-        if (roleNames == null || roleNames.isEmpty()) {
-            Rol defaultRol = rolDao.findByName(ERole.ENCARGADO_EVENTO)
-                    .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", ERole.ENCARGADO_EVENTO));
-            return Collections.singleton(defaultRol);
+    private boolean currentUserIsAdmin() {
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
         }
-
-        Set<Rol> roles = new HashSet<>();
-        for (String roleName : roleNames) {
-            try {
-                ERole eRole = ERole.valueOf(roleName);
-                Rol rol = rolDao.findByName(eRole)
-                        .orElseThrow(() -> new NotFoundExceptionResource("Rol", "name", eRole));
-                roles.add(rol);
-            } catch (IllegalArgumentException e) {
-                throw new BadRequestException("Rol inválido: " + roleName);
-            }
-        }
-        return roles;
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
     private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario) {
+        return buildDtoWithPhotoUrl(usuario, null);
+    }
+
+    /**
+     * @param catalogoAccionesPrecargado catalogo de acciones ya mapeado para reusar entre
+     *                                    varios usuarios (ver findAll). Si es null, se carga
+     *                                    bajo demanda (uso puntual: findById/findByUsername).
+     */
+    private UsuarioDtoRes buildDtoWithPhotoUrl(Usuario usuario, List<AccionDto> catalogoAccionesPrecargado) {
         UsuarioDtoRes dto = modelMapper.map(usuario, UsuarioDtoRes.class);
-        if (dto.getUriFoto() != null) {
-            String fileUrl = ServletUriComponentsBuilder
-                    .fromCurrentContextPath()
-                    .path("/uploads/")
-                    .path(USUARIOS_DIR)
-                    .path(dto.getUriFoto())
-                    .toUriString();
-            dto.setUriFoto(fileUrl);
+        Set<AccionDto> accionDtos = new HashSet<>();
+
+        if (Boolean.TRUE.equals(usuario.getEsAdmin())) {
+            dto.setUriFoto(null);
+            dto.setIglesiaNombre("Administración Central");
+            com.mcmm.model.dto.RolCargoDto adminDto = com.mcmm.model.dto.RolCargoDto.builder()
+                    .nombre("Administrador Global")
+                    .nombreRol("ADMIN")
+                    .estado(true)
+                    .build();
+            dto.setRoles(Collections.singleton(adminDto));
+
+            accionDtos.addAll(catalogoAccionesPrecargado != null ? catalogoAccionesPrecargado : mapCatalogoAcciones());
+        } else if (usuario.getMiembro() != null) {
+            dto.setMiembroId(usuario.getMiembro().getId());
+            dto.setName(usuario.getMiembro().getNombre());
+            dto.setApellidos(usuario.getMiembro().getApellido());
+            
+            if (usuario.getMiembro().getUriFoto() != null) {
+                String fileUrl = ServletUriComponentsBuilder
+                        .fromCurrentContextPath()
+                        .path("/uploads/")
+                        .path("miembros/")
+                        .path(usuario.getMiembro().getUriFoto())
+                        .toUriString();
+                dto.setUriFoto(fileUrl);
+            } else {
+                dto.setUriFoto(null);
+            }
+            
+            if (usuario.getMiembro().getMiembroIglesias() != null) {
+                String iglesiaName = usuario.getMiembro().getMiembroIglesias().stream()
+                        .filter(mi -> Boolean.TRUE.equals(mi.getEstado()))
+                        .map(mi -> mi.getIglesia() != null ? mi.getIglesia().getNombre() : null)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null);
+                dto.setIglesiaNombre(iglesiaName);
+            }
+
+            if (usuario.getMiembro().getCargos() != null) {
+                Date now = new Date();
+                Set<com.mcmm.model.dto.RolCargoDto> rolesDtos = usuario.getMiembro().getCargos().stream()
+                        .filter(c -> Boolean.TRUE.equals(c.getEstado()) && (c.getFechaFin() == null || c.getFechaFin().after(now)))
+                        .filter(c -> c.getRolCargo() != null)
+                        .map(c -> {
+                            if (c.getRolCargo().getAcciones() != null) {
+                                c.getRolCargo().getAcciones().forEach(a -> {
+                                    AccionDto aDto = modelMapper.map(a, AccionDto.class);
+                                    aDto.setAuthorityCode(a.getAuthorityCode());
+                                    if (a.getServicio() != null) {
+                                        aDto.setServicioId(a.getServicio().getId());
+                                        aDto.setServicioCodigo(a.getServicio().getCodigo());
+                                    }
+                                    accionDtos.add(aDto);
+                                });
+                            }
+                            RolCargoDto rcDto = modelMapper.map(c.getRolCargo(), RolCargoDto.class);
+                            return rcDto;
+                        })
+                        .collect(Collectors.toSet());
+                dto.setRoles(rolesDtos);
+            }
+        } else {
+            // Usuario sin miembro y sin marca de admin: cuenta sin roles ni privilegios.
+            dto.setUriFoto(null);
+            dto.setIglesiaNombre(null);
+            dto.setRoles(Collections.emptySet());
         }
+
+        dto.setAcciones(accionDtos);
         return dto;
+    }
+
+    private List<AccionDto> mapCatalogoAcciones() {
+        List<AccionDto> result = new ArrayList<>();
+        accionDao.findAll().forEach(a -> {
+            AccionDto aDto = modelMapper.map(a, AccionDto.class);
+            aDto.setAuthorityCode(a.getAuthorityCode());
+            if (a.getServicio() != null) {
+                aDto.setServicioId(a.getServicio().getId());
+                aDto.setServicioCodigo(a.getServicio().getCodigo());
+            }
+            result.add(aDto);
+        });
+        return result;
     }
 }

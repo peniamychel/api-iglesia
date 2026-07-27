@@ -6,12 +6,14 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "participacion_evento")
 public class ParticipacionEvento {
 
@@ -37,10 +39,23 @@ public class ParticipacionEvento {
 
     private Boolean estado;
 
+    @Column(name = "entregado")
+    private Boolean entregado;
+
+    @Column(name = "fecha_entrega")
+    private LocalDateTime fechaEntrega;
+
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Usuario.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "entregado_por")
+    private Usuario entregadoPor;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "codigo_unico", unique = true)
+    private String codigoUnico;
 
     @PrePersist
     protected void onCreate() {
@@ -48,6 +63,15 @@ public class ParticipacionEvento {
         updatedAt = LocalDateTime.now();
         if (estado == null) {
             estado = true; // Establecer estado en true si no se ha asignado
+        }
+        if (codigoUnico == null || codigoUnico.isEmpty()) {
+            String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            StringBuilder sb = new StringBuilder(4);
+            for (int i = 0; i < 4; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            codigoUnico = sb.toString();
         }
     }
 

@@ -25,6 +25,8 @@ public class MiembroIglesiaDto {
     private String motivoTraspaso;
     private Date fechaTraspaso;
     private String uriCartaTraspaso;
+    private Long iglesiaDestinoId;
+    private String estadoTraspaso;
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

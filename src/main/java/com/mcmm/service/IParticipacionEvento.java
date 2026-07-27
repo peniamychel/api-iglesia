@@ -11,4 +11,6 @@ public interface IParticipacionEvento {
     ParticipacionEventoDto update(ParticipacionEventoDto participacionEventoDto);
     void delete(Long id);
     void estado(Long id);
+    void toggleEntregado(Long id, String username);
+    void toggleEntregadoWithCertificado(Long id, Long certificadoId, String username);
 }

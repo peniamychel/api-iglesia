@@ -6,12 +6,14 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
-@Entity
 @Builder
+@Entity
 @Table(name = "evento")
 public class Evento {
 
@@ -23,6 +25,10 @@ public class Evento {
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = TipoEvento.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "tipo_evento_id")
     private TipoEvento tipoEvento;
+
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Iglesia.class, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "iglesia_id", nullable = true)
+    private Iglesia iglesia;
 
     @Column(name = "nombre", length = 254)
     private String nombre;
@@ -44,6 +50,21 @@ public class Evento {
 
     private Boolean estado;
 
+    @Column(name = "alcance", length = 50)
+    private String alcance; // LOCAL or GENERAL
+
+    @Column(name = "mostrar_en_calendario")
+    private Boolean mostrarEnCalendario;
+
+    @Column(name = "habilitar_inscripciones")
+    private Boolean habilitarInscripciones = false;
+
+    @Column(name = "iglesias_invitadas", length = 500)
+    private String iglesiasInvitadas;
+
+    @Column(name = "archivado")
+    private Boolean archivado;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
@@ -55,6 +76,9 @@ public class Evento {
         updatedAt = LocalDateTime.now();
         if (estado == null) {
             estado = true; // Establecer estado en true si no se ha asignado
+        }
+        if (archivado == null) {
+            archivado = false;
         }
     }
 
