@@ -63,6 +63,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/verificar-certificado/**").permitAll()
+                        // Ruta corta equivalente: es la que va en el QR, para que
+                        // el dibujo impreso tenga menos módulos y se lea mejor.
+                        .requestMatchers("/v/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

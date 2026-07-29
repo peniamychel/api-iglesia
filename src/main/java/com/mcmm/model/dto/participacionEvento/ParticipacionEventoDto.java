@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @AllArgsConstructor
@@ -22,12 +21,14 @@ public class ParticipacionEventoDto {
     @NotNull
     private Long eventoId; // FK to Evento
 
-    private Date fecha;
     private Boolean estado;
     private Boolean entregado;
     private LocalDateTime fechaEntrega;
+    private String numeroLibro;
+    private String numeroFolio;
     private Long entregadoPorId;
     private String codigoUnico;
+    private String tokenVerificacion;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

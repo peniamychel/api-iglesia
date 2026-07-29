@@ -1,6 +1,7 @@
 package com.mcmm.service;
 
 import com.mcmm.model.dto.participacionEvento.ParticipacionEventoDto;
+import com.mcmm.model.dto.participacionEvento.RegistroEntregaDto;
 
 import java.util.List;
 
@@ -13,4 +14,5 @@ public interface IParticipacionEvento {
     void estado(Long id);
     void toggleEntregado(Long id, String username);
     void toggleEntregadoWithCertificado(Long id, Long certificadoId, String username);
+    ParticipacionEventoDto registrarEntrega(Long id, RegistroEntregaDto registro, String username);
 }

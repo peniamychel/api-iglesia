@@ -1,6 +1,7 @@
 package com.mcmm.controller;
 
 import com.mcmm.model.dto.participacionEvento.ParticipacionEventoDto;
+import com.mcmm.model.dto.participacionEvento.RegistroEntregaDto;
 import com.mcmm.model.payload.ApiResponse;
 import com.mcmm.service.IParticipacionEvento;
 import jakarta.validation.Valid;
@@ -98,6 +99,26 @@ public class ParticipacionEventoController {
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .message("Estado de entrega del certificado actualizado exitosamente.")
                 .datos(null)
+                .nombreModelo("ParticipacionEvento")
+                .build());
+    }
+
+    /**
+     * Asienta la entrega del certificado con su libro y folio. Se invoca al
+     * generar el PDF desde la vista previa: es el único momento en que una
+     * participación queda registrada como entregada.
+     */
+    @PutMapping("/entregar/{id}")
+    @PreAuthorize("hasAuthority('EVENTOS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ParticipacionEventoDto>> registrarEntrega(
+            @PathVariable Long id,
+            @Valid @RequestBody RegistroEntregaDto registro) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        ParticipacionEventoDto actualizada = participacionEventoService.registrarEntrega(id, registro, username);
+        return ResponseEntity.ok(ApiResponse.<ParticipacionEventoDto>builder()
+                .message("Certificado registrado como entregado exitosamente.")
+                .datos(actualizada)
                 .nombreModelo("ParticipacionEvento")
                 .build());
     }

@@ -43,6 +43,9 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
     /** True si el evento tiene al menos un participante/miembro registrado (guard de borrado). */
     boolean existsByEventoId(Long eventoId);
 
+    /** Se consulta antes de asignar un código de verificación, para no chocar con uno ya emitido. */
+    boolean existsByCodigoUnico(String codigoUnico);
+
     @Query("SELECT p FROM ParticipacionEvento p " +
            "LEFT JOIN FETCH p.certificado c " +
            "JOIN FETCH p.miembro " +
@@ -51,4 +54,13 @@ public interface ParticipacionEventoDao extends JpaRepository<ParticipacionEvent
            "LEFT JOIN FETCH p.entregadoPor " +
            "WHERE p.codigoUnico = :codigoUnico")
     java.util.Optional<ParticipacionEvento> findByCodigoUnicoWithRelations(@Param("codigoUnico") String codigoUnico);
+
+    @Query("SELECT p FROM ParticipacionEvento p " +
+           "LEFT JOIN FETCH p.certificado c " +
+           "JOIN FETCH p.miembro " +
+           "JOIN FETCH p.evento e " +
+           "JOIN FETCH e.iglesia " +
+           "LEFT JOIN FETCH p.entregadoPor " +
+           "WHERE p.tokenVerificacion = :token")
+    java.util.Optional<ParticipacionEvento> findByTokenVerificacionWithRelations(@Param("token") String token);
 }
