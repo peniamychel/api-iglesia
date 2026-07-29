@@ -103,6 +103,12 @@ public class MiembroImpl implements IMiembro {
         miembroExistente.setCelular(miembroDto.getCelular());
         miembroExistente.setSexo(miembroDto.getSexo());
         miembroExistente.setDireccion(miembroDto.getDireccion());
+        // Datos adicionales (opcionales)
+        miembroExistente.setLocalidadNacimiento(miembroDto.getLocalidadNacimiento());
+        miembroExistente.setProvincia(miembroDto.getProvincia());
+        miembroExistente.setDepartamento(miembroDto.getDepartamento());
+        miembroExistente.setNombrePadre(miembroDto.getNombrePadre());
+        miembroExistente.setNombreMadre(miembroDto.getNombreMadre());
         // uriFoto se preserva — se gestiona mediante endpoints dedicados para subir/eliminar foto
         miembroExistente.setFechaConvercion(miembroDto.getFechaConvercion());
         miembroExistente.setLugarConvercion(miembroDto.getLugarConvercion());

@@ -43,6 +43,21 @@ public class Miembro {
 
     private String direccion;
 
+    // ── Datos adicionales (opcionales): se completan desde "Datos adicionales" del formulario ──
+
+    @Column(name = "localidad_nacimiento")
+    private String localidadNacimiento;
+
+    private String provincia;
+
+    private String departamento;
+
+    @Column(name = "nombre_padre")
+    private String nombrePadre;
+
+    @Column(name = "nombre_madre")
+    private String nombreMadre;
+
     @Column(name = "uri_foto")
     private String uriFoto;
 

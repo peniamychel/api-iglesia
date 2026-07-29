@@ -50,6 +50,13 @@ public class MiembroDtoNew {
     @Size(max = 500, message = "La direccion no debe exceder 500 caracteres.")
     private String direccion;
 
+    // ── Datos adicionales (opcionales) ──
+    private String localidadNacimiento;
+    private String provincia;
+    private String departamento;
+    private String nombrePadre;
+    private String nombreMadre;
+
     @Size(max = 254, message = "La uriFoto no debe exceder 254 caracteres.")
     private String uriFoto;
 

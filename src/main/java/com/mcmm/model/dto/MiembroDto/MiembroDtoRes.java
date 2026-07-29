@@ -26,6 +26,14 @@ public class MiembroDtoRes {
     private String celular;
     private String sexo;
     private String direccion;
+
+    // ── Datos adicionales (opcionales) ──
+    private String localidadNacimiento;
+    private String provincia;
+    private String departamento;
+    private String nombrePadre;
+    private String nombreMadre;
+
     private String uriFoto;
 
     private Boolean estado;
