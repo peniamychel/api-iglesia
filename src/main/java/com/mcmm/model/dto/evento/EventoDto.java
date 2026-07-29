@@ -32,10 +32,19 @@ public class EventoDto {
     private String motivo;
 
     @Size(max = 254)
-    private String uriFoto;
-
-    @Size(max = 254)
     private String ubicacion;
+
+    @NotBlank(message = "La localidad es obligatoria")
+    @Size(max = 254)
+    private String localidad;
+
+    @NotBlank(message = "La provincia es obligatoria")
+    @Size(max = 254)
+    private String provincia;
+
+    @NotBlank(message = "El departamento es obligatorio")
+    @Size(max = 254)
+    private String departamento;
 
     private Date fechaInicio;
     private Date fechaFin;

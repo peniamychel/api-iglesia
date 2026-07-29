@@ -244,13 +244,15 @@ public class EventoImpl implements IEvento {
         evento.setNombre(eventoDto.getNombre());
         evento.setMotivo(eventoDto.getMotivo());
         evento.setUbicacion(eventoDto.getUbicacion());
+        evento.setLocalidad(eventoDto.getLocalidad());
+        evento.setProvincia(eventoDto.getProvincia());
+        evento.setDepartamento(eventoDto.getDepartamento());
         evento.setFechaInicio(eventoDto.getFechaInicio());
         evento.setFechaFin(eventoDto.getFechaFin());
         evento.setAlcance(eventoDto.getAlcance());
         evento.setMostrarEnCalendario(eventoDto.getMostrarEnCalendario());
         evento.setHabilitarInscripciones(eventoDto.getHabilitarInscripciones());
         evento.setIglesiasInvitadas(eventoDto.getIglesiasInvitadas());
-        evento.setUriFoto(eventoDto.getUriFoto());
         // estado solo se pisa si viene en el request; archivado se maneja únicamente
         // por los endpoints archivar/desarchivar.
         if (eventoDto.getEstado() != null) {
@@ -334,6 +336,9 @@ public class EventoImpl implements IEvento {
                         .nombre(original.getNombre())
                         .motivo(original.getMotivo())
                         .ubicacion(original.getUbicacion())
+                        .localidad(original.getLocalidad())
+                        .provincia(original.getProvincia())
+                        .departamento(original.getDepartamento())
                         .tipoEvento(original.getTipoEvento())
                         .iglesia(original.getIglesia())
                         .alcance(original.getAlcance())

@@ -36,11 +36,17 @@ public class Evento {
     @Column(name = "motivo", length = 254)
     private String motivo;
 
-    @Column(name = "uri_foto", length = 254)
-    private String uriFoto;
-
     @Column(name = "ubicacion", length = 254)
     private String ubicacion;
+
+    @Column(name = "localidad", length = 254)
+    private String localidad;
+
+    @Column(name = "provincia", length = 254)
+    private String provincia;
+
+    @Column(name = "departamento", length = 254)
+    private String departamento;
 
     @Column(name = "fecha_inicio")
     private Date fechaInicio;
