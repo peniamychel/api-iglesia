@@ -32,6 +32,9 @@ public interface IMiembroIglesia {
     MiembroIglesiaDto aceptarTraspaso(Long id);
     MiembroIglesiaDto rechazarTraspaso(Long id);
     List<MiembroIglesiaDto> getSolicitudesPendientes(Long iglesiaId);
+    /** Traspasos ya resueltos que la iglesia de origen todavia no vio. */
+    List<MiembroIglesiaDto> getRespuestasSinVer(Long iglesiaId);
+    MiembroIglesiaDto marcarRespuestaVista(Long id);
     List<MiembroIglesiaDto> obtenerHistorialMiembro(Long miembroId);
     String subirCartaTraspaso(Long id, MultipartFile file) throws IOException;
 }

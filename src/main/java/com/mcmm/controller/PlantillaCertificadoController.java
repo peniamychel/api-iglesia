@@ -99,54 +99,6 @@ public class PlantillaCertificadoController {
                 .build());
     }
 
-    @PostMapping(value = "/{id}/logo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> uploadLogo(
-            @PathVariable Long id,
-            @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
-        try {
-            String fileUrl = plantillaCertificadoService.uploadLogo(id, file);
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .message("Logo subido exitosamente")
-                    .datos(fileUrl)
-                    .nombreModelo("PlantillaCertificado")
-                    .build());
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("Error al subir el logo: " + e.getMessage());
-        }
-    }
-
-    @PostMapping(value = "/{id}/marca-agua", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> uploadMarcaAgua(
-            @PathVariable Long id,
-            @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
-        try {
-            String fileUrl = plantillaCertificadoService.uploadMarcaAgua(id, file);
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .message("Marca de agua subida exitosamente")
-                    .datos(fileUrl)
-                    .nombreModelo("PlantillaCertificado")
-                    .build());
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("Error al subir la marca de agua: " + e.getMessage());
-        }
-    }
-
-    @PostMapping(value = "/{id}/firma", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('CERTIFICADOS:GENERAR') OR hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> uploadFirma(
-            @PathVariable Long id,
-            @RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
-        try {
-            String fileUrl = plantillaCertificadoService.uploadFirma(id, file);
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .message("Firma subida exitosamente")
-                    .datos(fileUrl)
-                    .nombreModelo("PlantillaCertificado")
-                    .build());
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("Error al subir la firma: " + e.getMessage());
-        }
-    }
+    // Se retiraron los endpoints de subida de logo, marca de agua y firma: la
+    // plantilla ya no lleva imágenes.
 }

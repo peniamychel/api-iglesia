@@ -18,10 +18,4 @@ public interface PlantillaCertificadoService {
     void delete(Long id);
 
     PlantillaCertificado changeState(Long id);
-
-    String uploadLogo(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
-
-    String uploadMarcaAgua(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
-
-    String uploadFirma(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
 }

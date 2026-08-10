@@ -77,6 +77,20 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!--
+			Solo para @DataJpaTest: base en memoria que reemplaza a MariaDB durante
+			los tests de repositorio, para probar las @Query JPQL contra una base
+			real sin depender de que la MariaDB de desarrollo este encendida. Las
+			consultas @Query(nativeQuery = true) de este proyecto usan FIND_IN_SET
+			y un stored procedure especificos de MariaDB, que H2 no soporta: quedan
+			fuera de este tipo de prueba (ver EventoDaoTest si se agrega despues).
+		-->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 <!--		dependencias para uso de jwt-->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -141,6 +155,19 @@
 
 	<build>
 		<plugins>
+			<!--
+				`mvnw test` ejecuta solo las pruebas unitarias: rapidas y sin base de
+				datos. Las etiquetadas como "integracion" (levantan el contexto de
+				Spring y tocan la base real) quedan fuera y se corren a proposito con
+				`mvnw test -Dgroups=integracion`.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>integracion</excludedGroups>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

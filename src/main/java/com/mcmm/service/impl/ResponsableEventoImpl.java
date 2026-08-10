@@ -7,6 +7,7 @@ import com.mcmm.model.entity.Cargo;
 import com.mcmm.model.dao.ResponsableEventoDao;
 import com.mcmm.model.dao.EventoDao;
 import com.mcmm.model.dao.CargoDao;
+import com.mcmm.exception.NotFoundExceptionResource;
 import com.mcmm.service.IResponsableEvento;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -88,7 +89,11 @@ public class ResponsableEventoImpl implements IResponsableEvento {
 
     @Override
     public ResponsableEventoDto create(ResponsableEventoDto responsableEventoDto) {
-        ResponsableEvento responsable = modelMapper.map(responsableEventoDto, ResponsableEvento.class);
+        // Se arma a mano en vez de con ModelMapper: el DTO lleva nombreCompleto y
+        // nombreCargo (solo de lectura) y el mapeo implícito los toma como
+        // candidatos para evento.nombre, lo que aborta con una ambiguedad.
+        ResponsableEvento responsable = new ResponsableEvento();
+        responsable.setEstado(responsableEventoDto.getEstado());
         if (responsableEventoDto.getEventoId() != null) {
             Evento evento = eventoDao.findById(responsableEventoDto.getEventoId()).orElse(null);
             responsable.setEvento(evento);
@@ -110,7 +115,13 @@ public class ResponsableEventoImpl implements IResponsableEvento {
 
     @Override
     public ResponsableEventoDto update(ResponsableEventoDto responsableEventoDto) {
-        ResponsableEvento responsable = modelMapper.map(responsableEventoDto, ResponsableEvento.class);
+        // Se carga la fila existente y se copian solo los campos editables (mismo
+        // motivo que en create para no usar ModelMapper hacia la entidad).
+        ResponsableEvento responsable = responsableEventoDao.findById(responsableEventoDto.getId())
+                .orElseThrow(() -> new NotFoundExceptionResource("ResponsableEvento", "id", responsableEventoDto.getId()));
+        if (responsableEventoDto.getEstado() != null) {
+            responsable.setEstado(responsableEventoDto.getEstado());
+        }
         if (responsableEventoDto.getEventoId() != null) {
             Evento evento = eventoDao.findById(responsableEventoDto.getEventoId()).orElse(null);
             responsable.setEvento(evento);

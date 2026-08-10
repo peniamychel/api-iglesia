@@ -27,14 +27,10 @@ public class PlantillaCertificado {
     @Column(name = "configuracion_json", length = 65535)
     private String configuracionJson;
 
-    @Column(name = "uri_logo", length = 255)
-    private String uriLogo;
-
-    @Column(name = "uri_marca_agua")
-    private String uriMarcaAgua;
-
-    @Column(name = "uri_firma")
-    private String uriFirma;
+    // La plantilla ya no lleva imágenes (logo, marca de agua ni firma): el
+    // certificado se imprime sobre papel preimpreso y el sistema solo coloca los
+    // datos encima. Las columnas uri_logo, uri_marca_agua y uri_firma quedan sin
+    // uso hasta que se eliminen de la base.
 
     private Boolean estado;
 

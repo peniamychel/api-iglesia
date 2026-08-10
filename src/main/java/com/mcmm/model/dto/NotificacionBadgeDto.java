@@ -16,5 +16,7 @@ import lombok.NoArgsConstructor;
 public class NotificacionBadgeDto {
     private long traspasos;
     private long eventos;
+    /** Traspasos que la iglesia solicito y ya fueron aceptados o rechazados. */
+    private long respuestas;
     private long total;
 }

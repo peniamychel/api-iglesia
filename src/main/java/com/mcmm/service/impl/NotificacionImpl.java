@@ -41,6 +41,11 @@ public class NotificacionImpl implements INotificacion {
                 ? miembroIglesiaDao.countPendingTransfersForChurch(iglesiaId)
                 : miembroIglesiaDao.countAllPendingTransfers();
 
+        // Aviso de vuelta: lo que la iglesia solicito y el destino ya resolvio
+        long respuestas = tieneIglesia
+                ? miembroIglesiaDao.countRespuestasSinVerParaOrigen(iglesiaId)
+                : miembroIglesiaDao.countTodasLasRespuestasSinVer();
+
         long eventos = 0;
         if (tieneIglesia) {
             List<Long> eventosHabilitados = eventoDao.findIdsEventosHabilitadosParaIglesia(iglesiaId);
@@ -54,7 +59,8 @@ public class NotificacionImpl implements INotificacion {
         return NotificacionBadgeDto.builder()
                 .traspasos(traspasos)
                 .eventos(eventos)
-                .total(traspasos + eventos)
+                .respuestas(respuestas)
+                .total(traspasos + eventos + respuestas)
                 .build();
     }
 }

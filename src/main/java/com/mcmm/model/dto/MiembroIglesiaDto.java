@@ -27,6 +27,8 @@ public class MiembroIglesiaDto {
     private String uriCartaTraspaso;
     private Long iglesiaDestinoId;
     private String estadoTraspaso;
+    /** Solo respuesta: false si la iglesia de origen aun no vio el resultado. */
+    private Boolean respuestaVista;
     private Boolean estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -48,6 +48,15 @@ public class MiembroIglesia implements java.io.Serializable{
     @Column(name = "estado_traspaso")
     private String estadoTraspaso;
 
+    /**
+     * Falso mientras la iglesia de origen no haya visto la respuesta (aceptado o
+     * rechazado) de la iglesia destino. Es lo que sostiene el aviso de vuelta:
+     * el sistema no tiene tabla de notificaciones, se cuentan las solicitudes
+     * resueltas y todavia no vistas por quien las envio.
+     */
+    @Column(name = "respuesta_vista")
+    private Boolean respuestaVista;
+
     private Boolean estado;
 
     @Column(name = "created_at", updatable = false)

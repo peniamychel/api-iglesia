@@ -46,4 +46,30 @@ public interface MiembroIglesiaDao extends JpaRepository<MiembroIglesia, Long> {
 
     @Query("SELECT COUNT(mi) FROM MiembroIglesia mi WHERE mi.estadoTraspaso = 'PENDIENTE'")
     long countAllPendingTransfers();
+
+    /* ── Respuestas de vuelta para la iglesia que solicito el traspaso ── */
+
+    @Query("SELECT mi FROM MiembroIglesia mi " +
+           "WHERE mi.iglesia.id = :iglesiaId " +
+           "AND mi.estadoTraspaso IN ('ACEPTADO', 'RECHAZADO') " +
+           "AND (mi.respuestaVista IS NULL OR mi.respuestaVista = false) " +
+           "ORDER BY mi.updatedAt DESC")
+    java.util.List<MiembroIglesia> findRespuestasSinVerParaOrigen(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT mi FROM MiembroIglesia mi " +
+           "WHERE mi.estadoTraspaso IN ('ACEPTADO', 'RECHAZADO') " +
+           "AND (mi.respuestaVista IS NULL OR mi.respuestaVista = false) " +
+           "ORDER BY mi.updatedAt DESC")
+    java.util.List<MiembroIglesia> findTodasLasRespuestasSinVer();
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi " +
+           "WHERE mi.iglesia.id = :iglesiaId " +
+           "AND mi.estadoTraspaso IN ('ACEPTADO', 'RECHAZADO') " +
+           "AND (mi.respuestaVista IS NULL OR mi.respuestaVista = false)")
+    long countRespuestasSinVerParaOrigen(@Param("iglesiaId") Long iglesiaId);
+
+    @Query("SELECT COUNT(mi) FROM MiembroIglesia mi " +
+           "WHERE mi.estadoTraspaso IN ('ACEPTADO', 'RECHAZADO') " +
+           "AND (mi.respuestaVista IS NULL OR mi.respuestaVista = false)")
+    long countTodasLasRespuestasSinVer();
 }

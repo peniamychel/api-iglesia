@@ -178,6 +178,33 @@ public class MiembroIglesiaController {
                         .build());
     }
 
+    /** Respuestas (aceptado/rechazado) que la iglesia de origen todavia no vio. */
+    @GetMapping("/traspaso/respuestas/{iglesiaId}")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<MiembroIglesiaDto>>> getRespuestasSinVer(@PathVariable Long iglesiaId) {
+        List<MiembroIglesiaDto> respuestas = miembroIglesiaService.getRespuestasSinVer(iglesiaId);
+        return ResponseEntity.ok(
+                ApiResponse.<List<MiembroIglesiaDto>>builder()
+                        .message("Respuestas de traspaso sin ver encontradas.")
+                        .datos(respuestas)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
+    @PutMapping("/traspaso/{id}/respuesta-vista")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('MIEMBROS:EDITAR') OR hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<MiembroIglesiaDto>> marcarRespuestaVista(@PathVariable Long id) {
+        MiembroIglesiaDto dto = miembroIglesiaService.marcarRespuestaVista(id);
+        return ResponseEntity.ok(
+                ApiResponse.<MiembroIglesiaDto>builder()
+                        .message("Respuesta marcada como vista.")
+                        .datos(dto)
+                        .nombreModelo("MiembroIglesia")
+                        .build());
+    }
+
     @GetMapping("/historial/{miembroId}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAuthority('MIEMBROS:VER') OR hasRole('ADMIN')")

@@ -95,6 +95,32 @@ public class EventoImpl implements IEvento {
         return toDtosConCertificado(eventos);
     }
 
+    /**
+     * Lleva la fecha de fin al último minuto del día (23:59:59).
+     *
+     * El formulario solo pide el día, así que la hora llega en 00:00 y un evento
+     * de un solo día quedaba empezando y terminando en el mismo instante. Si la
+     * fecha ya trae una hora distinta de medianoche se respeta, por si alguna vez
+     * se registra la hora exacta de cierre.
+     */
+    private Date finDeJornada(Date fechaFin) {
+        if (fechaFin == null) return null;
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(fechaFin);
+
+        boolean esMedianoche = cal.get(Calendar.HOUR_OF_DAY) == 0
+                && cal.get(Calendar.MINUTE) == 0
+                && cal.get(Calendar.SECOND) == 0;
+        if (!esMedianoche) return fechaFin;
+
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
     /** Mapea la lista poblando tieneCertificado en batch (una sola consulta, sin N+1). */
     private List<EventoDto> toDtosConCertificado(List<Evento> eventos) {
         List<Long> ids = eventos.stream().map(Evento::getId).collect(Collectors.toList());
@@ -135,6 +161,7 @@ public class EventoImpl implements IEvento {
     @Override
     public EventoDto create(EventoDto eventoDto) {
         Evento evento = modelMapper.map(eventoDto, Evento.class);
+        evento.setFechaFin(finDeJornada(evento.getFechaFin()));
         if (eventoDto.getTipoEventoId() != null) {
             TipoEvento tipoEvento = tipoEventoDao.findById(eventoDto.getTipoEventoId()).orElse(null);
             evento.setTipoEvento(tipoEvento);
@@ -248,7 +275,7 @@ public class EventoImpl implements IEvento {
         evento.setProvincia(eventoDto.getProvincia());
         evento.setDepartamento(eventoDto.getDepartamento());
         evento.setFechaInicio(eventoDto.getFechaInicio());
-        evento.setFechaFin(eventoDto.getFechaFin());
+        evento.setFechaFin(finDeJornada(eventoDto.getFechaFin()));
         evento.setAlcance(eventoDto.getAlcance());
         evento.setMostrarEnCalendario(eventoDto.getMostrarEnCalendario());
         evento.setHabilitarInscripciones(eventoDto.getHabilitarInscripciones());

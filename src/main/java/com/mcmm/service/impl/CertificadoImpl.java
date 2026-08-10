@@ -141,19 +141,7 @@ public class CertificadoImpl implements ICertificado {
         certificadoDao.delete(certificado);
         
         if (plantilla != null) {
-            try {
-                if (plantilla.getUriLogo() != null && !plantilla.getUriLogo().isBlank()) {
-                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriLogo());
-                }
-                if (plantilla.getUriMarcaAgua() != null && !plantilla.getUriMarcaAgua().isBlank()) {
-                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriMarcaAgua());
-                }
-                if (plantilla.getUriFirma() != null && !plantilla.getUriFirma().isBlank()) {
-                    fileStorageService.deleteFile("plantillas/" + plantilla.getUriFirma());
-                }
-            } catch (Exception e) {
-                log.warn("Error al eliminar imagenes de plantilla: {}", e.getMessage());
-            }
+            // La plantilla ya no guarda imágenes, así que solo se borra el registro.
             plantillaCertificadoDao.delete(plantilla);
         }
     }

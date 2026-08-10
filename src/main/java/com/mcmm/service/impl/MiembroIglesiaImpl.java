@@ -244,6 +244,8 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
         solicitud.setEstado(false);
         solicitud.setEstadoTraspaso("ACEPTADO");
         solicitud.setFechaTraspaso(new java.util.Date());
+        // Queda pendiente de aviso para la iglesia que solicitó el traspaso
+        solicitud.setRespuestaVista(false);
         miembroIglesiaDao.save(solicitud);
 
         // 2. Crear nueva asignación activa en la iglesia destino
@@ -268,8 +270,9 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
         }
 
         solicitud.setEstadoTraspaso("RECHAZADO");
-        solicitud.setIglesiaDestino(null);
-        solicitud.setMotivoTraspaso(solicitud.getMotivoTraspaso() + " (RECHAZADO)");
+        // Se conserva la iglesia destino y el motivo original: hacen falta para
+        // avisarle a la iglesia de origen quién rechazó y por qué se había pedido.
+        solicitud.setRespuestaVista(false);
 
         MiembroIglesia saved = miembroIglesiaDao.save(solicitud);
         return convertToDto(saved);
@@ -286,6 +289,24 @@ public class MiembroIglesiaImpl implements IMiembroIglesia {
         return miembroIglesiaDao.findPendingTransfersForChurch(iglesiaId).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MiembroIglesiaDto> getRespuestasSinVer(Long iglesiaId) {
+        List<MiembroIglesia> respuestas = (iglesiaId == null || iglesiaId == 0)
+                ? miembroIglesiaDao.findTodasLasRespuestasSinVer()
+                : miembroIglesiaDao.findRespuestasSinVerParaOrigen(iglesiaId);
+        return respuestas.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public MiembroIglesiaDto marcarRespuestaVista(Long id) {
+        MiembroIglesia solicitud = miembroIglesiaDao.findById(id)
+                .orElseThrow(() -> new NotFoundExceptionResource("MiembroIglesia", "id", id));
+        solicitud.setRespuestaVista(true);
+        return convertToDto(miembroIglesiaDao.save(solicitud));
     }
 
     @Override
